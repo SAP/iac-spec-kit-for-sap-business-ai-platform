@@ -62,15 +62,18 @@
   <script>
     const EVAL_DATA = __EVAL_DATA_PLACEHOLDER__;
 
-    let evalItems = [...EVAL_DATA];
+    let nextId = 0;
+    let evalItems = EVAL_DATA.map(i => ({ ...i, id: nextId++ }));
+
+    // ponytail: stable ids keep callbacks correct across delete/sort; upgrade to a Map if lookup shows up in a profile.
+    const byId = id => evalItems.find(i => i.id === id);
 
     function render() {
       const tbody = document.getElementById('eval-body');
       tbody.innerHTML = '';
 
       // Sort: should-trigger first, then should-not-trigger
-      const sorted = evalItems
-        .map((item, origIdx) => ({ ...item, origIdx }))
+      const sorted = [...evalItems]
         .sort((a, b) => (b.should_trigger ? 1 : 0) - (a.should_trigger ? 1 : 0));
 
       let lastGroup = null;
@@ -84,18 +87,18 @@
           lastGroup = group;
         }
 
-        const idx = item.origIdx;
+        const id = item.id;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><textarea class="query-input" onchange="updateQuery(${idx}, this.value)">${escapeHtml(item.query)}</textarea></td>
+          <td><textarea class="query-input" onchange="updateQuery(${id}, this.value)">${escapeHtml(item.query)}</textarea></td>
           <td>
             <label class="toggle">
-              <input type="checkbox" ${item.should_trigger ? 'checked' : ''} onchange="updateTrigger(${idx}, this.checked)">
+              <input type="checkbox" ${item.should_trigger ? 'checked' : ''} onchange="updateTrigger(${id}, this.checked)">
               <span class="slider"></span>
             </label>
             <span style="margin-left:8px;font-size:0.8rem;color:#b0aea5">${item.should_trigger ? 'Yes' : 'No'}</span>
           </td>
-          <td><button class="btn-delete" onclick="deleteRow(${idx})">Delete</button></td>
+          <td><button class="btn-delete" onclick="deleteRow(${id})">Delete</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -108,12 +111,13 @@
       return div.innerHTML;
     }
 
-    function updateQuery(idx, value) { evalItems[idx].query = value; updateSummary(); }
-    function updateTrigger(idx, value) { evalItems[idx].should_trigger = value; render(); }
-    function deleteRow(idx) { evalItems.splice(idx, 1); render(); }
+    function updateQuery(id, value)   { const item = byId(id); if (item) { item.query = value; updateSummary(); } }
+    function updateTrigger(id, value) { const item = byId(id); if (item) { item.should_trigger = value; render(); } }
+    function deleteRow(id)            { evalItems = evalItems.filter(i => i.id !== id); render(); }
 
     function addRow() {
-      evalItems.push({ query: '', should_trigger: true });
+      const id = nextId++;
+      evalItems.push({ id, query: '', should_trigger: true });
       render();
       const inputs = document.querySelectorAll('.query-input');
       inputs[inputs.length - 1].focus();
