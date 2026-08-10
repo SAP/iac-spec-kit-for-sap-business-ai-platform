@@ -30,3 +30,6 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# OpenSpec in-progress changes (work-in-progress, stays on feature branches)
+openspec/changes/

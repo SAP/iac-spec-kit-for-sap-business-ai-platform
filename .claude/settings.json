@@ -1,19 +1,27 @@
 {
-  "enabledPlugins": {
-    "ponytail@ponytail": false,
-    "skill-creator@claude-plugins-official": false
-  },
-  "extraKnownMarketplaces": {
-    "ponytail": {
-      "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
-      }
-    }
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ponytail/ponytail-statusline.sh\""
+  "permissions": {
+    "allow": [
+      "Bash(npx @fission-ai/openspec instructions design --change \"btp-init\" --json)",
+      "Bash(npx @fission-ai/openspec status --change \"btp-init\")",
+      "Bash(npx @fission-ai/openspec instructions apply --change \"btp-init\" --json)",
+      "Bash(golangci-lint run *)",
+      "Bash(npx @fission-ai/openspec new change \"btp-init-agent-selection\")",
+      "Bash(npx @fission-ai/openspec status --change \"btp-init-agent-selection\" --json)",
+      "Bash(npx @fission-ai/openspec instructions proposal --change \"btp-init-agent-selection\" --json)",
+      "Bash(npx @fission-ai/openspec instructions specs --change \"btp-init-agent-selection\" --json)",
+      "Bash(npx @fission-ai/openspec instructions design --change \"btp-init-agent-selection\" --json)",
+      "Bash(npx @fission-ai/openspec instructions tasks --change \"btp-init-agent-selection\" --json)",
+      "Bash(npx @fission-ai/openspec status --change \"btp-init-agent-selection\")",
+      "Bash(npx @fission-ai/openspec instructions apply --change \"btp-init-agent-selection\" --json)",
+      "Bash(go get *)",
+      "Bash(go vet *)",
+      "Bash(npx @fission-ai/openspec list --json)",
+      "Bash(npx @fission-ai/openspec new change \"btp-iac-governance-command\")",
+      "Bash(npx @fission-ai/openspec status --change \"btp-iac-governance-command\" --json)",
+      "Bash(npx @fission-ai/openspec status --change \"btp-iac-governance-command\")",
+      "Bash(npx @fission-ai/openspec instructions apply --change \"btp-iac-governance-command\" --json)",
+      "Bash(npm update *)"
+    ]
   },
   "hooks": {
     "SessionStart": [
@@ -23,7 +31,6 @@
           {
             "type": "command",
             "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ponytail/ponytail-activate.js\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\ponytail\\ponytail-activate.js\" }",
             "timeout": 5,
             "statusMessage": "Loading ponytail mode..."
           }
@@ -36,12 +43,27 @@
           {
             "type": "command",
             "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ponytail/ponytail-mode-tracker.js\" || exit 0",
-            "commandWindows": "if (Get-Command node -ErrorAction SilentlyContinue) { node \"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\ponytail\\ponytail-mode-tracker.js\" }",
             "timeout": 5,
             "statusMessage": "Tracking ponytail mode..."
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/ponytail/ponytail-statusline.sh\""
+  },
+  "enabledPlugins": {
+    "ponytail@ponytail": false,
+    "skill-creator@claude-plugins-official": false
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
   }
 }
