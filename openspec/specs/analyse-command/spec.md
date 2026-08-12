@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.analyse`: reading application source code to extract concrete infrastructure signals and enriching `specs/scenario.md` in place.
+Defines the behaviour of `/btp-iac:analyse`: reading application source code to extract concrete infrastructure signals and enriching `specs/scenario.md` in place.
 
 ## Requirements
 

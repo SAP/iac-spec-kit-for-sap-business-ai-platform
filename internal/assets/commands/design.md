@@ -1,4 +1,4 @@
-# /btp-iac.design
+# /btp-iac:design
 
 Translates the task list into a concrete Terraform folder structure — how resources are split across files, whether modules are introduced, and how environment-specific variable files are organised.
 

@@ -1,6 +1,6 @@
-# /btp-iac.generate
+# /btp-iac:generate
 
-Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac.design`.
+Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac:design`.
 
 Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to the `terraform/` directory. Runs `terraform validate` and `terraform fmt` on completion.
 
@@ -49,11 +49,11 @@ For each metered service resource:
 
 ## Workflow
 
-Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac.design`.
+Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac:design`.
 
 For each task in dependency order:
 1. Generate the Terraform HCL resource(s) for that task
-2. Write to the file path annotated by `/btp-iac.design`
+2. Write to the file path annotated by `/btp-iac:design`
 3. Continue to the next task
 
 After all tasks are complete:

@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Defines how downstream commands (`/btp-iac.accounts`, `/btp-iac.services`, `/btp-iac.security`, `/btp-iac.generate`) read and enforce governance rules from `memory/governance.md`.
+Defines how downstream commands (`/btp-iac:accounts`, `/btp-iac:services`, `/btp-iac:security`, `/btp-iac:generate`) read and enforce governance rules from `memory/governance.md`.
 
 ## Requirements
 
 ### Requirement: governance file read before generating output
-Each downstream command (`/btp-iac.accounts`, `/btp-iac.services`, `/btp-iac.security`, `/btp-iac.generate`) SHALL read `memory/governance.md` at the start of execution if it exists.
+Each downstream command (`/btp-iac:accounts`, `/btp-iac:services`, `/btp-iac:security`, `/btp-iac:generate`) SHALL read `memory/governance.md` at the start of execution if it exists.
 
 #### Scenario: governance file present
 - **WHEN** `memory/governance.md` exists

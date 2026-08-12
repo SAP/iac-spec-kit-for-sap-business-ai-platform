@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.scenario`: translating a plain-language application description into structured BTP infrastructure requirements.
+Defines the behaviour of `/btp-iac:scenario`: translating a plain-language application description into structured BTP infrastructure requirements.
 
 ## Requirements
 

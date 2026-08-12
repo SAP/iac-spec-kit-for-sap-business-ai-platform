@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.security`: defining authentication, authorisation, and connectivity configuration with governance validation, producing `specs/trust.md`.
+Defines the behaviour of `/btp-iac:security`: defining authentication, authorisation, and connectivity configuration with governance validation, producing `specs/trust.md`.
 
 ## Requirements
 
@@ -53,4 +53,4 @@ The command SHALL write `specs/trust.md` with the complete security and connecti
 
 #### Scenario: trust file written
 - **WHEN** the command completes successfully
-- **THEN** `specs/trust.md` exists and is the direct input to `/btp-iac.tasks`
+- **THEN** `specs/trust.md` exists and is the direct input to `/btp-iac:tasks`

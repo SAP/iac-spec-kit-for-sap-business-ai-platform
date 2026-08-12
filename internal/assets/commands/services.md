@@ -1,4 +1,4 @@
-# /btp-iac.services
+# /btp-iac:services
 
 Resolves the infrastructure requirements from `specs/scenario.md` into a dependency-ordered list of BTP entitlements, subscriptions, and service instances per subaccount.
 
@@ -34,4 +34,4 @@ For each subaccount, resolve:
 - Service instances with configuration parameters
 - Dependencies between services (ordered)
 
-Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac:tasks`.

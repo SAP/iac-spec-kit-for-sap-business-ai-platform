@@ -25,8 +25,8 @@ func TestScaffoldClaude(t *testing.T) {
 		"specs", "memory", "terraform",
 		filepath.Join(".claude", "commands", "btp-iac"),
 		".gitignore", ".git",
-		filepath.Join(".claude", "commands", "btp-iac", "btp-iac.govern.md"),
-		filepath.Join(".claude", "commands", "btp-iac", "btp-iac.generate.md"),
+		filepath.Join(".claude", "commands", "btp-iac", "govern.md"),
+		filepath.Join(".claude", "commands", "btp-iac", "generate.md"),
 	}
 	for _, rel := range expected {
 		if _, err := os.Stat(filepath.Join("myproject", rel)); err != nil {
@@ -52,7 +52,7 @@ func TestScaffoldCursor(t *testing.T) {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join("myproject", ".cursor", "rules", "btp-iac.govern.mdc")); err != nil {
+	if _, err := os.Stat(filepath.Join("myproject", ".cursor", "rules", "govern.mdc")); err != nil {
 		t.Errorf("missing cursor rule file: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join("myproject", ".claude")); err == nil {
@@ -73,7 +73,7 @@ func TestScaffoldCopilot(t *testing.T) {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join("myproject", ".github", "instructions", "btp-iac.govern.instructions.md")); err != nil {
+	if _, err := os.Stat(filepath.Join("myproject", ".github", "instructions", "govern.instructions.md")); err != nil {
 		t.Errorf("missing copilot instructions file: %v", err)
 	}
 }
@@ -92,9 +92,9 @@ func TestScaffoldMultiAgent(t *testing.T) {
 	}
 
 	checks := []string{
-		filepath.Join(".claude", "commands", "btp-iac", "btp-iac.scenario.md"),
-		filepath.Join(".cursor", "rules", "btp-iac.scenario.mdc"),
-		filepath.Join(".github", "instructions", "btp-iac.scenario.instructions.md"),
+		filepath.Join(".claude", "commands", "btp-iac", "scenario.md"),
+		filepath.Join(".cursor", "rules", "scenario.mdc"),
+		filepath.Join(".github", "instructions", "scenario.instructions.md"),
 	}
 	for _, rel := range checks {
 		if _, err := os.Stat(filepath.Join("myproject", rel)); err != nil {

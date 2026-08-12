@@ -1,4 +1,4 @@
-# /btp-iac.security
+# /btp-iac:security
 
 Identifies the authentication, authorisation, and connectivity requirements — role collection definitions, user assignments, IdP trust configurations, and destination configurations for external system access.
 
@@ -41,4 +41,4 @@ Define for each subaccount:
 - Destination configurations for external system access
 - Connectivity service setup if required
 
-Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac:tasks`.

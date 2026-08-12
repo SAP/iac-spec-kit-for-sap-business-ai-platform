@@ -61,8 +61,8 @@ func initCmd() *cobra.Command {
 			fmt.Printf("\nProject %q is ready (agents: %s).\n\n", name, strings.Join(agentIDs, ", "))
 			fmt.Printf("Next steps:\n")
 			fmt.Printf("  1. Open the project in your AI tool:  cd %s\n", name)
-			fmt.Printf("  2. Describe your app:                 /btp-iac.scenario\n")
-			fmt.Printf("  3. (Optional) Set guardrails first:   /btp-iac.govern\n")
+			fmt.Printf("  2. Describe your app:                 /btp-iac:scenario\n")
+			fmt.Printf("  3. (Optional) Set guardrails first:   /btp-iac:govern\n")
 			return nil
 		},
 	}

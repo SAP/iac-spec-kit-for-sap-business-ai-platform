@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of the `/btp-iac.govern` agent command: project root detection, existing file handling, category completeness evaluation, and writing the governance file.
+Defines the behaviour of the `/btp-iac:govern` agent command: project root detection, existing file handling, category completeness evaluation, and writing the governance file.
 
 ## Requirements
 

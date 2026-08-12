@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.tasks`: consolidating landscape, services, and trust specs into a single dependency-ordered task list with IDs and parallel execution markers.
+Defines the behaviour of `/btp-iac:tasks`: consolidating landscape, services, and trust specs into a single dependency-ordered task list with IDs and parallel execution markers.
 
 ## Requirements
 
@@ -18,4 +18,4 @@ The command SHALL write the task list to `specs/tasks.md`.
 
 #### Scenario: tasks file written
 - **WHEN** the command completes
-- **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
+- **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac:design` and `/btp-iac:generate`

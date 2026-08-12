@@ -37,4 +37,4 @@ The CLI SHALL print a human-readable success summary after init completes.
 
 #### Scenario: init succeeds
 - **WHEN** `btp-iac init <name>` completes without error
-- **THEN** the CLI prints the project name and a list of next steps (e.g. open the project in Claude Code and run `/btp-iac.scenario`)
+- **THEN** the CLI prints the project name and a list of next steps (e.g. open the project in Claude Code and run `/btp-iac:scenario`)

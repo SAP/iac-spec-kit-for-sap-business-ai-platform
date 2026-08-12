@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.accounts`: defining the BTP account topology with governance validation, producing `specs/landscape.md`.
+Defines the behaviour of `/btp-iac:accounts`: defining the BTP account topology with governance validation, producing `specs/landscape.md`.
 
 ## Requirements
 
@@ -49,4 +49,4 @@ The command SHALL write `specs/landscape.md` as the authoritative account struct
 
 #### Scenario: landscape file written
 - **WHEN** the command completes successfully
-- **THEN** `specs/landscape.md` exists and is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`
+- **THEN** `specs/landscape.md` exists and is the authoritative input for `/btp-iac:services`, `/btp-iac:security`, and `/btp-iac:generate`

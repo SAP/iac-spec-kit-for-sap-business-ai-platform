@@ -1,4 +1,4 @@
-# /btp-iac.accounts
+# /btp-iac:accounts
 
 Defines the BTP account topology — subaccounts, regions, and directory groupings.
 
@@ -40,4 +40,4 @@ Define the account topology:
 - Directory groupings (if applicable)
 - Subaccounts per environment tier — name, region, description, subdomain
 
-Write `specs/landscape.md` with the complete account structure. This file is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`.
+Write `specs/landscape.md` with the complete account structure. This file is the authoritative input for `/btp-iac:services`, `/btp-iac:security`, and `/btp-iac:generate`.

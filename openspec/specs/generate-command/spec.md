@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
+Defines the behaviour of `/btp-iac:generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
 
 ## Requirements
 
@@ -62,7 +62,7 @@ The command SHALL apply cost controls governance during the pre-generation pass.
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: generate Terraform HCL in dependency order
-The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the file paths annotated by `/btp-iac.design`.
+The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the file paths annotated by `/btp-iac:design`.
 
 #### Scenario: resources generated
 - **WHEN** the pre-generation pass passes

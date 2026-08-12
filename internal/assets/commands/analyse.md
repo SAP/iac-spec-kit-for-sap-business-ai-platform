@@ -1,4 +1,4 @@
-# /btp-iac.analyse
+# /btp-iac:analyse
 
 Reads application source code to extract concrete infrastructure signals that the user cannot be expected to know — service dependencies, memory requirements, role definitions from the security descriptor, and build artifact details.
 
