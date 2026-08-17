@@ -1,4 +1,4 @@
-module github.com/SAP/btp-iac-sdd
+module github.com/SAP/btp-iac-spec-kit
 
 go 1.25.0
 

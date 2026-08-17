@@ -4,11 +4,11 @@ package main
 import (
 	"os"
 
-	"github.com/SAP/btp-iac-sdd/internal/agentselect"
-	"github.com/SAP/btp-iac-sdd/internal/assets"
-	"github.com/SAP/btp-iac-sdd/internal/preflight"
-	"github.com/SAP/btp-iac-sdd/internal/scaffold"
-	"github.com/SAP/btp-iac-sdd/internal/ui"
+	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
+	"github.com/SAP/btp-iac-spec-kit/internal/assets"
+	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
+	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
+	"github.com/SAP/btp-iac-spec-kit/internal/ui"
 	"github.com/spf13/cobra"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/SAP/btp-iac-sdd/internal/scaffold"
+	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"golang.org/x/term"
 )
 

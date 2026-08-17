@@ -1,2 +1,2 @@
-# btp-iac-sdd
-Prototype for Spec-Driven Development for Terraform on SAP BTP
+# btp-iac-spec-kit
+Spec-Driven Development Toolkit for Terraform on SAP BTP

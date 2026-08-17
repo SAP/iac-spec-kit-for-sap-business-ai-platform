@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SAP/btp-iac-sdd/internal/assets"
+	"github.com/SAP/btp-iac-spec-kit/internal/assets"
 )
 
 func TestScaffoldClaude(t *testing.T) {
