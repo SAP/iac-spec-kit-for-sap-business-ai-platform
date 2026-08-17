@@ -45,6 +45,16 @@ The CLI SHALL run `git init` inside the newly created project directory.
 - **THEN** the CLI exits with a non-zero status and prints a message directing the user to install Git
 - **THEN** no directories or files are created
 
+### Requirement: success output shows workflow guide
+On successful init the CLI SHALL print a structured workflow guide showing the project name, configured agents, and the ordered sequence of slash commands to run inside the AI agent.
+
+#### Scenario: success output after init
+- **WHEN** `btp-iac init my-project --agent claude` completes successfully
+- **THEN** the CLI prints confirmation of what was created (project, agent, git repository)
+- **THEN** the CLI prints a boxed workflow guide with two steps: open the project in the terminal, then run the slash commands inside the AI agent in order
+- **THEN** the guide groups commands into three sections: Before you start, Define your infrastructure, and Generate Terraform
+- **THEN** optional commands (`/btp-iac.govern`, `/btp-iac.analyse`) are marked as optional
+
 ### Requirement: idempotent on existing directory
 The CLI SHALL refuse to overwrite an existing directory with the given name.
 

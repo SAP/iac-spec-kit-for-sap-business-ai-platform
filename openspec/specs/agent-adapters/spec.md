@@ -2,30 +2,40 @@
 
 ## Purpose
 
-Defines the per-agent directory targets and file extensions used when installing command files.
+Defines the per-agent directory targets, file name prefix, and file extensions used when installing command files.
 
 ## Requirements
 
 ### Requirement: Claude Code adapter
-The CLI SHALL install command files for Claude Code into `.claude/commands/btp-iac/` as `.md` files.
+The CLI SHALL install command files for Claude Code into `.claude/commands/` as `btp-iac.<command>.md` files.
 
 #### Scenario: Claude files written
 - **WHEN** `claude` is a selected agent
-- **THEN** `.claude/commands/btp-iac/*.md` files exist in the project
+- **THEN** `.claude/commands/btp-iac.<command>.md` files exist in the project
+- **THEN** commands are invocable as `/btp-iac.<command>` in Claude Code
 
 ### Requirement: Cursor adapter
-The CLI SHALL install command files for Cursor into `.cursor/rules/` as `.mdc` files.
+The CLI SHALL install command files for Cursor into `.cursor/rules/` as `btp-iac.<command>.mdc` files.
 
 #### Scenario: Cursor files written
 - **WHEN** `cursor` is a selected agent
-- **THEN** `.cursor/rules/*.mdc` files exist in the project
+- **THEN** `.cursor/rules/btp-iac.<command>.mdc` files exist in the project
+- **THEN** rules are referenceable as `@btp-iac.<command>.mdc` in Cursor
 
 ### Requirement: GitHub Copilot adapter
-The CLI SHALL install command files for GitHub Copilot into `.github/instructions/` as `.instructions.md` files.
+The CLI SHALL install command files for GitHub Copilot into `.github/instructions/` as `btp-iac.<command>.instructions.md` files.
 
 #### Scenario: Copilot files written
 - **WHEN** `copilot` is a selected agent
-- **THEN** `.github/instructions/*.instructions.md` files exist in the project
+- **THEN** `.github/instructions/btp-iac.<command>.instructions.md` files exist in the project
+- **THEN** instructions are referenceable as `@btp-iac.<command>.instructions.md` in Copilot
+
+### Requirement: consistent btp-iac. prefix across all agents
+All agents SHALL use the `btp-iac.` prefix on command filenames so the invocation pattern is consistent regardless of agent.
+
+#### Scenario: prefix applied uniformly
+- **WHEN** any agent is selected
+- **THEN** every installed command file is named `btp-iac.<command>.<ext>`
 
 ### Requirement: adapters are independent
 Each adapter SHALL create only its own directories and files without affecting other adapters.

@@ -2,14 +2,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
 	"github.com/SAP/btp-iac-sdd/internal/agentselect"
 	"github.com/SAP/btp-iac-sdd/internal/assets"
 	"github.com/SAP/btp-iac-sdd/internal/preflight"
 	"github.com/SAP/btp-iac-sdd/internal/scaffold"
+	"github.com/SAP/btp-iac-sdd/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -58,11 +57,7 @@ func initCmd() *cobra.Command {
 				agentIDs[i] = a.ID
 			}
 
-			fmt.Printf("\nProject %q is ready (agents: %s).\n\n", name, strings.Join(agentIDs, ", "))
-			fmt.Printf("Next steps:\n")
-			fmt.Printf("  1. Open the project in your AI tool:  cd %s\n", name)
-			fmt.Printf("  2. Describe your app:                 /btp-iac:scenario\n")
-			fmt.Printf("  3. (Optional) Set guardrails first:   /btp-iac:govern\n")
+			ui.PrintSuccess(name, agentIDs)
 			return nil
 		},
 	}

@@ -1,8 +1,12 @@
-# /btp-iac:services
+# BTP IaC — Services
 
 Resolves the infrastructure requirements from `specs/scenario.md` into a dependency-ordered list of BTP entitlements, subscriptions, and service instances per subaccount.
 
 Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/services.md` for the team to review and adjust before any code is generated.
+
+## Tool preferences
+
+Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.
 
 ---
 
@@ -34,4 +38,4 @@ For each subaccount, resolve:
 - Service instances with configuration parameters
 - Dependencies between services (ordered)
 
-Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac:tasks`.
+Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac.tasks`.

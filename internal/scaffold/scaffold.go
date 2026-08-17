@@ -19,13 +19,15 @@ type Agent struct {
 	Dir string
 	// Ext is the file extension written for command files (e.g. ".md", ".mdc").
 	Ext string
+	// Prefix is prepended to each command filename (e.g. "btp-iac.").
+	Prefix string
 }
 
 // KnownAgents is the registry of supported agents, keyed by ID.
 var KnownAgents = map[string]Agent{
-	"claude":  {ID: "claude", Dir: filepath.Join(".claude", "commands", "btp-iac"), Ext: ".md"},
-	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc"},
-	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md"},
+	"claude":  {ID: "claude", Dir: filepath.Join(".claude", "commands"), Ext: ".md", Prefix: "btp-iac."},
+	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc", Prefix: "btp-iac."},
+	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md", Prefix: "btp-iac."},
 }
 
 var baseDirs = []string{"specs", "memory", "terraform"}
@@ -98,9 +100,9 @@ func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) err
 		if err != nil {
 			return fmt.Errorf("read embedded file %s: %w", path, err)
 		}
-		// Strip the source .md extension and apply the agent's extension.
+		// Strip the source .md extension, apply optional prefix and the agent's extension.
 		base := strings.TrimSuffix(filepath.Base(path), ".md")
-		dest := filepath.Join(destDir, base+agent.Ext)
+		dest := filepath.Join(destDir, agent.Prefix+base+agent.Ext)
 		if err := os.WriteFile(dest, data, 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", dest, err)
 		}

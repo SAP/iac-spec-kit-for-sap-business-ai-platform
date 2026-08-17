@@ -1,8 +1,12 @@
-# /btp-iac:security
+# BTP IaC — Security
 
 Identifies the authentication, authorisation, and connectivity requirements — role collection definitions, user assignments, IdP trust configurations, and destination configurations for external system access.
 
 Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/trust.md`.
+
+## Tool preferences
+
+Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.
 
 ---
 
@@ -41,4 +45,4 @@ Define for each subaccount:
 - Destination configurations for external system access
 - Connectivity service setup if required
 
-Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac:tasks`.
+Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac.tasks`.

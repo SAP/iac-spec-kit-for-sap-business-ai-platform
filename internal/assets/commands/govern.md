@@ -1,4 +1,4 @@
-# /btp-iac:govern
+# BTP IaC — Govern
 
 Establishes governance guardrails for the project. Records approved regions, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations.
 
@@ -123,8 +123,8 @@ The following rules are now in effect:
   Security:       <summary>
   Cost Controls:  <summary>
 
-All subsequent commands (/btp-iac:accounts, /btp-iac:services,
-/btp-iac:security, /btp-iac:generate) will validate their output
+All subsequent commands (/btp-iac.accounts, /btp-iac.services,
+/btp-iac.security, /btp-iac.generate) will validate their output
 against these rules and stop on any violation.
 
 To bypass enforcement, add "- Override: true" to memory/governance.md.

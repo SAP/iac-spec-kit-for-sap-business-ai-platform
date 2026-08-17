@@ -1,8 +1,12 @@
-# /btp-iac:accounts
+# BTP IaC — Accounts
 
 Defines the BTP account topology — subaccounts, regions, and directory groupings.
 
 Reads `specs/scenario.md` and (if present) `memory/governance.md`. Produces `specs/landscape.md` as the authoritative account structure that all service and trust configuration will reference.
+
+## Tool preferences
+
+Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.
 
 ---
 
@@ -40,4 +44,4 @@ Define the account topology:
 - Directory groupings (if applicable)
 - Subaccounts per environment tier — name, region, description, subdomain
 
-Write `specs/landscape.md` with the complete account structure. This file is the authoritative input for `/btp-iac:services`, `/btp-iac:security`, and `/btp-iac:generate`.
+Write `specs/landscape.md` with the complete account structure. This file is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`.

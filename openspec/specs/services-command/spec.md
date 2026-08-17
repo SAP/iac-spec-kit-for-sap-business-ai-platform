@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac:services`: resolving BTP service dependencies with governance validation, producing `specs/services.md`.
+Defines the behaviour of `/btp-iac.services`: resolving BTP service dependencies with governance validation, producing `specs/services.md`.
 
 ## Requirements
 
@@ -37,4 +37,4 @@ The command SHALL write `specs/services.md` with the full dependency-ordered ser
 
 #### Scenario: services file written
 - **WHEN** the command completes successfully
-- **THEN** `specs/services.md` exists and is the direct input to `/btp-iac:tasks`
+- **THEN** `specs/services.md` exists and is the direct input to `/btp-iac.tasks`

@@ -1,4 +1,4 @@
-# /btp-iac:scenario
+# BTP IaC — Scenario
 
 <!-- INPUT: what the user provides as the starting description -->
 Takes a plain-language description of the app or service to be deployed and translates it into a structured set of BTP infrastructure requirements.
@@ -9,3 +9,6 @@ Asks up to three targeted follow-up questions about runtime, integration points,
 <!-- OUTPUT: path where the structured requirements are written -->
 `specs/scenario.md`
 
+## Tool preferences
+
+Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.
