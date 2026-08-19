@@ -89,19 +89,23 @@ func scaffold(name string, commands embed.FS, agents []Agent) error {
 
 func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) error {
 	destDir := filepath.Join(projectDir, agent.Dir)
-	return fs.WalkDir(commands, "commands", func(path string, d fs.DirEntry, err error) error {
+	return fs.WalkDir(commands, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
+		if d.IsDir() || path == "." {
+			return nil
+		}
+		// Only process skill entry points; skip any stray files.
+		if filepath.Base(path) != "SKILL.md" {
 			return nil
 		}
 		data, err := commands.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("read embedded file %s: %w", path, err)
 		}
-		// Strip the source .md extension, apply optional prefix and the agent's extension.
-		base := strings.TrimSuffix(filepath.Base(path), ".md")
+		// Extract command name from the skill directory (e.g. "btp-iac-govern" → "govern").
+		base := strings.TrimPrefix(filepath.Base(filepath.Dir(path)), "btp-iac-")
 		dest := filepath.Join(destDir, agent.Prefix+base+agent.Ext)
 		if err := os.WriteFile(dest, data, 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", dest, err)

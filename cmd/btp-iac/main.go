@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
-	"github.com/SAP/btp-iac-spec-kit/internal/assets"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
+	"github.com/SAP/btp-iac-spec-kit/skills"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"github.com/SAP/btp-iac-spec-kit/internal/ui"
 	"github.com/spf13/cobra"
@@ -48,7 +48,7 @@ func initCmd() *cobra.Command {
 			}
 
 			name := args[0]
-			if err := scaffold.Scaffold(name, assets.Commands, agents); err != nil {
+			if err := scaffold.Scaffold(name, skills.Commands, agents); err != nil {
 				return err
 			}
 

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SAP/btp-iac-spec-kit/internal/assets"
+	"github.com/SAP/btp-iac-spec-kit/skills"
 )
 
 func TestScaffoldClaude(t *testing.T) {
@@ -17,7 +17,7 @@ func TestScaffoldClaude(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["claude"]}
-	if err := Scaffold("myproject", assets.Commands, agents); err != nil {
+	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -48,7 +48,7 @@ func TestScaffoldCursor(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["cursor"]}
-	if err := Scaffold("myproject", assets.Commands, agents); err != nil {
+	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -69,7 +69,7 @@ func TestScaffoldCopilot(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["copilot"]}
-	if err := Scaffold("myproject", assets.Commands, agents); err != nil {
+	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -87,7 +87,7 @@ func TestScaffoldMultiAgent(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["claude"], KnownAgents["cursor"], KnownAgents["copilot"]}
-	if err := Scaffold("myproject", assets.Commands, agents); err != nil {
+	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -114,7 +114,7 @@ func TestScaffoldRefusesExistingDir(t *testing.T) {
 	if err := os.Mkdir("exists", 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := Scaffold("exists", assets.Commands, []Agent{KnownAgents["claude"]}); err == nil {
+	if err := Scaffold("exists", skills.Commands, []Agent{KnownAgents["claude"]}); err == nil {
 		t.Error("expected error when directory already exists, got nil")
 	}
 }

@@ -22,7 +22,7 @@ The CLI SHALL write the embedded command files for each selected agent to that a
 
 #### Scenario: all nine files present after init (Claude)
 - **WHEN** `btp-iac init <name> --agent claude` completes successfully
-- **THEN** nine `.md` files exist under `<name>/.claude/commands/btp-iac/`:
+- **THEN** nine `.md` files exist under `<name>/.claude/commands/`:
   - `btp-iac.govern.md`
   - `btp-iac.scenario.md`
   - `btp-iac.analyse.md`
