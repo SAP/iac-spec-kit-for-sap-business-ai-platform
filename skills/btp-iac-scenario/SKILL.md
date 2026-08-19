@@ -1,3 +1,12 @@
+---
+name: btp-iac-scenario
+description: Translates a plain-language app description into structured BTP infrastructure requirements.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Scenario
 
 <!-- INPUT: what the user provides as the starting description -->

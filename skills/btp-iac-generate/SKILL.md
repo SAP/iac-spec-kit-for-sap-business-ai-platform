@@ -1,3 +1,12 @@
+---
+name: btp-iac-generate
+description: Generates complete, validated Terraform HCL by executing each task in dependency order.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Generate
 
 Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac.design`.

@@ -1,3 +1,12 @@
+---
+name: btp-iac-analyse
+description: Reads application source code to extract infrastructure signals — service dependencies, memory, roles, and build artifacts.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Analyse
 
 Reads application source code to extract concrete infrastructure signals that the user cannot be expected to know — service dependencies, memory requirements, role definitions from the security descriptor, and build artifact details.

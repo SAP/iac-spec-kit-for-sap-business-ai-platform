@@ -1,3 +1,12 @@
+---
+name: btp-iac-govern
+description: Establishes governance guardrails — regions, naming, service plans, security, and cost controls.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Govern
 
 Establishes governance guardrails for the project. Records approved regions, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations.

@@ -1,3 +1,12 @@
+---
+name: btp-iac-services
+description: Resolves infrastructure requirements into a dependency-ordered list of BTP entitlements, subscriptions, and service instances.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Services
 
 Resolves the infrastructure requirements from `specs/scenario.md` into a dependency-ordered list of BTP entitlements, subscriptions, and service instances per subaccount.

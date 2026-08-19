@@ -1,3 +1,12 @@
+---
+name: btp-iac-security
+description: Identifies authentication, authorisation, and connectivity requirements — IdP trust, role collections, and destinations.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Security
 
 Identifies the authentication, authorisation, and connectivity requirements — role collection definitions, user assignments, IdP trust configurations, and destination configurations for external system access.

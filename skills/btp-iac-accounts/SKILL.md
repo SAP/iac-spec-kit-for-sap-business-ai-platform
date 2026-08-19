@@ -1,3 +1,12 @@
+---
+name: btp-iac-accounts
+description: Defines the BTP account topology — subaccounts, regions, and directory groupings.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.0"
+---
+
 # BTP IaC — Accounts
 
 Defines the BTP account topology — subaccounts, regions, and directory groupings.
