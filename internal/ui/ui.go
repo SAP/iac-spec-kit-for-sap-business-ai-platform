@@ -9,12 +9,33 @@ import (
 	"unicode/utf8"
 )
 
+// errWriter absorbs write errors so callers don't need to check each fmt.Fprintf.
+type errWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (e *errWriter) write(format string, a ...any) {
+	if e.err != nil {
+		return
+	}
+	_, e.err = fmt.Fprintf(e.w, format, a...)
+}
+
+func (e *errWriter) writeln(a ...any) {
+	if e.err != nil {
+		return
+	}
+	_, e.err = fmt.Fprintln(e.w, a...)
+}
+
 // PrintSuccess prints the post-init success message and workflow guide.
 func PrintSuccess(name string, agentIDs []string) {
 	printSuccess(os.Stdout, name, agentIDs)
 }
 
 func printSuccess(w io.Writer, name string, agentIDs []string) {
+	ew := &errWriter{w: w}
 	const inner = 78 // visible character width between │ and │
 
 	// pad pads s to inner visible characters.
@@ -26,13 +47,13 @@ func printSuccess(w io.Writer, name string, agentIDs []string) {
 		return s + strings.Repeat(" ", inner-n)
 	}
 
-	l := func(s string) { fmt.Fprintf(w, "│ %s │\n", pad(s)) }
+	l := func(s string) { ew.write("│ %s │\n", pad(s)) }
 	blank := func() { l("") }
 
 	divider := func(label string) {
 		labelWidth := utf8.RuneCountInString(label)
 		dashes := strings.Repeat("─", inner-labelWidth-4)
-		fmt.Fprintf(w, "├──  %s  %s┤\n", label, dashes)
+		ew.write("├──  %s  %s┤\n", label, dashes)
 	}
 
 	row := func(num, command, desc string) {
@@ -42,13 +63,13 @@ func printSuccess(w io.Writer, name string, agentIDs []string) {
 		l(fmt.Sprintf("  %s  %-22s%s", " ", "", desc))
 	}
 
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  ✓  Project %q created\n", name)
-	fmt.Fprintf(w, "  ✓  %s configured\n", strings.Join(agentIDs, ", "))
-	fmt.Fprintf(w, "  ✓  Git repository initialised\n")
-	fmt.Fprintln(w)
+	ew.writeln()
+	ew.write("  ✓  Project %q created\n", name)
+	ew.write("  ✓  %s configured\n", strings.Join(agentIDs, ", "))
+	ew.write("  ✓  Git repository initialised\n")
+	ew.writeln()
 
-	fmt.Fprintf(w, "╭%s╮\n", strings.Repeat("─", inner+2))
+	ew.write("╭%s╮\n", strings.Repeat("─", inner+2))
 	blank()
 	l("  Getting started")
 	blank()
@@ -82,6 +103,6 @@ func printSuccess(w io.Writer, name string, agentIDs []string) {
 	row("8", "btp-iac.generate", "Write and validate all Terraform HCL.")
 	blank()
 
-	fmt.Fprintf(w, "╰%s╯\n", strings.Repeat("─", inner+2))
-	fmt.Fprintln(w)
+	ew.write("╰%s╯\n", strings.Repeat("─", inner+2))
+	ew.writeln()
 }
