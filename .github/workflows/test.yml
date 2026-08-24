@@ -47,7 +47,7 @@ jobs:
           cache: false
       - run: go mod download
       - run: go test -v -cover -coverprofile=cover.out ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: cover.out
