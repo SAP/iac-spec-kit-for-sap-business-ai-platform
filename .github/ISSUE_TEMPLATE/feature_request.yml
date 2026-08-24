@@ -1,0 +1,33 @@
+name: 💡 Feature request
+description: Suggest an idea for this project
+title: "[FEATURE]"
+labels: [enhancement, pending-decision]
+body:
+  - type: dropdown
+    attributes:
+      label: What area do you want to see improved?
+      options:
+        - CLI commands
+        - scaffold / init workflow
+        - agent command files
+        - documentation
+        - other
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Is your feature request related to a problem? Please describe.
+      description: e.g. I'm always frustrated when [...]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe the solution you'd like
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    attributes:
+      label: Additional context
