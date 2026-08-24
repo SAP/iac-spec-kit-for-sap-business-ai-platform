@@ -6,9 +6,9 @@ import (
 
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
-	"github.com/SAP/btp-iac-spec-kit/skills"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"github.com/SAP/btp-iac-spec-kit/internal/ui"
+	"github.com/SAP/btp-iac-spec-kit/skills"
 	"github.com/spf13/cobra"
 )
 
