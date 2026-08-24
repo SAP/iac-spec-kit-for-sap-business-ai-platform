@@ -13,7 +13,7 @@ func TestPrintSuccessBorderWidth(t *testing.T) {
 
 	const want = 82 // │ + space + 78 content + space + │
 
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		r := []rune(line)
 		if len(r) == 0 {
 			continue
