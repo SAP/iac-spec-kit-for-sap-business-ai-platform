@@ -21,7 +21,7 @@ func main() {
 func rootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:          "btp-iac",
-		Short:        "Spec-driven Terraform toolkit for SAP BTP",
+		Short:        "Spec-Driven Terraform Toolkit for SAP BTP",
 		SilenceUsage: true,
 	}
 	root.AddCommand(initCmd())
@@ -33,7 +33,7 @@ func initCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init <name>",
-		Short: "Bootstrap a new BTP IaC project",
+		Short: "Bootstrap a new SAP BTP IaC project",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			for _, dep := range []string{"terraform", "git"} {

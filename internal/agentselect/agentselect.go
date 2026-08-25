@@ -7,10 +7,13 @@ import (
 	"os"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"golang.org/x/term"
 )
+
+var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(12)).Bold(true)
 
 var agentOrder = []string{"claude", "cursor", "copilot"}
 
@@ -50,7 +53,7 @@ func fromFlag(flagValue string) ([]scaffold.Agent, error) {
 func fromPrompt() ([]scaffold.Agent, error) {
 	var selected []string
 	prompt := &survey.MultiSelect{
-		Message: "Select AI agents to configure:",
+		Message: promptStyle.Render("Select AI agents to configure:"),
 		Options: agentOrder,
 	}
 	if err := survey.AskOne(prompt, &selected); err != nil {
