@@ -6,28 +6,35 @@ import (
 	"io"
 	"os"
 	"strings"
-	"unicode/utf8"
+
+	"charm.land/lipgloss/v2"
 )
 
-// errWriter absorbs write errors so callers don't need to check each fmt.Fprintf.
-type errWriter struct {
-	w   io.Writer
-	err error
-}
+const (
+	boxWidth    = 80
+	cmdColWidth = 22
+)
 
-func (e *errWriter) write(format string, a ...any) {
-	if e.err != nil {
-		return
-	}
-	_, e.err = fmt.Fprintf(e.w, format, a...)
-}
+var (
+	successMark = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(10)).Bold(true).Render("✓")
+	checkLine   = lipgloss.NewStyle().PaddingLeft(2)
 
-func (e *errWriter) writeln(a ...any) {
-	if e.err != nil {
-		return
-	}
-	_, e.err = fmt.Fprintln(e.w, a...)
-}
+	// Left-border panel: clean single-line accent instead of a full box.
+	panel = lipgloss.NewStyle().
+		BorderLeft(true).
+		BorderStyle(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.ANSIColor(12)).
+		PaddingLeft(2).
+		PaddingRight(2)
+
+	headingStyle = lipgloss.NewStyle().Bold(true)
+	sectionTitle = lipgloss.NewStyle().
+			Foreground(lipgloss.ANSIColor(12)).
+			Bold(true)
+
+	cmdStyle  = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(14)).Bold(true)
+	stepStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(11))
+)
 
 // PrintSuccess prints the post-init success message and workflow guide.
 func PrintSuccess(name string, agentIDs []string) {
@@ -35,74 +42,63 @@ func PrintSuccess(name string, agentIDs []string) {
 }
 
 func printSuccess(w io.Writer, name string, agentIDs []string) {
-	ew := &errWriter{w: w}
-	const inner = 78 // visible character width between │ and │
+	var sb strings.Builder
 
-	// pad pads s to inner visible characters.
-	pad := func(s string) string {
-		n := utf8.RuneCountInString(s)
-		if n >= inner {
-			return s
-		}
-		return s + strings.Repeat(" ", inner-n)
+	sb.WriteString("\n")
+	sb.WriteString(checkLine.Render(successMark + "  Project " + fmt.Sprintf("%q", name) + " created"))
+	sb.WriteString("\n")
+	sb.WriteString(checkLine.Render(successMark + "  " + strings.Join(agentIDs, ", ") + " configured"))
+	sb.WriteString("\n")
+	sb.WriteString(checkLine.Render(successMark + "  Git repository initialised"))
+	sb.WriteString("\n\n")
+
+	var body strings.Builder
+
+	body.WriteString(headingStyle.Render("Getting started"))
+	body.WriteString("\n\n")
+	body.WriteString("I. Open the project in your terminal\n\n")
+	fmt.Fprintf(&body, "   %s\n\n", cmdStyle.Render("$ cd "+name))
+	body.WriteString("II. Open your AI agent and run these in order\n\n")
+
+	section(&body, "Define your guardrails", []stepRow{
+		{"-", "btp-iac.govern", "Set guardrails — regions, naming, cost policies. Skip to use defaults (optional)."},
+	})
+
+	section(&body, "Define your infrastructure", []stepRow{
+		{"1)", "btp-iac.scenario", "Describe your app."},
+		{"2)", "btp-iac.analyse", "Scan source code to extract service dependencies automatically (optional)."},
+		{"3)", "btp-iac.accounts", "Map your app to BTP directories and subaccounts."},
+		{"4)", "btp-iac.services", "Resolve which BTP services each subaccount needs."},
+		{"5)", "btp-iac.security", "Set up IdP trust, role collections, destinations."},
+	})
+
+	section(&body, "Generate Terraform", []stepRow{
+		{"6)", "btp-iac.tasks", "Build a dependency-ordered execution plan."},
+		{"7)", "btp-iac.design", "Plan the Terraform file and module layout."},
+		{"8)", "btp-iac.generate", "Write and validate all Terraform HCL."},
+	})
+
+	sb.WriteString(panel.Render(body.String()))
+	sb.WriteString("\n\n")
+
+	_, _ = fmt.Fprint(w, sb.String())
+}
+
+type stepRow struct{ step, cmd, desc string }
+
+func section(b *strings.Builder, title string, rows []stepRow) {
+	fmt.Fprintf(b, "%s\n\n", sectionTitle.Render(title))
+	for _, r := range rows {
+		renderedCmd := cmdStyle.Render(r.cmd)
+		// Pad based on visible width so ANSI escapes don't throw off alignment.
+		pad := cmdColWidth - lipgloss.Width(renderedCmd)
+		pad = max(pad, 1)
+		fmt.Fprintf(b, "%s  %s%s%s\n",
+			stepStyle.Render(r.step),
+			renderedCmd,
+			strings.Repeat(" ", pad),
+			r.desc,
+		)
 	}
-
-	l := func(s string) { ew.write("│ %s │\n", pad(s)) }
-	blank := func() { l("") }
-
-	divider := func(label string) {
-		labelWidth := utf8.RuneCountInString(label)
-		dashes := strings.Repeat("─", inner-labelWidth-4)
-		ew.write("├──  %s  %s┤\n", label, dashes)
-	}
-
-	row := func(num, command, desc string) {
-		l(fmt.Sprintf("  %s  %-22s%s", num, command, desc))
-	}
-	row2 := func(desc string) {
-		l(fmt.Sprintf("  %s  %-22s%s", " ", "", desc))
-	}
-
-	ew.writeln()
-	ew.write("  ✓  Project %q created\n", name)
-	ew.write("  ✓  %s configured\n", strings.Join(agentIDs, ", "))
-	ew.write("  ✓  Git repository initialised\n")
-	ew.writeln()
-
-	ew.write("╭%s╮\n", strings.Repeat("─", inner+2))
-	blank()
-	l("  Getting started")
-	blank()
-	l("  1. Open the project in your terminal")
-	blank()
-	l(fmt.Sprintf("     $ cd %s", name))
-	blank()
-	l("  2. Open your AI agent and run these in order")
-	blank()
-
-	divider("Before you start")
-	blank()
-	row("○", "btp-iac.govern", "(optional) Set guardrails — regions,")
-	row2("naming, cost policies. Skip to use defaults.")
-	blank()
-
-	divider("Define your infrastructure")
-	blank()
-	row("1", "btp-iac.scenario", "Describe your app.")
-	row("2", "btp-iac.analyse", "(optional) Scan source code to extract")
-	row2("service dependencies automatically.")
-	row("3", "btp-iac.accounts", "Map your app to BTP directories and subaccounts.")
-	row("4", "btp-iac.services", "Resolve which BTP services each subaccount needs.")
-	row("5", "btp-iac.security", "Set up IdP trust, role collections, destinations.")
-	blank()
-
-	divider("Generate Terraform")
-	blank()
-	row("6", "btp-iac.tasks", "Build a dependency-ordered execution plan.")
-	row("7", "btp-iac.design", "Plan the Terraform file and module layout.")
-	row("8", "btp-iac.generate", "Write and validate all Terraform HCL.")
-	blank()
-
-	ew.write("╰%s╯\n", strings.Repeat("─", inner+2))
-	ew.writeln()
+	b.WriteString("\n")
 }
