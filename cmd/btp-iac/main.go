@@ -4,6 +4,7 @@ package main
 import (
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
@@ -32,9 +33,9 @@ func initCmd() *cobra.Command {
 	var agentFlag string
 
 	cmd := &cobra.Command{
-		Use:   "init <name>",
+		Use:   "init [name]",
 		Short: "Bootstrap a new SAP BTP IaC project",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			for _, dep := range []string{"terraform", "git"} {
 				if err := preflight.Check(dep); err != nil {
@@ -47,7 +48,14 @@ func initCmd() *cobra.Command {
 				return err
 			}
 
-			name := args[0]
+			var name string
+			if len(args) == 1 {
+				name = args[0]
+			} else {
+				if err := survey.AskOne(&survey.Input{Message: "Project name:"}, &name, survey.WithValidator(survey.Required)); err != nil {
+					return err
+				}
+			}
 			if err := scaffold.Scaffold(name, skills.Commands, agents); err != nil {
 				return err
 			}
