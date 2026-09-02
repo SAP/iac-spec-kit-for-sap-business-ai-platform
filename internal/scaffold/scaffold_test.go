@@ -17,7 +17,7 @@ func TestScaffoldClaude(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["claude"]}
-	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
+	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -48,7 +48,7 @@ func TestScaffoldCursor(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["cursor"]}
-	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
+	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -69,7 +69,7 @@ func TestScaffoldCopilot(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["copilot"]}
-	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
+	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -87,7 +87,7 @@ func TestScaffoldMultiAgent(t *testing.T) {
 	defer os.Chdir(orig) //nolint:errcheck
 
 	agents := []Agent{KnownAgents["claude"], KnownAgents["cursor"], KnownAgents["copilot"]}
-	if err := Scaffold("myproject", skills.Commands, agents); err != nil {
+	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
@@ -114,7 +114,35 @@ func TestScaffoldRefusesExistingDir(t *testing.T) {
 	if err := os.Mkdir("exists", 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := Scaffold("exists", skills.Commands, []Agent{KnownAgents["claude"]}); err == nil {
+	if _, err := Scaffold("exists", skills.Commands, []Agent{KnownAgents["claude"]}); err == nil {
 		t.Error("expected error when directory already exists, got nil")
+	}
+}
+
+func TestScaffoldGitAbsent(t *testing.T) {
+	tmp := t.TempDir()
+	orig, _ := os.Getwd()
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(orig) //nolint:errcheck
+
+	// Hide git from PATH so LookPath fails.
+	t.Setenv("PATH", "")
+
+	agents := []Agent{KnownAgents["claude"]}
+	notice, err := Scaffold("myproject", skills.Commands, agents)
+	if err != nil {
+		t.Fatalf("Scaffold should succeed without git, got: %v", err)
+	}
+	if notice == "" {
+		t.Error("expected non-empty notice when git is absent")
+	}
+	// Files created; no .git dir.
+	if _, err := os.Stat(filepath.Join("myproject", ".gitignore")); err != nil {
+		t.Error("missing .gitignore")
+	}
+	if _, err := os.Stat(filepath.Join("myproject", ".git")); err == nil {
+		t.Error(".git dir should not exist when git was absent")
 	}
 }

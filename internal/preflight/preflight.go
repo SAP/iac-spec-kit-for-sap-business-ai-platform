@@ -14,3 +14,12 @@ func Check(name string) error {
 	}
 	return nil
 }
+
+// Warn returns a warning message if the named binary is not found on $PATH,
+// or an empty string if it is found.
+func Warn(name string) string {
+	if _, err := exec.LookPath(name); err != nil {
+		return fmt.Sprintf("%q was not found on $PATH — install it before running terraform commands.", name)
+	}
+	return ""
+}

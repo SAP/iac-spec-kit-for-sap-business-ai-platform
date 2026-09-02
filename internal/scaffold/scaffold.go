@@ -40,51 +40,58 @@ const gitignore = `.terraform/
 
 // Scaffold creates the project directory named name in the current working
 // directory, installs command files for each selected agent, writes .gitignore,
-// and runs git init.
-func Scaffold(name string, commands embed.FS, agents []Agent) error {
+// and runs git init if git is available.
+// warning is non-empty when git was not found and git init was skipped.
+func Scaffold(name string, commands embed.FS, agents []Agent) (warning string, err error) {
 	if _, err := os.Stat(name); err == nil {
-		return fmt.Errorf("directory %q already exists", name)
+		return "", fmt.Errorf("directory %q already exists", name)
 	}
 
 	if err := os.Mkdir(name, 0o755); err != nil {
-		return fmt.Errorf("create project directory: %w", err)
+		return "", fmt.Errorf("create project directory: %w", err)
 	}
 
-	if err := scaffold(name, commands, agents); err != nil {
+	warning, err = scaffold(name, commands, agents)
+	if err != nil {
 		_ = os.RemoveAll(name)
-		return err
+		return "", err
 	}
-	return nil
+	return warning, nil
 }
 
-func scaffold(name string, commands embed.FS, agents []Agent) error {
+func scaffold(name string, commands embed.FS, agents []Agent) (string, error) {
 	for _, d := range baseDirs {
 		if err := os.MkdirAll(filepath.Join(name, d), 0o755); err != nil {
-			return fmt.Errorf("create directory %s: %w", d, err)
+			return "", fmt.Errorf("create directory %s: %w", d, err)
 		}
 	}
 
 	for _, agent := range agents {
 		if err := os.MkdirAll(filepath.Join(name, agent.Dir), 0o755); err != nil {
-			return fmt.Errorf("create agent directory %s: %w", agent.Dir, err)
+			return "", fmt.Errorf("create agent directory %s: %w", agent.Dir, err)
 		}
 		if err := copyCommandsForAgent(name, commands, agent); err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	if err := os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0o644); err != nil {
-		return fmt.Errorf("write .gitignore: %w", err)
+		return "", fmt.Errorf("write .gitignore: %w", err)
+	}
+
+	if _, err := exec.LookPath("git"); err != nil {
+		// ponytail: skip git init when git is absent; caller prints the warning
+		return `"git" was not found on $PATH — run "git init" manually in the project directory.`, nil
 	}
 
 	cmd := exec.Command("git", "init", name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git init: %w", err)
+		return "", fmt.Errorf("git init: %w", err)
 	}
 
-	return nil
+	return "", nil
 }
 
 func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) error {

@@ -37,10 +37,8 @@ func initCmd() *cobra.Command {
 		Short: "Bootstrap a new SAP BTP IaC project",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			for _, dep := range []string{"terraform", "git"} {
-				if err := preflight.Check(dep); err != nil {
-					return err
-				}
+			if w := preflight.Warn("terraform"); w != "" {
+				cmd.PrintErrln(ui.Warn(w))
 			}
 
 			agents, err := agentselect.Select(agentFlag)
@@ -56,8 +54,12 @@ func initCmd() *cobra.Command {
 					return err
 				}
 			}
-			if err := scaffold.Scaffold(name, skills.Commands, agents); err != nil {
+			warning, err := scaffold.Scaffold(name, skills.Commands, agents)
+			if err != nil {
 				return err
+			}
+			if warning != "" {
+				cmd.PrintErrln(ui.Warn(warning))
 			}
 
 			agentIDs := make([]string, len(agents))
@@ -65,7 +67,7 @@ func initCmd() *cobra.Command {
 				agentIDs[i] = a.ID
 			}
 
-			ui.PrintSuccess(name, agentIDs)
+			ui.PrintSuccess(name, agentIDs, warning == "")
 			return nil
 		},
 	}
