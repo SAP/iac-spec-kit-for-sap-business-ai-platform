@@ -7,7 +7,7 @@ import (
 
 func TestPrintSuccessContainsCommands(t *testing.T) {
 	var buf strings.Builder
-	printSuccess(&buf, "my-project", []string{"claude", "cursor"})
+	printSuccess(&buf, "my-project", []string{"claude", "cursor"}, true)
 	output := buf.String()
 
 	for _, cmd := range []string{
@@ -23,7 +23,7 @@ func TestPrintSuccessContainsCommands(t *testing.T) {
 
 func TestPrintSuccessContainsName(t *testing.T) {
 	var buf strings.Builder
-	printSuccess(&buf, "my-project", []string{"claude"})
+	printSuccess(&buf, "my-project", []string{"claude"}, true)
 	output := buf.String()
 
 	if !strings.Contains(output, "my-project") {

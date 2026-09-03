@@ -34,14 +34,22 @@ var (
 
 	cmdStyle  = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(14)).Bold(true)
 	stepStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(11))
+	warnStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(11)).Background(lipgloss.ANSIColor(0)).Bold(true)
+	warnMsg   = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(15)).Background(lipgloss.ANSIColor(0)).Bold(true)
 )
 
-// PrintSuccess prints the post-init success message and workflow guide.
-func PrintSuccess(name string, agentIDs []string) {
-	printSuccess(os.Stdout, name, agentIDs)
+// Warn renders msg as a styled warning line for use on stderr.
+func Warn(msg string) string {
+	return warnStyle.Render("Warning:") + " " + warnMsg.Render(msg)
 }
 
-func printSuccess(w io.Writer, name string, agentIDs []string) {
+// PrintSuccess prints the post-init success message and workflow guide.
+// gitInitialised should be true when git init ran successfully.
+func PrintSuccess(name string, agentIDs []string, gitInitialised bool) {
+	printSuccess(os.Stdout, name, agentIDs, gitInitialised)
+}
+
+func printSuccess(w io.Writer, name string, agentIDs []string, gitInitialised bool) {
 	var sb strings.Builder
 
 	sb.WriteString("\n")
@@ -49,8 +57,11 @@ func printSuccess(w io.Writer, name string, agentIDs []string) {
 	sb.WriteString("\n")
 	sb.WriteString(checkLine.Render(successMark + "  " + strings.Join(agentIDs, ", ") + " configured"))
 	sb.WriteString("\n")
-	sb.WriteString(checkLine.Render(successMark + "  Git repository initialised"))
-	sb.WriteString("\n\n")
+	if gitInitialised {
+		sb.WriteString(checkLine.Render(successMark + "  Git repository initialised"))
+		sb.WriteString("\n")
+	}
+	sb.WriteString("\n")
 
 	var body strings.Builder
 
