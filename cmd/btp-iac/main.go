@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
+	"github.com/SAP/btp-iac-spec-kit/internal/mcpcheck"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"github.com/SAP/btp-iac-spec-kit/internal/ui"
@@ -46,6 +47,14 @@ func initCmd() *cobra.Command {
 				return err
 			}
 
+			agentIDs := make([]string, len(agents))
+			for i, a := range agents {
+				agentIDs[i] = a.ID
+			}
+			for _, w := range mcpcheck.Run(mcpcheck.DefaultChecks, agentIDs) {
+				cmd.PrintErrln(ui.Warn(w))
+			}
+
 			var name string
 			if len(args) == 1 {
 				name = args[0]
@@ -60,11 +69,6 @@ func initCmd() *cobra.Command {
 			}
 			if warning != "" {
 				cmd.PrintErrln(ui.Warn(warning))
-			}
-
-			agentIDs := make([]string, len(agents))
-			for i, a := range agents {
-				agentIDs[i] = a.ID
 			}
 
 			ui.PrintSuccess(name, agentIDs, warning == "")
