@@ -4,45 +4,87 @@ description: Analyses application source code or Terraform code to extract infra
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Analyse
 
-Analyses code to extract concrete infrastructure signals and enriches `specs/scenario.md` in place.
+Analyses code to extract concrete infrastructure signals and enriches `specs/scenario.md` in place. Findings are recorded as **observed facts with evidence and a confidence level** — not as approved desired state. Downstream skills consume reviewed requirements, so never present a raw implementation detail as intent.
+
+## Preconditions
+
+Before analysing, check these and report (do not silently proceed) if any hold:
+
+- **`specs/scenario.md` missing** — tell the user to run `/btp-iac.scenario` first; do not create the file from scratch here.
+- **Path outside the project root** — refuse a path that resolves outside the current project; do not read it.
+- **No supported input at the path** — if no descriptor (application source) or `*.tf`/`*.tf.json` (Terraform) is found, report that and stop.
 
 ## Workflow
 
-**Phase 1 — Ask what to analyse**: Ask the user whether they want to analyse (a) existing **application source code** or (b) **Terraform code**. Do not proceed without a clear answer.
+**Phase 1 — Ask what to analyse**: Ask whether to analyse (a) **application source code**, (b) **Terraform code**, or (c) **both**. Do not proceed without a clear answer.
 
-**Phase 2 — Locate the code**: Ask for the path to the code if not already provided.
+**Phase 2 — Locate the code**: Ask for the path if not provided. Confirm it resolves inside the project root before reading.
 
-**Phase 3 — Detect format and read** (existence checks before full reads; stop at first match per branch):
+**Phase 3 — Detect and read** (existence checks before full reads):
 
-*Application source code:*
-1. `mta.yaml` present → **MTA** — read `mta.yaml`, `xs-security.json` (if present), `xs-app.json` (if present)
-2. `package.json` contains `@sap/cds` → **CAP** — read `package.json` (dependencies only), `schema.cds` (entity names only), `xs-security.json` (if present)
-3. `manifest.yml` present → **CF** — read `manifest.yml`
-4. None matched → report unsupported format and stop.
+*Application source code* — detect **all** descriptors present; do not stop at the first match. If more than one descriptor or multiple deployable apps are found (e.g. a monorepo with both `mta.yaml` and CAP config), analyse each, apply this precedence for overlapping facts — **MTA › CAP › CF** — and record disagreements as conflicts rather than discarding later files.
 
-*Terraform code:*
-- Read `*.tf` files in this order: `providers.tf` or `versions.tf`, `variables.tf`, `main.tf`, then any module `*.tf` files. Stop reading once signals are found; do not read all files if early reads are sufficient.
+- **MTA** (`mta.yaml` present): module/resource relationships, service offerings/plans, `requires`, memory/disk/instances, build parameters. Also read `xs-security.json` and `xs-app.json` if present.
+- **CAP** (`package.json` contains `@sap/cds`): `cds.requires`, database kind, messaging, destinations, XSUAA, multitenancy, HANA. Read `schema.cds` (entity names only) and `xs-security.json` if present.
+- **CF** (`manifest.yml` present): disk, instances, routes, buildpack, stack, health checks, and any unresolved variable placeholders. For a service binding that gives only an instance name, mark its offering/plan `unresolved` — do not infer them.
+- **`xs-security.json`** (any format): scopes, role templates, role collections, attribute references, authorities, tenant mode.
 
-**Phase 4 — Extract signals**:
+*Terraform code* — inspect **all** root `*.tf` and `*.tf.json` files; exclude `.terraform`, `.git`, and generated/vendored directories. Terraform is a graph across files (providers, variables, locals, resources, modules, instances are commonly split), so **do not stop after initial signals**. Follow local module `source` references up to a depth of **3**; for external module sources (registry/git), record source and version and report that they were not inspected. Extract:
 
-*From source code:*
-- **services** — BTP service instances (name, service, plan)
-- **memory** — per-module memory quotas
-- **roles** — role definitions from `xs-security.json` (name, scope)
-- **artifacts** — build artifact names and types
+- **subaccounts, directories** — regions, hierarchy, labels
+- **entitlements & subscriptions** — service offerings/plans, service instances
+- **security & connectivity** — trust configurations, role collections, assignments, destinations, connectivity
+- **providers** — `required_providers` (versions) and provider aliases
+- **graph** — `data`, `locals`, `outputs`, dependency edges, `for_each`, `count`, `depends_on`
+- **variables** — type, `description`, `validation`, `sensitive`, and whether there is no default
+- **modules** — local module interfaces (inputs/outputs); external module source/version
 
-*From Terraform code:*
-- **resources** — `resource` blocks (type, name)
-- **modules** — `module` blocks (name, source)
-- **variables** — input variables with their types and defaults
-- **providers** — required providers and versions
+**Never evaluate unknown or variable-driven expressions, and never invent a value** where configuration is indeterminate — record it as `unresolved`.
 
-**Phase 5 — Enrich `specs/scenario.md`**: Add or update an `## Infrastructure Signals` section at the end of the file. Do not rewrite existing sections. Render each signal category as a markdown table; omit any table with no data. Mark the section with `<!-- auto-generated by /btp-iac.analyse -->` so re-runs can identify and replace it without touching the rest of the file.
+**Phase 4 — Record findings**: For every signal capture four things:
+
+| Field | Meaning |
+|---|---|
+| Evidence | file and relevant location |
+| Observed value | the literal value found (or `unresolved`) |
+| Confidence | `observed` (read directly), `inferred` (derived), or `unresolved` (indeterminate/variable-driven/absent) |
+| Downstream consumer | which command uses it — `btp-iac.accounts`, `btp-iac.services`, `btp-iac.security`, or `btp-iac.design` |
+
+**Phase 5 — Redact secrets**: Never write secrets into `specs/scenario.md`. For backend settings, provider credentials, destination credentials, certificates, tokens, or `sensitive` variable defaults, redact the value and report only that the configuration exists and its type.
+
+**Phase 6 — Enrich `specs/scenario.md`**: Write findings **only** between the paired markers below, under the `## Infrastructure Signals` heading. On re-runs, replace only the content between the markers and preserve everything outside them. **Never rewrite the whole file.** Render each subsection as a markdown table; omit a table with no rows.
+
+```md
+## Infrastructure Signals
+<!-- btp-iac:analyse:begin -->
+
+### Observed services
+| Signal | Evidence | Confidence | Downstream consumer |
+|---|---|---|---|
+
+### Observed security and connectivity
+| Signal | Evidence | Confidence | Downstream consumer |
+|---|---|---|---|
+
+### Terraform architecture
+| Signal | Evidence | Confidence | Downstream consumer |
+|---|---|---|---|
+
+### Unresolved mappings and conflicts
+| Item | Evidence | Required decision |
+|---|---|---|
+
+<!-- btp-iac:analyse:end -->
+```
+
+If the file already contains an older single `<!-- auto-generated by /btp-iac.analyse -->` marker from a prior version, replace that whole legacy section with the paired-marker block.
+
+**Phase 7 — Completion report**: Report analysed files, skipped files (with reason — excluded dir, external module, unreadable), findings written, redactions performed, unresolved mappings and conflicts, and the recommended next command.
 
 ## Tool preferences
 
