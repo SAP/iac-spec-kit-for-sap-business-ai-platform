@@ -17,6 +17,19 @@ var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(12)).Bold(tr
 
 var agentOrder = []string{"claude", "cursor", "copilot"}
 
+// CheckTTYOrFlag returns an error if flagValue is empty and stdin is not a TTY.
+// Call this before showing any interactive prompts to fail fast in CI/non-TTY
+// environments.
+func CheckTTYOrFlag(flagValue string) error {
+	if flagValue != "" {
+		return nil
+	}
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return fmt.Errorf("no TTY detected: use --agent to specify agents (e.g. --agent claude,cursor,copilot)")
+	}
+	return nil
+}
+
 // Select resolves the agents to install.
 //
 // If flagValue is non-empty it is parsed as a comma-separated list of agent IDs.
