@@ -17,6 +17,9 @@ coverage.*
 *.coverprofile
 profile.cov
 
+# Live skill-evaluation reports (upload as CI artifacts; do not commit)
+eval-artifacts/
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
