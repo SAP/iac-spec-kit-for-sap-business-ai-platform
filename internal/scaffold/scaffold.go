@@ -11,6 +11,22 @@ import (
 	"strings"
 )
 
+// Mode controls which parts of the project are created or updated.
+type Mode int
+
+const (
+	// ModeFresh creates a new project subdirectory with all dirs, agent files,
+	// .gitignore, and runs git init.
+	ModeFresh Mode = iota + 1
+	// ModeAdopt sets up btp-iac inside an existing directory (e.g. a Terraform
+	// repo). Creates specs/, memory/, terraform/, agent files, and .gitignore
+	// if absent. Skips git init.
+	ModeAdopt
+	// ModeAgentOnly writes agent command files only. All other files and
+	// directories are left untouched.
+	ModeAgentOnly
+)
+
 // Agent describes a supported AI coding agent and where its command files live.
 type Agent struct {
 	// ID is the canonical identifier used in the --agent flag (e.g. "claude").
@@ -46,12 +62,10 @@ func Scaffold(name string, commands embed.FS, agents []Agent) (warning string, e
 	if _, err := os.Stat(name); err == nil {
 		return "", fmt.Errorf("directory %q already exists", name)
 	}
-
 	if err := os.Mkdir(name, 0o755); err != nil {
 		return "", fmt.Errorf("create project directory: %w", err)
 	}
-
-	warning, err = scaffold(name, commands, agents)
+	warning, err = Apply(name, ModeFresh, commands, agents)
 	if err != nil {
 		_ = os.RemoveAll(name)
 		return "", err
@@ -59,24 +73,46 @@ func Scaffold(name string, commands embed.FS, agents []Agent) (warning string, e
 	return warning, nil
 }
 
-func scaffold(name string, commands embed.FS, agents []Agent) (string, error) {
-	for _, d := range baseDirs {
-		if err := os.MkdirAll(filepath.Join(name, d), 0o755); err != nil {
-			return "", fmt.Errorf("create directory %s: %w", d, err)
+// IsProject reports whether dir looks like an existing btp-iac project by
+// checking for the presence of specs/ or memory/.
+func IsProject(dir string) bool {
+	for _, marker := range []string{"specs", "memory"} {
+		if _, err := os.Stat(filepath.Join(dir, marker)); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// Apply runs the scaffold operation for the given mode inside dir.
+// dir must already exist for ModeAdopt and ModeAgentOnly.
+// warning is non-empty when git was not found (ModeFresh only).
+func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning string, err error) {
+	if mode == ModeFresh || mode == ModeAdopt {
+		for _, d := range baseDirs {
+			if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
+				return "", fmt.Errorf("create directory %s: %w", d, err)
+			}
 		}
 	}
 
 	for _, agent := range agents {
-		if err := os.MkdirAll(filepath.Join(name, agent.Dir), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Join(dir, agent.Dir), 0o755); err != nil {
 			return "", fmt.Errorf("create agent directory %s: %w", agent.Dir, err)
 		}
-		if err := copyCommandsForAgent(name, commands, agent); err != nil {
+		if err := copyCommandsForAgent(dir, commands, agent); err != nil {
 			return "", err
 		}
 	}
 
-	if err := os.WriteFile(filepath.Join(name, ".gitignore"), []byte(gitignore), 0o644); err != nil {
-		return "", fmt.Errorf("write .gitignore: %w", err)
+	if mode == ModeFresh || mode == ModeAdopt {
+		if err := writeGitignoreIfAbsent(dir); err != nil {
+			return "", err
+		}
+	}
+
+	if mode != ModeFresh {
+		return "", nil
 	}
 
 	if _, err := exec.LookPath("git"); err != nil {
@@ -84,7 +120,7 @@ func scaffold(name string, commands embed.FS, agents []Agent) (string, error) {
 		return `"git" was not found on $PATH — run "git init" manually in the project directory.`, nil
 	}
 
-	cmd := exec.Command("git", "init", name)
+	cmd := exec.Command("git", "init", dir)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -92,6 +128,17 @@ func scaffold(name string, commands embed.FS, agents []Agent) (string, error) {
 	}
 
 	return "", nil
+}
+
+func writeGitignoreIfAbsent(dir string) error {
+	path := filepath.Join(dir, ".gitignore")
+	if _, err := os.Stat(path); err == nil {
+		return nil // already exists — preserve it
+	}
+	if err := os.WriteFile(path, []byte(gitignore), 0o644); err != nil {
+		return fmt.Errorf("write .gitignore: %w", err)
+	}
+	return nil
 }
 
 func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) error {

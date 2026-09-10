@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 )
 
 const (
@@ -45,15 +46,19 @@ func Warn(msg string) string {
 
 // PrintSuccess prints the post-init success message and workflow guide.
 // gitInitialised should be true when git init ran successfully.
-func PrintSuccess(name string, agentIDs []string, gitInitialised bool) {
-	printSuccess(os.Stdout, name, agentIDs, gitInitialised)
+func PrintSuccess(name string, agentIDs []string, mode scaffold.Mode, gitInitialised bool) {
+	printSuccess(os.Stdout, name, agentIDs, mode, gitInitialised)
 }
 
-func printSuccess(w io.Writer, name string, agentIDs []string, gitInitialised bool) {
+func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mode, gitInitialised bool) {
 	var sb strings.Builder
 
 	sb.WriteString("\n")
-	sb.WriteString(checkLine.Render(successMark + "  Project " + fmt.Sprintf("%q", name) + " created"))
+	if mode == scaffold.ModeFresh {
+		sb.WriteString(checkLine.Render(successMark + "  Project " + fmt.Sprintf("%q", name) + " created"))
+	} else {
+		sb.WriteString(checkLine.Render(successMark + "  Project updated"))
+	}
 	sb.WriteString("\n")
 	sb.WriteString(checkLine.Render(successMark + "  " + strings.Join(agentIDs, ", ") + " configured"))
 	sb.WriteString("\n")
@@ -67,9 +72,13 @@ func printSuccess(w io.Writer, name string, agentIDs []string, gitInitialised bo
 
 	body.WriteString(headingStyle.Render("Getting started"))
 	body.WriteString("\n\n")
-	body.WriteString("I. Open the project in your terminal\n\n")
-	fmt.Fprintf(&body, "   %s\n\n", cmdStyle.Render("$ cd "+name))
-	body.WriteString("II. Open your AI agent and run these in order\n\n")
+	if mode == scaffold.ModeFresh {
+		body.WriteString("I. Open the project in your terminal\n\n")
+		fmt.Fprintf(&body, "   %s\n\n", cmdStyle.Render("$ cd "+name))
+		body.WriteString("II. Open your AI agent and run these in order\n\n")
+	} else {
+		body.WriteString("I. Open your AI agent and run these in order\n\n")
+	}
 
 	section(&body, "Define your guardrails", []stepRow{
 		{"-", "btp-iac.govern", "Set guardrails — regions, naming, cost policies. Skip to use defaults (optional)."},
