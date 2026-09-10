@@ -22,7 +22,6 @@
       "name": "partial-policy-ask-only-missing",
       "description": "Only uncovered governance categories receive one targeted question.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In this btp-iac project, only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. Use {org}-{env}-{app}, where org is our short code, env is dev/test/prod, and app is the app identifier; use a flat directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope, permit internal destinations only, and require OAuth2ClientCredentials.",
       "turns": [
         {"role": "user", "content": "In this btp-iac project, only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. Use {org}-{env}-{app}, where org is our short code, env is dev/test/prod, and app is the app identifier; use a flat directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope, permit internal destinations only, and require OAuth2ClientCredentials."},
         {"role": "user", "content": "For service plans, dev may use free (default free), test may use standard (default standard), and prod may use standard (default standard); free is forbidden in prod because it has no SLA. Enable metered-service warnings for hana-cloud and ai-core. The cost centre tag is required and its Terraform key is cost_center."}
@@ -76,7 +75,6 @@
         {"path": "terraform/.gitkeep", "content": ""},
         {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10, eu20\n- Forbidden: us10\n- Data residency: EU only\n- Compliance reason: GDPR\n- Preferred region: eu10\n\n## Naming\n- Subaccount pattern: {org}-{env}-{app}\n- Pattern tokens: {org} = organisation, {env} = environment, {app} = application\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n\n## Service Plans\n### dev\n- Permitted: free\n- Forbidden: none\n- Default plan: free\n### prod\n- Permitted: standard\n- Forbidden: free\n- Forbidden reason: no SLA\n- Default plan: standard\n\n## Security\n- Custom IdP: required\n- IdP type: OIDC\n- Default role collections: BTP_OPERATOR → platform-admins\n- Role collection scope: platform\n- Destinations: internal systems only\n- Destination auth type: OAuth2ClientCredentials\n\n## Cost Controls\n- Metered service warning: enabled\n- Metered services: hana-cloud\n- Cost centre tag: required\n- Tag key name: cost_center\n"}
       ],
-      "prompt": "The project fixture already contains memory/governance.md with complete governance rules. Run govern, then respond 'done' when asked about changes.",
       "turns": [
         {"role": "user", "content": "Run govern for this project."},
         {"role": "user", "content": "done"}
@@ -111,7 +109,6 @@
         {"path": "terraform/.gitkeep", "content": ""},
         {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10, eu20\n- Forbidden: us10\n- Data residency: EU only\n- Compliance reason: GDPR\n- Preferred region: eu10\n\n## Naming\n- Subaccount pattern: {org}-{env}-{app}\n- Pattern tokens: {org} = organisation, {env} = environment, {app} = application\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n\n## Service Plans\n### dev\n- Permitted: free\n- Forbidden: none\n- Default plan: free\n### prod\n- Permitted: standard\n- Forbidden: free\n- Forbidden reason: no SLA\n- Default plan: standard\n\n## Security\n- Custom IdP: required\n- IdP type: OIDC\n- Default role collections: BTP_OPERATOR → platform-admins\n- Role collection scope: platform\n- Destinations: internal systems only\n- Destination auth type: OAuth2ClientCredentials\n\n## Cost Controls\n- Metered service warning: enabled\n- Metered services: hana-cloud\n- Cost centre tag: required\n- Tag key name: cost_center\n"}
       ],
-      "prompt": "The fixture contains an existing complete governance policy. Change only the preferred region from eu10 to eu20.",
       "turns": [
         {"role": "user", "content": "Run govern for this project."},
         {"role": "user", "content": "Change only the preferred region from eu10 to eu20."}
