@@ -18,7 +18,11 @@ func TestLoadAndFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(root)
+	defer func() {
+		if err := os.RemoveAll(root); err != nil {
+			t.Errorf("remove fixture root: %v", err)
+		}
+	}()
 	for _, p := range []string{"specs/.gitkeep", "memory/.gitkeep", "terraform/.gitkeep"} {
 		if _, err := os.Stat(filepath.Join(d, p)); err != nil {
 			t.Errorf("missing fixture %s: %v", p, err)

@@ -137,7 +137,7 @@ func Run(ctx context.Context, spec Spec, skill string, agent, judge Agent, keep 
 				}
 				prompt = "Follow this skill exactly and work only in the current project directory.\n\n" + skill + "\n\n" + prompt
 			}
-			result.Transcript = append(result.Transcript, Message{Role: turn.Role, Content: turn.Content})
+			result.Transcript = append(result.Transcript, Message(turn))
 			response, next, runErr := agent.Turn(ctx, dir, session, prompt)
 			if runErr != nil && session != "" && agent.SupportsResume() {
 				// A lost provider session should not discard an otherwise valid multi-turn eval.
@@ -264,7 +264,7 @@ func score(ctx context.Context, judge Agent, assertions []Assertion, result Case
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(judgeDir)
+	defer func() { _ = os.RemoveAll(judgeDir) }()
 	var text string
 	if isolatedJudge, ok := judge.(judgeAgent); ok {
 		text, _, err = isolatedJudge.JudgeTurn(ctx, judgeDir, "", prompt)
