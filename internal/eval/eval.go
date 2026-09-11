@@ -186,15 +186,18 @@ func RunWithOptions(ctx context.Context, spec Spec, skill string, agent, judge A
 		result := CaseResult{ID: c.ID, Name: c.Name, Assertions: c.Assertions}
 		dir, fixtureRoot, err := fixture(c)
 		if err != nil {
+			cancel()
 			return r, err
 		}
 		isolate := c.Environment.ForbidAncestorProjectRoot || c.Environment.WorkingDirectory == "isolated-no-project-root"
 		if c.Environment.WorkingDirectory != "" && c.Environment.WorkingDirectory != "isolated-no-project-root" {
+			cancel()
 			_ = os.RemoveAll(fixtureRoot)
 			return r, fmt.Errorf("unsupported eval working_directory %q", c.Environment.WorkingDirectory)
 		}
 		if isolate {
 			if err := requireNoProjectRootAncestor(dir); err != nil {
+				cancel()
 				_ = os.RemoveAll(fixtureRoot)
 				return r, err
 			}
@@ -202,6 +205,7 @@ func RunWithOptions(ctx context.Context, spec Spec, skill string, agent, judge A
 		result.Directory = dir
 		result.InitialArtifacts, err = snapshot(dir)
 		if err != nil {
+			cancel()
 			_ = os.RemoveAll(fixtureRoot)
 			return r, err
 		}
