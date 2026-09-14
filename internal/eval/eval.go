@@ -103,7 +103,7 @@ type judgeAgent interface {
 type Report struct {
 	Provider     string       `json:"provider"`
 	Judge        string       `json:"judge,omitempty"`
-	GeneratedAt  time.Time    `json:"generated_at,omitempty"`
+	GeneratedAt  time.Time    `json:"generated_at"`
 	GitSHA       string       `json:"git_sha,omitempty"`
 	SpecPath     string       `json:"spec_path,omitempty"`
 	SkillPath    string       `json:"skill_path,omitempty"`
@@ -545,7 +545,7 @@ func (Claude) turn(ctx context.Context, dir, session, prompt string, judge bool)
 }
 
 func threadID(raw []byte, fallback string) string {
-	for _, line := range strings.Split(string(raw), "\n") {
+	for line := range strings.SplitSeq(string(raw), "\n") {
 		var v map[string]any
 		if json.Unmarshal([]byte(line), &v) == nil {
 			if id := findID(v); id != "" {
