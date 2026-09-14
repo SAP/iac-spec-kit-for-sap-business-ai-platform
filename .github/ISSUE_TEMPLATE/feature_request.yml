@@ -7,9 +7,8 @@ body:
     attributes:
       label: What area do you want to see improved?
       options:
-        - CLI commands
         - scaffold / init workflow
-        - agent command files
+        - agent commands
         - documentation
         - other
     validations:

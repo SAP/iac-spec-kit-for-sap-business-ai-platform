@@ -1,5 +1,5 @@
 ![Golang](https://img.shields.io/badge/Go-1.27-informational)
-[![CodeQL](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/btp-iac-spec-kit)](https://api.reuse.software/info/github.com/SAP/btp-iac-spec-kit)
 
 
