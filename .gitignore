@@ -33,3 +33,5 @@ go.work.sum
 
 # OpenSpec in-progress changes (work-in-progress, stays on feature branches)
 openspec/changes/
+
+vendor

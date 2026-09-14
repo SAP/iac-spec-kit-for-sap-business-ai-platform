@@ -1,4 +1,8 @@
-[![REUSE status](https://api.reuse.software/badge/github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp)](https://api.reuse.software/info/github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp)
+![Golang](https://img.shields.io/badge/Go-1.27-informational)
+[![CodeQL](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/codeql.yml)
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP/btp-iac-spec-kit)](https://api.reuse.software/info/github.com/SAP/btp-iac-spec-kit)
+
+
 
 # infrastructure-as-code specification toolkit for SAP BTP
 
