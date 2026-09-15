@@ -26,7 +26,7 @@ The CLI SHALL display an interactive multi-select prompt when `--agent` is not p
 
 #### Scenario: user selects agents interactively
 - **WHEN** `btp-iac init my-project` is run without `--agent` in a TTY
-- **THEN** a multi-select prompt lists `claude`, `cursor`, and `copilot`
+- **THEN** a multi-select prompt lists `claude`, `codex`, `cursor`, and `copilot`
 - **AND** the user may select one or more agents with space and confirm with enter
 - **AND** init proceeds with the selected agents
 
@@ -39,8 +39,8 @@ The CLI SHALL display an interactive multi-select prompt when `--agent` is not p
 - **THEN** the CLI exits with a non-zero status directing the user to use `--agent`
 
 ### Requirement: supported agent IDs
-The CLI SHALL recognise exactly three agent IDs: `claude`, `cursor`, `copilot`.
+The CLI SHALL recognise exactly four agent IDs: `claude`, `codex`, `cursor`, `copilot`.
 
 #### Scenario: complete supported set
-- **WHEN** `btp-iac init --agent claude,cursor,copilot` is run
-- **THEN** all three agents are configured in the new project
+- **WHEN** `btp-iac init --agent claude,codex,cursor,copilot` is run
+- **THEN** all four agents are configured in the new project
