@@ -42,14 +42,14 @@
       "description": "A bare invocation initiates complete governance discovery without writing a partial policy.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Set up governance for this btp-iac project.",
-      "trap": "No governance details were supplied. The skill must ask exactly one targeted question for each category rather than manufacture defaults or write a skeletal file. The five questions may be batched in one response or asked in separate turns.",
+      "trap": "No governance details were supplied. The skill must ask one question per category, one at a time, rather than batch all five into a single tool call or manufacture defaults or write a skeletal file.",
       "assertions": [
         {"id": "3.1", "text": "Requests the Regions details: approved and forbidden regions, data residency, compliance reason, and preferred default"},
         {"id": "3.2", "text": "Requests the Naming details: pattern, token meanings, environment tiers, directory structure, and length limit"},
         {"id": "3.3", "text": "Requests the Service Plans details: permitted and forbidden plans, reasons, and defaults per environment"},
         {"id": "3.4", "text": "Requests the Security details: IdP, role collections and scope, destination restrictions, and authentication type"},
         {"id": "3.5", "text": "Requests the Cost Controls details: metered-service warning policy and cost-centre tag requirements"},
-        {"id": "3.6", "text": "Requests each missing category once, permits the five questions to be batched in one response or sent in separate turns, and asks no extra category question"},
+        {"id": "3.6", "text": "Asks exactly one category question per turn, waits for the answer, then asks the next — never bundles multiple categories into a single question or tool call"},
         {"id": "3.7", "text": "Does not create or overwrite memory/governance.md until all required information is collected"}
       ]
     },

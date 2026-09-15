@@ -52,15 +52,15 @@ Assess whether the user's invocation message already covers all five governance 
 | **Security** | IdP, custom identity provider type, role collections and scope, destinations and auth type |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** category, ask exactly one targeted question:
+For each **missing** category, ask the user for that category's details. **Ask one category at a time**: emit a single question, wait for the answer, then move to the next missing category. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
-| Missing category | Question to ask |
-|---|---|
-| Regions | "Which BTP regions are approved for this project (e.g. eu10, eu20)? Are any explicitly forbidden? What data residency requirement applies (e.g. EU only), and what is the compliance reason (e.g. GDPR — customer data must not leave the EU)? Which region should be the preferred default?" |
-| Naming | "What naming convention should subaccounts follow (e.g. `{org}-{env}-{app}`)? What does each token mean (e.g. `{org}` = organisation short code)? What environment tiers exist (e.g. dev, test, prod)? Is the directory structure flat or hierarchical? Is there a maximum subaccount name length?" |
-| Service Plans | "For each environment tier, which BTP service plans are permitted? Are any plans explicitly forbidden, and if so why (e.g. free plan has no SLA — forbidden in prod)? What is the default plan for each tier when multiple are allowed?" |
-| Security | "Is a custom Identity Provider required, and if so what type — SAML 2.0 or OIDC? Which role collections should be assigned by default and to which user groups? Should role collections apply at platform level, application level, or both? Are destinations restricted (e.g. internal systems only), and what authentication type is required (e.g. OAuth2ClientCredentials)?" |
-| Cost Controls | "Should metered services trigger a warning before use? If so, which specific services should trigger it (e.g. hana-cloud, ai-core, build-workzone)? Is a cost centre tag required on all subaccounts? If so, what is the tag attribute name in Terraform (e.g. cost_center)?" |
+Keep each question to a single short prompt. The details to gather per category are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as five separate questions crammed into one string.
+
+- **Regions** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
+- **Naming** — subaccount pattern (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
+- **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
+- **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both); destination restrictions and required auth type (e.g. OAuth2ClientCredentials).
+- **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
 
 If the prompt already covers all five categories, skip to Step 3 immediately.
 
