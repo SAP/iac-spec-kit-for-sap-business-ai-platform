@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.security`: defining authentication, authorisation, and connectivity configuration with governance validation, producing `specs/trust.md`.
+Defines the behaviour of `/btp-iac.security`: defining authentication and authorisation configuration with governance validation, producing `specs/trust.md`.
 
 ## Requirements
 
@@ -18,7 +18,7 @@ The command SHALL define for each subaccount: IdP trust configurations, role col
 
 #### Scenario: security configuration defined
 - **WHEN** inputs are read
-- **THEN** the command produces a complete security and connectivity configuration for each subaccount
+- **THEN** the command produces a complete security configuration for each subaccount
 
 ### Requirement: validate IdP against governance
 The command SHALL validate the custom IdP configuration against governance rules if `memory/governance.md` exists.

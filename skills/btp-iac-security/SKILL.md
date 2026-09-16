@@ -1,6 +1,6 @@
 ---
 name: btp-iac-security
-description: Identifies authentication, authorisation, and connectivity requirements — IdP trust, role collections, and role collection assignments.
+description: Identifies authentication and authorisation requirements — IdP trust, role collections, and role collection assignments.
 license: Apache-2.0
 metadata:
   author: SAP
@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Security
 
-Identifies the authentication, authorisation, and connectivity requirements — role collection definitions, user assignments, IdP trust configurations and role collection assignments.
+Identifies the authentication and authorisation requirements — role collection definitions, user assignments, IdP trust configurations, and role collection assignments.
 
 Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/trust.md`.
 
@@ -48,4 +48,4 @@ Define for each subaccount:
 - Role collections with role template assignments
 - User and group assignments to role collections
 
-Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/trust.md` with the complete security configuration. This file is the direct input to `/btp-iac.tasks`.

@@ -67,7 +67,7 @@ Before analysing, check these and report (do not silently proceed) if any hold:
 | Signal | Evidence | Confidence | Downstream consumer |
 |---|---|---|---|
 
-### Observed security and connectivity
+### Observed security
 | Signal | Evidence | Confidence | Downstream consumer |
 |---|---|---|---|
 
