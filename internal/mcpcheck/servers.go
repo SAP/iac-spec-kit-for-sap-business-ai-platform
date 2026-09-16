@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	_ "modernc.org/sqlite" // pure-Go SQLite driver, no cgo required
@@ -40,6 +41,65 @@ func serverKeysFromFile(path string) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// codexServerNames returns MCP server names from Codex config files:
+//   - ~/.codex/config.toml      (user-level)
+//   - .codex/config.toml in cwd (project-level)
+func codexServerNames() []string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
+	var names []string
+	names = append(names, codexServerNamesFromTOML(filepath.Join(home, ".codex", "config.toml"))...)
+	names = append(names, codexServerNamesFromTOML(filepath.Join(".codex", "config.toml"))...)
+	return names
+}
+
+// codexServerNamesFromTOML extracts top-level [mcp_servers.<name>] table names
+// from a Codex config.toml. It ignores nested tables such as
+// [mcp_servers.<name>.env].
+func codexServerNamesFromTOML(path string) []string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		name, ok := codexMCPTableName(line)
+		if ok {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func codexMCPTableName(line string) (string, bool) {
+	const prefix = "[mcp_servers."
+	if !strings.HasPrefix(line, prefix) || !strings.HasSuffix(line, "]") {
+		return "", false
+	}
+	body := strings.TrimSuffix(strings.TrimPrefix(line, prefix), "]")
+	if body == "" {
+		return "", false
+	}
+	if strings.HasPrefix(body, `"`) {
+		name, err := strconv.Unquote(body)
+		if err != nil || name == "" {
+			return "", false
+		}
+		return name, true
+	}
+	if strings.Contains(body, ".") {
+		return "", false
+	}
+	return body, true
 }
 
 // gatewayEntry is the shape of a Docker MCP gateway mcpServers entry.
@@ -356,6 +416,8 @@ func serverNamesForAgent(agent string) []string {
 			names = append(names, mcpDockerServerNames(profileID)...)
 		}
 		return names
+	case "codex":
+		return codexServerNames()
 	case "cursor":
 		names := cursorServerNames()
 		if profileID, found := cursorGatewayProfile(); found {

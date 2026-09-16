@@ -184,6 +184,6 @@ func initCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, cursor, copilot)")
+	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, codex, cursor, copilot)")
 	return cmd
 }

@@ -14,6 +14,14 @@ The CLI SHALL install command files for Claude Code into `.claude/commands/` as 
 - **THEN** `.claude/commands/btp-iac.<command>.md` files exist in the project
 - **THEN** commands are invocable as `/btp-iac.<command>` in Claude Code
 
+### Requirement: Codex adapter
+The CLI SHALL install command files for Codex into `.codex/prompts/` as `btp-iac.<command>.md` files.
+
+#### Scenario: Codex files written
+- **WHEN** `codex` is a selected agent
+- **THEN** `.codex/prompts/btp-iac.<command>.md` files exist in the project
+- **THEN** prompts are available to Codex from the project-local prompt directory
+
 ### Requirement: Cursor adapter
 The CLI SHALL install command files for Cursor into `.cursor/rules/` as `btp-iac.<command>.mdc` files.
 
@@ -42,4 +50,4 @@ Each adapter SHALL create only its own directories and files without affecting o
 
 #### Scenario: single adapter does not create other dirs
 - **WHEN** only `cursor` is selected
-- **THEN** `.claude/` and `.github/instructions/` directories are NOT created
+- **THEN** `.claude/`, `.codex/`, and `.github/instructions/` directories are NOT created

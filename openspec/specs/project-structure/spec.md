@@ -15,7 +15,7 @@ The CLI SHALL create the base project directories and the agent-specific directo
 
 #### Scenario: agent dirs vary by selection
 - **WHEN** only `cursor` is selected
-- **THEN** `.cursor/rules/` is created and `.claude/` is NOT created
+- **THEN** `.cursor/rules/` is created and `.claude/` and `.codex/` are NOT created
 
 #### Scenario: full structure present after init (Claude)
 - **WHEN** `btp-iac init <name> --agent claude` completes successfully
@@ -23,7 +23,15 @@ The CLI SHALL create the base project directories and the agent-specific directo
   - `specs/` (directory)
   - `memory/` (directory)
   - `terraform/` (directory)
-  - `.claude/commands/btp-iac/` (directory, populated with command files)
+  - `.claude/commands/` (directory, populated with command files)
+
+#### Scenario: full structure present after init (Codex)
+- **WHEN** `btp-iac init <name> --agent codex` completes successfully
+- **THEN** the following paths exist under `<name>/`:
+  - `specs/` (directory)
+  - `memory/` (directory)
+  - `terraform/` (directory)
+  - `.codex/prompts/` (directory, populated with prompt files)
 
 ### Requirement: .gitignore created
 The CLI SHALL write a `.gitignore` file in the project root that excludes Terraform local state and provider cache files.

@@ -60,6 +60,27 @@ func TestScaffoldCursor(t *testing.T) {
 	}
 }
 
+func TestScaffoldCodex(t *testing.T) {
+	tmp := t.TempDir()
+	orig, _ := os.Getwd()
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(orig) //nolint:errcheck
+
+	agents := []Agent{KnownAgents["codex"]}
+	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
+		t.Fatalf("Scaffold: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join("myproject", ".codex", "prompts", "btp-iac.govern.md")); err != nil {
+		t.Errorf("missing codex prompt file: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join("myproject", ".claude")); err == nil {
+		t.Error("unexpected .claude dir created for codex-only selection")
+	}
+}
+
 func TestScaffoldCopilot(t *testing.T) {
 	tmp := t.TempDir()
 	orig, _ := os.Getwd()
@@ -86,13 +107,14 @@ func TestScaffoldMultiAgent(t *testing.T) {
 	}
 	defer os.Chdir(orig) //nolint:errcheck
 
-	agents := []Agent{KnownAgents["claude"], KnownAgents["cursor"], KnownAgents["copilot"]}
+	agents := []Agent{KnownAgents["claude"], KnownAgents["codex"], KnownAgents["cursor"], KnownAgents["copilot"]}
 	if _, err := Scaffold("myproject", skills.Commands, agents); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
 	checks := []string{
 		filepath.Join(".claude", "commands", "btp-iac.scenario.md"),
+		filepath.Join(".codex", "prompts", "btp-iac.scenario.md"),
 		filepath.Join(".cursor", "rules", "btp-iac.scenario.mdc"),
 		filepath.Join(".github", "instructions", "btp-iac.scenario.instructions.md"),
 	}

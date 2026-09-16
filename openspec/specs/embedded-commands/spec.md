@@ -7,7 +7,7 @@ Defines how the CLI embeds and installs agent command files into new projects.
 ## Requirements
 
 ### Requirement: agent command files embedded in binary
-The CLI binary SHALL embed command files for all three supported agents (`claude`, `cursor`, `copilot`) using Go's `embed.FS` so no external asset directory is required at runtime.
+The CLI binary SHALL embed command files for all four supported agents (`claude`, `codex`, `cursor`, `copilot`) using Go's `embed.FS` so no external asset directory is required at runtime.
 
 #### Scenario: binary ships standalone
 - **WHEN** the compiled binary is moved to a new machine with no source tree
@@ -15,7 +15,7 @@ The CLI binary SHALL embed command files for all three supported agents (`claude
 
 #### Scenario: all variants present in binary
 - **WHEN** the compiled binary is run on any machine
-- **THEN** it can install command files for any combination of the three supported agents without external assets
+- **THEN** it can install command files for any combination of the four supported agents without external assets
 
 ### Requirement: command files written on init
 The CLI SHALL write the embedded command files for each selected agent to that agent's directory during `btp-iac init`. Five of the nine files contain substantive agent instructions rather than placeholder content.
@@ -36,6 +36,10 @@ The CLI SHALL write the embedded command files for each selected agent to that a
 #### Scenario: Cursor files present after init with cursor selected
 - **WHEN** `btp-iac init <name> --agent cursor` completes successfully
 - **THEN** nine `.mdc` files exist under `<name>/.cursor/rules/`
+
+#### Scenario: Codex files present after init with codex selected
+- **WHEN** `btp-iac init <name> --agent codex` completes successfully
+- **THEN** nine `.md` files exist under `<name>/.codex/prompts/`
 
 #### Scenario: Copilot files present after init with copilot selected
 - **WHEN** `btp-iac init <name> --agent copilot` completes successfully

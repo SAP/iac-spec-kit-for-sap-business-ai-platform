@@ -15,7 +15,7 @@ import (
 
 var promptStyle = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(12)).Bold(true)
 
-var agentOrder = []string{"claude", "cursor", "copilot"}
+var agentOrder = []string{"claude", "codex", "cursor", "copilot"}
 
 // CheckTTYOrFlag returns an error if flagValue is empty and stdin is not a TTY.
 // Call this before showing any interactive prompts to fail fast in CI/non-TTY
@@ -25,7 +25,7 @@ func CheckTTYOrFlag(flagValue string) error {
 		return nil
 	}
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		return fmt.Errorf("no TTY detected: use --agent to specify agents (e.g. --agent claude,cursor,copilot)")
+		return fmt.Errorf("no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)")
 	}
 	return nil
 }
@@ -41,7 +41,7 @@ func Select(flagValue string) ([]scaffold.Agent, error) {
 		return fromFlag(flagValue)
 	}
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		return nil, fmt.Errorf("no TTY detected: use --agent to specify agents (e.g. --agent claude,cursor,copilot)")
+		return nil, fmt.Errorf("no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)")
 	}
 	return fromPrompt()
 }

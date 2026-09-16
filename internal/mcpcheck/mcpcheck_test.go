@@ -40,6 +40,7 @@ func TestApplies(t *testing.T) {
 		want        bool
 	}{
 		{nil, "claude", true}, // nil = all agents
+		{nil, "codex", true},
 		{[]string{"claude"}, "claude", true},
 		{[]string{"claude"}, "cursor", false},
 		{[]string{"claude", "cursor"}, "copilot", false},
@@ -206,6 +207,35 @@ func TestTerraformCheck_cursorProjectConfig(t *testing.T) {
 	}
 }
 
+func TestTerraformCheck_codexUserConfig(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	writeCodexMCPConfig(t, filepath.Join(home, ".codex", "config.toml"), []string{"terraform-mcp"})
+
+	if !terraformCheck.Probe("codex") {
+		t.Error("expected terraform check to pass with terraform-mcp in ~/.codex/config.toml")
+	}
+}
+
+func TestTerraformCheck_codexProjectConfig(t *testing.T) {
+	orig, _ := os.Getwd()
+	dir := t.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(orig) })
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	writeCodexMCPConfig(t, filepath.Join(dir, ".codex", "config.toml"), []string{"opentofu-server"})
+
+	if !terraformCheck.Probe("codex") {
+		t.Error("expected terraform check to pass with opentofu-server in .codex/config.toml")
+	}
+}
+
 func TestTerraformCheck_copilotVSCode(t *testing.T) {
 	orig, _ := os.Getwd()
 	dir := t.TempDir()
@@ -313,7 +343,7 @@ func TestBTPAdminCheck_missing(t *testing.T) {
 	_ = os.Chdir(dir)
 	t.Cleanup(func() { _ = os.Chdir(orig) })
 
-	for _, agent := range []string{"claude", "cursor", "copilot"} {
+	for _, agent := range []string{"claude", "codex", "cursor", "copilot"} {
 		if btpAdminCheck.Probe(agent) {
 			t.Errorf("expected btp check to fail for agent %q when nothing is configured", agent)
 		}
@@ -390,6 +420,42 @@ func TestBTPAdminCheck_claudeOnlyDoesNotSatisfyCursor(t *testing.T) {
 	}
 }
 
+func TestBTPAdminCheck_codexPresent(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	writeCodexMCPConfig(t, filepath.Join(home, ".codex", "config.toml"), []string{"btp-administration"})
+
+	if !btpAdminCheck.Probe("codex") {
+		t.Error("expected btp check to pass with btp-administration in ~/.codex/config.toml")
+	}
+}
+
+func TestCodexServerNamesFromTOMLIgnoresNestedTables(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	data := strings.Join([]string{
+		`[mcp_servers.terraform-mcp]`,
+		`command = "terraform-mcp"`,
+		``,
+		`[mcp_servers.terraform-mcp.env]`,
+		`TOKEN = "x"`,
+		``,
+		`[mcp_servers."btp-administration"]`,
+		`command = "btp-admin"`,
+	}, "\n")
+	if err := os.WriteFile(path, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := codexServerNamesFromTOML(path)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 codex MCP servers, got %v", got)
+	}
+	if !hasMatch(got, "terraform") || !hasMatch(got, "btp") {
+		t.Fatalf("expected terraform and btp servers, got %v", got)
+	}
+}
+
 // writeClaudeDockerGateway writes a Docker MCP gateway entry into ~/.claude.json.
 // extraArgs are appended after ["mcp", "gateway", "run"] — pass nil for no --profile.
 func writeClaudeDockerGateway(t *testing.T, home string, extraArgs []string) {
@@ -405,6 +471,27 @@ func writeClaudeDockerGateway(t *testing.T, home string, extraArgs []string) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(home, ".claude.json"), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeCodexMCPConfig(t *testing.T, path string, servers []string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var b strings.Builder
+	for i, server := range servers {
+		if i > 0 {
+			b.WriteString("\n")
+		}
+		b.WriteString("[mcp_servers.")
+		b.WriteString(server)
+		b.WriteString("]\ncommand = \"")
+		b.WriteString(server)
+		b.WriteString("\"\n")
+	}
+	if err := os.WriteFile(path, []byte(b.String()), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

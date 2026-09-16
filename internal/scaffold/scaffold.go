@@ -42,6 +42,7 @@ type Agent struct {
 // KnownAgents is the registry of supported agents, keyed by ID.
 var KnownAgents = map[string]Agent{
 	"claude":  {ID: "claude", Dir: filepath.Join(".claude", "commands"), Ext: ".md", Prefix: "btp-iac."},
+	"codex":   {ID: "codex", Dir: filepath.Join(".codex", "prompts"), Ext: ".md", Prefix: "btp-iac."},
 	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc", Prefix: "btp-iac."},
 	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md", Prefix: "btp-iac."},
 }

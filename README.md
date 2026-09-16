@@ -10,6 +10,8 @@
 
 IaC Spec Kit for SAP BTP is an open-source CLI tool that will help SAP BTP administrators and practitioners. The utility is a scaffolding templater that will be used to generate the necessary project structure and skills used by AI agents to help generate IaC (Terraform) configurations for a given BTP account using best practices as recommended by SAP. Users will be able to use the generated skill to create and enhance their IaC scripts for managing their SAP BTP accounts. It will provide an easy entry point for new administrators who may be new to SAP BTP best practices and to following the right approaches when using IaC (Terraform) scripts.
 
+The `btp-iac init` workflow currently scaffolds agent integrations for Claude Code, Codex, Cursor, and GitHub Copilot.
+
 ## Requirements and Setup
 
 *Insert a short description what is required to get your project running...*
