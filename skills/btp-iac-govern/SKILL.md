@@ -49,7 +49,7 @@ Assess whether the user's invocation message already covers all five governance 
 | **Regions** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
 | **Naming** | subaccount name patterns, token definitions, environment tier names, max length |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
-| **Security** | IdP, custom identity provider type, role collections and scope, destinations and auth type |
+| **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
 For each **missing** category, ask the user for that category's details. **Ask one category at a time**: emit a single question, wait for the answer, then move to the next missing category. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
@@ -59,7 +59,7 @@ Keep each question to a single short prompt. The details to gather per category 
 - **Regions** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
 - **Naming** — subaccount pattern (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
-- **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both); destination restrictions and required auth type (e.g. OAuth2ClientCredentials).
+- **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both);.
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
 
 If the prompt already covers all five categories, skip to Step 3 immediately.
@@ -104,8 +104,6 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - IdP type: <SAML 2.0 / OIDC / N/A>
 - Default role collections: <name → user group, e.g. "BTP_OPERATOR → platform admins, BTP_VIEWER → developers">
 - Role collection scope: <platform / application / both>
-- Destinations: <restriction description, e.g. "internal systems only" or "unrestricted">
-- Destination auth type: <required auth method, e.g. OAuth2ClientCredentials, BasicAuthentication, any>
 
 ## Cost Controls
 - Metered service warning: <enabled / disabled>

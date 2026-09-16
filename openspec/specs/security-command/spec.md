@@ -14,7 +14,7 @@ The command SHALL read `specs/scenario.md`, `specs/landscape.md`, and if present
 - **THEN** it reads both spec files and optionally governance
 
 ### Requirement: define security configuration
-The command SHALL define for each subaccount: IdP trust configurations, role collections with role template assignments, user and group assignments, destination configurations, and connectivity service setup if required.
+The command SHALL define for each subaccount: IdP trust configurations, role collections with role template assignments, user and group assignments.
 
 #### Scenario: security configuration defined
 - **WHEN** inputs are read
@@ -40,16 +40,8 @@ The command SHALL validate default role collection assignments against governanc
 - **THEN** the command stops with the required assignments and fix instructions
 - **UNLESS** `- Override: true` is set
 
-### Requirement: validate destinations against governance
-The command SHALL validate destination configurations against governance restrictions.
-
-#### Scenario: destination restriction violated — hard block
-- **WHEN** `Destinations` restricts access and an external destination is being configured
-- **THEN** the command stops with the restriction and fix instructions
-- **UNLESS** `- Override: true` is set
-
 ### Requirement: write trust file
-The command SHALL write `specs/trust.md` with the complete security and connectivity configuration.
+The command SHALL write `specs/trust.md` with the complete security configuration.
 
 #### Scenario: trust file written
 - **WHEN** the command completes successfully

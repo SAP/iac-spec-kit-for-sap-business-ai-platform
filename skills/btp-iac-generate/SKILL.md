@@ -43,7 +43,6 @@ For each service instance resource:
 For each trust configuration:
 - Custom IdP presence matches `## Security → Custom IdP` requirement
 - Required role collection assignments are included
-- Destinations comply with `## Security → Destinations` restriction
 - **STOP** on violation with specific rule and fix instructions
 
 ### Cost controls validation
