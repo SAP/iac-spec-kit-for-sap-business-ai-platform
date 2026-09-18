@@ -78,3 +78,25 @@ The command SHALL run `terraform fmt` and `terraform validate` after all files a
 #### Scenario: validate fails
 - **WHEN** `terraform validate` fails
 - **THEN** the command identifies the failing resource and the likely cause
+
+### Requirement: do not commit generated code by default
+The command SHALL NOT run `git commit` (or stage files) after generating Terraform HCL unless the user explicitly requests a commit.
+
+#### Scenario: default post-generate state
+- **WHEN** generation and validation succeed
+- **THEN** the generated files are left as unstaged working-tree changes for the user to review
+
+#### Scenario: user requests commit
+- **WHEN** the user explicitly asks to commit (e.g. "commit", "git commit", "commit the changes")
+- **THEN** the command may stage and commit the generated files
+
+### Requirement: do not push generated code by default
+The command SHALL NOT run `git push` after generating Terraform HCL unless the user explicitly requests a push.
+
+#### Scenario: default post-generate state
+- **WHEN** generation and validation succeed
+- **THEN** no push is performed
+
+#### Scenario: user requests push
+- **WHEN** the user explicitly asks to push (e.g. "push", "git push")
+- **THEN** the command may push the changes

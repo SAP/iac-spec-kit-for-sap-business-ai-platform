@@ -69,3 +69,13 @@ After all tasks are complete:
 - Run `terraform fmt` on the `terraform/` directory
 - Run `terraform validate` on the `terraform/` directory
 - Report the outcome. If validate fails, identify the failing resource and the likely cause.
+
+---
+
+## Git Safeguards
+
+**Do not commit** the generated Terraform files unless the user explicitly asks (e.g. "commit", "git commit", "commit the changes").
+
+**Do not push** the generated Terraform files unless the user explicitly asks (e.g. "push", "git push").
+
+Default behaviour after a successful generate run is to leave the files as unstaged changes in the working tree so the user can review, iterate, and decide when to commit.
