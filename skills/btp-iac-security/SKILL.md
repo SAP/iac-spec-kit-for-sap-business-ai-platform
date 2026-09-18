@@ -1,6 +1,6 @@
 ---
 name: btp-iac-security
-description: Identifies authentication, authorisation, and connectivity requirements — IdP trust, role collections, and destinations.
+description: Identifies authentication and authorisation requirements — IdP trust, role collections, and role collection assignments.
 license: Apache-2.0
 metadata:
   author: SAP
@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Security
 
-Identifies the authentication, authorisation, and connectivity requirements — role collection definitions, user assignments, IdP trust configurations, and destination configurations for external system access.
+Identifies the authentication and authorisation requirements — role collection definitions, user assignments, IdP trust configurations, and role collection assignments.
 
 Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/trust.md`.
 
@@ -35,10 +35,6 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 - If `Default role collections` specifies assignments and the configuration does not include them: **STOP**
   > "GOVERNANCE VIOLATION: Governance requires default role collection assignments (`<required>`). Include these assignments or add `- Override: true` to memory/governance.md."
 
-### Destination validation
-- If `Destinations` restricts access (e.g. "internal systems only") and an external destination is being configured: **STOP**
-  > "GOVERNANCE VIOLATION: Governance restricts destinations to `<restriction>`. Remove the external destination or add `- Override: true` to memory/governance.md."
-
 **If `- Override: true` is set in `<project-root>/memory/governance.md`:** log a warning for each violation and continue instead of stopping.
 
 ---
@@ -51,7 +47,5 @@ Define for each subaccount:
 - IdP trust configurations (platform and application)
 - Role collections with role template assignments
 - User and group assignments to role collections
-- Destination configurations for external system access
-- Connectivity service setup if required
 
-Write `specs/trust.md` with the complete security and connectivity configuration. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/trust.md` with the complete security configuration. This file is the direct input to `/btp-iac.tasks`.

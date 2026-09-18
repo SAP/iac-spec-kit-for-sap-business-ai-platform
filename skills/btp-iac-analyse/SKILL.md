@@ -38,7 +38,7 @@ Before analysing, check these and report (do not silently proceed) if any hold:
 
 - **subaccounts, directories** — regions, hierarchy, labels
 - **entitlements & subscriptions** — service offerings/plans, service instances
-- **security & connectivity** — trust configurations, role collections, assignments, destinations, connectivity
+- **security** — trust configurations, role collections, assignments
 - **providers** — `required_providers` (versions) and provider aliases
 - **graph** — `data`, `locals`, `outputs`, dependency edges, `for_each`, `count`, `depends_on`
 - **variables** — type, `description`, `validation`, `sensitive`, and whether there is no default
@@ -67,7 +67,7 @@ Before analysing, check these and report (do not silently proceed) if any hold:
 | Signal | Evidence | Confidence | Downstream consumer |
 |---|---|---|---|
 
-### Observed security and connectivity
+### Observed security
 | Signal | Evidence | Confidence | Downstream consumer |
 |---|---|---|---|
 

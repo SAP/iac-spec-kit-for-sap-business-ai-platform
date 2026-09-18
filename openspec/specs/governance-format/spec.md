@@ -42,7 +42,7 @@ The governance file SHALL contain a Service Plans section with permitted and for
   - `- Default plan:` — the plan to use when multiple are permitted and none is specified
 
 ### Requirement: security section
-The governance file SHALL contain a Security section specifying the custom IdP requirement and type, role collection scope and default assignments, and destination authentication restrictions.
+The governance file SHALL contain a Security section specifying the custom IdP requirement and type, role collection scope and default assignments.
 
 #### Scenario: security section present
 - **WHEN** `memory/governance.md` is read by a downstream command
@@ -51,8 +51,6 @@ The governance file SHALL contain a Security section specifying the custom IdP r
   - `- IdP type:` — `SAML 2.0`, `OIDC`, or `N/A` if no custom IdP
   - `- Default role collections:` — named role collections and which user groups receive them (e.g. `BTP_OPERATOR → platform admins, BTP_VIEWER → developers`)
   - `- Role collection scope:` — `platform`, `application`, or `both`
-  - `- Destinations:` — access restriction description (e.g. `internal systems only`, `unrestricted`)
-  - `- Destination auth type:` — required authentication method for destinations (e.g. `OAuth2ClientCredentials`, `BasicAuthentication`, `any`)
 
 ### Requirement: cost controls section
 The governance file SHALL contain a Cost Controls section specifying which metered services trigger warnings, the cost centre tag key name, and whether the tag is mandatory.
