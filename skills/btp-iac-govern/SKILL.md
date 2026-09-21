@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Govern
 
-Establishes governance guardrails for the project. Records global-account setup, approved regions and infrastructure-provider preference, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
+Establishes governance guardrails for the project. Reads the optional global-account subdomain from `memory/global-account.md` and records approved regions and infrastructure-provider preference, naming conventions, permitted runtime environments, service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
 
 ---
 
@@ -17,11 +17,11 @@ Establishes governance guardrails for the project. Records global-account setup,
 
 Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For any platform availability check, use the recorded BTP CLI route first; otherwise, only when this agent is listed under BTP MCP agents, discover BTP MCP tools and use an equivalent operation. If the record is missing or has no route, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete a lookup, pause and ask the user to resolve it. If a completed lookup shows a requested value is unavailable, ask the user for a valid replacement before writing output.
 
-For CLI validation, target the global account subdomain with `btp target --global-account <subdomain>` before issuing account commands. For an MCP route, scope the equivalent lookup to that subdomain.
+For CLI validation, read the subdomain from `<project-root>/memory/global-account.md` and, when it is configured, target it with `btp target --global-account <subdomain>` before issuing account commands. For an MCP route, scope the equivalent lookup to that subdomain. Do not ask for a subdomain.
 
 ### Availability checks
 
-After collecting the global-account subdomain and before writing governance, validate every explicitly named service offering, subscription, and service-plan pair with the targeted `btp list accounts/entitlement` result (or an equivalent BTP MCP entitlement/subscription lookup). Do not infer an offering from a standalone plan name. If no global-account subdomain is supplied, do not target the CLI; retain user input without live validation.
+Before writing governance, validate every explicitly named service offering, subscription, and service-plan pair with the targeted `btp list accounts/entitlement` result (or an equivalent BTP MCP entitlement/subscription lookup). Do not infer an offering from a standalone plan name. If `memory/global-account.md` has no configured subdomain, do not target the CLI; retain user input without live validation.
 
 Validate each requested region with `btp list accounts/available-region` against the targeted global account, ignoring every entry labelled `NEO`. If the preferred infrastructure provider for this run is not `none` — the value supplied by the user, or `## Regions → Preferred infrastructure provider` from an existing governance file — compare it with the provider metadata returned for that region (or an equivalent MCP result). On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`. Map only unambiguous provider labels to `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, or `Alibaba Cloud`; never infer a provider from a region code. A known mismatch produces a warning naming the region, selected preference, and returned provider, but does not prevent the governance file from being written. If provider metadata is absent or unmappable, report that provider validation was unavailable and retain the region. If no live region lookup route is available, consult SAP Help's [Regions and API Endpoints Available for the Cloud Foundry Environment](https://help.sap.com/docs/btp/sap-business-technology-platform/regions-and-api-endpoints-available-for-cloud-foundry-environment?locale=en-US&version=LATEST), exclude NEO entries, and present the result as advisory only.
 
@@ -64,7 +64,7 @@ Assess whether the user's invocation message already covers all six governance c
 | Category | Covered if the prompt mentions… |
 |---|---|
 | **Regions** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
-| **Account Setup** | global account subdomain and permitted runtime environments (Cloud Foundry and/or Kyma) |
+| **Account Setup** | permitted runtime environments (Cloud Foundry and/or Kyma) |
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; environment tier names; max length |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Security** | IdP, custom identity provider type, role collections and scope |
@@ -75,7 +75,7 @@ For each **missing** category, ask the user for that category's details. **Ask o
 Keep each question to a single short prompt. The details to gather per category are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
 - **Regions** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
-- **Account Setup** — global account subdomain (never a GUID) and the allowed runtime environments: Cloud Foundry, Kyma, or both.
+- **Account Setup** — the allowed runtime environments: Cloud Foundry, Kyma, or both. The global account subdomain is set only during `btp-iac init` and is read from `memory/global-account.md`; never ask for it here.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
@@ -101,7 +101,6 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Preferred region: <default region when none is specified, e.g. eu10>
 
 ## Account Setup
-- Global account subdomain: <global account subdomain, never a GUID>
 - Allowed environments: <Cloud Foundry, Kyma, or both>
 
 ## Naming

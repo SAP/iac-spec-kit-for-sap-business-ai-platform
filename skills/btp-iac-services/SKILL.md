@@ -19,7 +19,7 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 
 ## BTP platform validation
 
-Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the global-account subdomain in `specs/landscape.md`. Prefer the recorded CLI route: run `btp target --global-account <subdomain>` and inspect `btp list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support.
+Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and inspect `btp list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
 If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
 

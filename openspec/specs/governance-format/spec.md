@@ -24,12 +24,11 @@ The governance file SHALL contain a Regions section specifying the preferred inf
 - **THEN** downstream commands treat it as `none`
 
 ### Requirement: account setup section
-The governance file SHALL contain an Account Setup section specifying the global account subdomain and the runtime environment types permitted in the project.
+The governance file SHALL contain an Account Setup section specifying the runtime environment types permitted in the project. The global account subdomain is stored separately in `memory/global-account.md`, which initialization creates.
 
 #### Scenario: account setup section present
 - **WHEN** `memory/governance.md` is read by a downstream command
 - **THEN** it contains a `## Account Setup` section with:
-  - `- Global account subdomain:` — the global account subdomain, never a GUID
   - `- Allowed environments:` — `Cloud Foundry`, `Kyma`, or both
 
 ### Requirement: naming section

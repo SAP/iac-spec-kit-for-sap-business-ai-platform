@@ -232,31 +232,36 @@ func TestApplyAdoptPreservesGitignore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := existing + ".btp-iac/platform-validation.md\n"
+	want := existing + ".btp-iac/platform-validation.md\nmemory/global-account.md\n"
 	if string(got) != want {
 		t.Errorf("Adopt: .gitignore = %q, want %q", string(got), want)
 	}
 }
 
 func TestEnsureGitignoreEntryRecognizesCRLFAndDirectoryRule(t *testing.T) {
-	for _, existing := range []string{
-		".btp-iac/platform-validation.md\r\n",
-		".btp-iac/\n",
-	} {
+	tests := []struct {
+		existing string
+		entry    string
+	}{
+		{existing: ".btp-iac/platform-validation.md\r\n", entry: ".btp-iac/platform-validation.md"},
+		{existing: ".btp-iac/\n", entry: ".btp-iac/platform-validation.md"},
+		{existing: "memory/\n", entry: filepath.Join("memory", GlobalAccountFile)},
+	}
+	for _, test := range tests {
 		dir := t.TempDir()
 		path := filepath.Join(dir, ".gitignore")
-		if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
+		if err := os.WriteFile(path, []byte(test.existing), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		if err := ensureGitignoreEntry(dir, ".btp-iac/platform-validation.md"); err != nil {
+		if err := ensureGitignoreEntry(dir, test.entry); err != nil {
 			t.Fatal(err)
 		}
 		got, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if string(got) != existing {
-			t.Errorf(".gitignore changed from %q to %q", existing, got)
+		if string(got) != test.existing {
+			t.Errorf(".gitignore changed from %q to %q", test.existing, got)
 		}
 	}
 }
@@ -278,9 +283,53 @@ func TestApplyAgentOnly(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, ".cursor", "rules", "btp-iac.govern.mdc")); err != nil {
 		t.Error("AgentOnly: missing cursor rule file")
 	}
-	// AgentOnly records the local platform-validation ignore rule too.
+	// AgentOnly records local files that must remain untracked too.
 	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
-	if err != nil || !strings.Contains(string(data), ".btp-iac/platform-validation.md") {
-		t.Errorf("AgentOnly: platform validation ignore rule missing: %v", err)
+	if err != nil || !strings.Contains(string(data), ".btp-iac/platform-validation.md") || !strings.Contains(string(data), "memory/global-account.md") {
+		t.Errorf("AgentOnly: local-file ignore rules missing: %v", err)
+	}
+}
+
+func TestWriteGlobalAccountSubdomain(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := WriteGlobalAccountSubdomain(dir, "acme-global"); err != nil {
+		t.Fatalf("WriteGlobalAccountSubdomain: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "memory", GlobalAccountFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(data), "# Global Account\n\n- Subdomain: acme-global\n"; got != want {
+		t.Errorf("global account record = %q, want %q", got, want)
+	}
+
+	if err := WriteGlobalAccountSubdomain(dir, ""); err != nil {
+		t.Fatalf("WriteGlobalAccountSubdomain(empty): %v", err)
+	}
+	data, err = os.ReadFile(filepath.Join(dir, "memory", GlobalAccountFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "acme-global") {
+		t.Error("empty optional input overwrote the configured subdomain")
+	}
+
+	emptyDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(emptyDir, "memory"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := WriteGlobalAccountSubdomain(emptyDir, ""); err != nil {
+		t.Fatalf("WriteGlobalAccountSubdomain(empty new project): %v", err)
+	}
+	data, err = os.ReadFile(filepath.Join(emptyDir, "memory", GlobalAccountFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(data), "# Global Account\n\n- Subdomain:\n"; got != want {
+		t.Errorf("empty global account record = %q, want %q", got, want)
 	}
 }

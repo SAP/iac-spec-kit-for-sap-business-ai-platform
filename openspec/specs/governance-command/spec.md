@@ -38,7 +38,7 @@ Before collecting any other missing governance details, the command SHALL determ
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
 ### Requirement: evaluate prompt completeness
-The command SHALL assess whether the user's invocation prompt covers all six governance categories: regions, account setup, naming, service plans, security, and cost controls.
+The command SHALL assess whether the user's invocation prompt covers all six governance categories: regions, account setup, naming, service plans, security, and cost controls. Account setup covers permitted runtime environments; the command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
 #### Scenario: all categories covered in prompt
 - **WHEN** the user's prompt contains rules for all six categories and states a valid preferred infrastructure provider
@@ -62,11 +62,11 @@ The command SHALL write the collected rules to `<project-root>/memory/governance
 - **AND** the command confirms the file was saved and lists the rules that will be enforced
 
 ### Requirement: validate explicitly specified platform values
-When the input identifies a global-account subdomain and named service offerings, subscriptions, service-plan pairs, or regions, the command SHALL validate them against the platform using the shared platform-validation capability before writing governance. CLI checks SHALL target that global account; region checks SHALL exclude NEO entries.
+When the input identifies named service offerings, subscriptions, service-plan pairs, or regions, the command SHALL validate them against the platform using the shared platform-validation capability before writing governance. CLI checks SHALL target the global account configured in `memory/global-account.md` when one is present; region checks SHALL exclude NEO entries.
 
 #### Scenario: no global-account target supplied
-- **WHEN** governance input names platform values but does not provide a global-account subdomain
-- **THEN** the command retains those values without a targeted live CLI check
+- **WHEN** `memory/global-account.md` has no configured subdomain
+- **THEN** the command retains those values without a targeted live CLI check and does not request a subdomain
 
 #### Scenario: provider mismatch
 - **WHEN** a requested region has unambiguous provider metadata that differs from the preferred infrastructure provider

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -40,6 +41,8 @@ type initIntent struct {
 	mode scaffold.Mode
 }
 
+var globalAccountGUID = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
 // validProjectName rejects names with path separators or leading dots to
 // prevent directory traversal and hidden-directory confusion.
 func validProjectName(name string) error {
@@ -47,6 +50,32 @@ func validProjectName(name string) error {
 		return fmt.Errorf("invalid project name %q: must not contain path separators or start with '.'", name)
 	}
 	return nil
+}
+
+// collectGlobalAccountSubdomain offers the optional initialization-only input.
+func collectGlobalAccountSubdomain() (string, error) {
+	var subdomain string
+	if err := survey.AskOne(
+		&survey.Input{Message: "Global account subdomain (optional):"},
+		&subdomain,
+		survey.WithValidator(func(val any) error {
+			value := strings.TrimSpace(fmt.Sprintf("%v", val))
+			if globalAccountGUID.MatchString(value) {
+				return fmt.Errorf("enter the global account subdomain, not its GUID")
+			}
+			return nil
+		}),
+	); err != nil {
+		return "", fmt.Errorf("prompt: %w", err)
+	}
+	return strings.TrimSpace(subdomain), nil
+}
+
+func existingDirIntent(dir string) initIntent {
+	if scaffold.IsProject(dir) {
+		return initIntent{dir: dir, mode: scaffold.ModeAgentOnly}
+	}
+	return initIntent{dir: dir, mode: scaffold.ModeAdopt}
 }
 
 // resolveIntent determines what to do based on the optional name arg.
@@ -58,12 +87,9 @@ func resolveIntent(name string) (initIntent, error) {
 			return initIntent{}, err
 		}
 		if _, err := os.Stat(name); err == nil {
-			// Named directory exists: pick mode based on whether it's already a
-			// btp-iac project (has specs/ or memory/) or a bare repo to adopt.
-			if scaffold.IsProject(name) {
-				return initIntent{dir: name, mode: scaffold.ModeAgentOnly}, nil
-			}
-			return initIntent{dir: name, mode: scaffold.ModeAdopt}, nil
+			// Existing btp-iac projects receive agent-only updates; bare repos
+			// are adopted as infrastructure projects.
+			return existingDirIntent(name), nil
 		}
 		return initIntent{dir: name, mode: scaffold.ModeFresh}, nil
 	}
@@ -102,7 +128,7 @@ func resolveIntent(name string) (initIntent, error) {
 		if err != nil {
 			return initIntent{}, fmt.Errorf("getwd: %w", err)
 		}
-		return initIntent{dir: cwd, mode: scaffold.ModeAdopt}, nil
+		return existingDirIntent(cwd), nil
 
 	default: // optAgentOnly
 		cwd, err := os.Getwd()
@@ -139,7 +165,6 @@ func initCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			agents, err := agentselect.Select(agentFlag)
 			if err != nil {
 				return err
@@ -173,6 +198,14 @@ func initCmd() *cobra.Command {
 				cmd.PrintErrln(ui.Warn("AI agents will generate Terraform files inside terraform/. Move your existing .tf files there if you want them alongside generated code."))
 			}
 
+			var globalSubdomain string
+			if intent.mode != scaffold.ModeAgentOnly {
+				globalSubdomain, err = collectGlobalAccountSubdomain()
+				if err != nil {
+					return err
+				}
+			}
+
 			var warning string
 			if intent.mode == scaffold.ModeFresh {
 				warning, err = scaffold.Scaffold(intent.dir, skills.Commands, agents)
@@ -187,6 +220,11 @@ func initCmd() *cobra.Command {
 			}
 			if err := capabilities.Write(intent.dir); err != nil {
 				return err
+			}
+			if intent.mode != scaffold.ModeAgentOnly {
+				if err := scaffold.WriteGlobalAccountSubdomain(intent.dir, globalSubdomain); err != nil {
+					return err
+				}
 			}
 
 			ui.PrintSuccess(intent.dir, agentIDs, intent.mode, warning == "")
