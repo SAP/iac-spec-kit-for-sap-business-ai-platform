@@ -13,12 +13,32 @@ The command SHALL accept a plain-language description of the app or service to b
 - **WHEN** the user describes their application in natural language
 - **THEN** the command translates it into structured infrastructure requirements
 
-### Requirement: ask targeted follow-up questions
-The command SHALL ask at most three targeted follow-up questions covering runtime, integration points, and environment isolation before writing output.
+### Requirement: governance-aware targeted follow-up questions
+The command SHALL read `memory/governance.md` when it exists before asking follow-up questions. It SHALL ask at most three targeted follow-up questions covering unresolved runtime and Cloud Foundry sizing, destinations, and setup structure before writing output.
 
 #### Scenario: follow-ups asked
 - **WHEN** the description is ambiguous or incomplete
 - **THEN** the command asks up to three questions and no more
+
+#### Scenario: environment already governed
+- **WHEN** scenario input and governance together sufficiently determine the required runtime and setup structure
+- **THEN** the command does not ask an environment follow-up question
+
+#### Scenario: environment decision remains unresolved
+- **WHEN** governance permits multiple runtimes and neither governance nor scenario input selects the runtime required by the scenario
+- **THEN** the command asks one narrowly scoped environment follow-up question
+
+#### Scenario: Cloud Foundry sizing required
+- **WHEN** Cloud Foundry is selected or permitted and scenario input does not specify its application memory allocation or sizing
+- **THEN** the runtime follow-up asks for Cloud Foundry memory allocation or sizing
+
+#### Scenario: destinations unresolved
+- **WHEN** scenario input does not establish whether integrations require destinations
+- **THEN** the integration follow-up asks whether destinations are required and, if so, which destinations and purposes are needed
+
+#### Scenario: setup structure unresolved
+- **WHEN** scenario input does not establish how stages should be structured
+- **THEN** the structure follow-up asks, for example, whether each stage needs its own subaccount
 
 ### Requirement: write scenario file
 The command SHALL write results to `specs/scenario.md`.
