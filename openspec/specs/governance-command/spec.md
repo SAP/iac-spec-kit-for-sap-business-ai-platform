@@ -31,10 +31,10 @@ The command SHALL check whether `<project-root>/memory/governance.md` exists bef
 - **THEN** the command proceeds to collect governance rules from scratch
 
 ### Requirement: evaluate prompt completeness
-The command SHALL assess whether the user's invocation prompt covers all five governance categories: regions, naming, service plans, security, and cost controls.
+The command SHALL assess whether the user's invocation prompt covers all six governance categories: regions, account setup, naming, service plans, security, and cost controls.
 
 #### Scenario: all categories covered in prompt
-- **WHEN** the user's prompt contains rules for all five categories
+- **WHEN** the user's prompt contains rules for all six categories
 - **THEN** the command writes governance.md directly without asking follow-up questions
 
 #### Scenario: some categories missing from prompt
@@ -44,7 +44,7 @@ The command SHALL assess whether the user's invocation prompt covers all five go
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks one targeted question for each of the five categories in sequence
+- **THEN** the command asks one targeted question for each of the six categories in sequence
 
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.

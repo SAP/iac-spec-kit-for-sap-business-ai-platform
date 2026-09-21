@@ -18,14 +18,26 @@ The governance file SHALL contain a Regions section specifying allowed and forbi
   - `- Compliance reason:` — the regulatory or policy driver (e.g. `GDPR — customer data must not leave the EU`)
   - `- Preferred region:` — the default region to use when none is explicitly specified (e.g. `eu10`)
 
+### Requirement: account setup section
+The governance file SHALL contain an Account Setup section specifying the global account subdomain and the runtime environment types permitted in the project.
+
+#### Scenario: account setup section present
+- **WHEN** `memory/governance.md` is read by a downstream command
+- **THEN** it contains a `## Account Setup` section with:
+  - `- Global account subdomain:` — the global account subdomain, never a GUID
+  - `- Allowed environments:` — `Cloud Foundry`, `Kyma`, or both
+
 ### Requirement: naming section
-The governance file SHALL contain a Naming section specifying the subaccount naming pattern with token definitions, environment tiers, directory structure preference, and maximum subaccount name length.
+The governance file SHALL contain a Naming section specifying the subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space naming patterns, token definitions, environment tiers, directory structure preference, and maximum subaccount name length.
 
 #### Scenario: naming section present
 - **WHEN** `memory/governance.md` is read by a downstream command
 - **THEN** it contains a `## Naming` section with:
   - `- Subaccount pattern:` — the naming template (e.g. `{org}-{env}-{app}`)
   - `- Pattern tokens:` — definition of each token in the pattern (e.g. `{org} = organisation short code, {env} = environment tier, {app} = application identifier`)
+  - `- Cloud Foundry org pattern:` — naming template for Cloud Foundry organizations
+  - `- Kyma environment pattern:` — naming template for Kyma environments
+  - `- Cloud Foundry space pattern:` — naming template for Cloud Foundry spaces
   - `- Environments:` — comma-separated ordered list of environment tiers (e.g. `dev, test, prod`)
   - `- Directory structure:` — `flat` or `hierarchical`
   - `- Max name length:` — maximum character length for subaccount names (BTP platform limit is 255)

@@ -14,11 +14,26 @@ The command SHALL read `specs/scenario.md` and, if present, `memory/governance.m
 - **THEN** it reads `specs/scenario.md` and optionally `memory/governance.md`
 
 ### Requirement: define account topology
-The command SHALL define the BTP account topology: global account reference, directory groupings, and subaccounts per environment tier with name, region, description, and subdomain.
+The command SHALL define the BTP account topology: global account subdomain, directory groupings, subaccounts per environment tier with name, region, description, and subdomain, and optional Cloud Foundry and Kyma environments.
 
 #### Scenario: topology defined
 - **WHEN** inputs are read
 - **THEN** the command produces a complete account topology covering all environment tiers
+
+### Requirement: collect runtime environment setup
+For every subaccount, the command SHALL determine whether Cloud Foundry, Kyma, both, or no runtime environment is required. When Cloud Foundry is selected, it SHALL determine whether spaces are required and collect their names.
+
+#### Scenario: environment setup missing from inputs
+- **WHEN** the scenario and governance do not fully determine a subaccount's runtime environment setup
+- **THEN** the command asks targeted questions before writing `specs/landscape.md`
+
+### Requirement: validate account setup governance
+The command SHALL use the governed global account subdomain when present, and validate each selected runtime environment type and applicable name against Account Setup and Naming rules.
+
+#### Scenario: governed environment violation
+- **WHEN** a selected environment type is not allowed or an environment, organization, or space name violates its pattern
+- **THEN** the command stops with the violated rule and fix instructions
+- **UNLESS** `- Override: true` is set, in which case a warning is logged and the command continues
 
 ### Requirement: validate regions against governance
 The command SHALL validate each subaccount region against governance rules if `memory/governance.md` exists.

@@ -1,6 +1,6 @@
 ---
 name: btp-iac-govern
-description: Establishes governance guardrails — regions, naming, service plans, security, and cost controls.
+description: Establishes governance guardrails — account setup, regions, naming, service plans, security, and cost controls.
 license: Apache-2.0
 metadata:
   author: SAP
@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Govern
 
-Establishes governance guardrails for the project. Records approved regions, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations.
+Establishes governance guardrails for the project. Records global-account setup, approved regions, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations.
 
 ---
 
@@ -42,27 +42,29 @@ Check whether `<project-root>/memory/governance.md` exists.
 
 ### Step 2 — Evaluate prompt completeness
 
-Assess whether the user's invocation message already covers all five governance categories:
+Assess whether the user's invocation message already covers all six governance categories:
 
 | Category | Covered if the prompt mentions… |
 |---|---|
 | **Regions** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
-| **Naming** | subaccount name patterns, token definitions, environment tier names, max length |
+| **Account Setup** | global account subdomain and permitted runtime environments (Cloud Foundry and/or Kyma) |
+| **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; environment tier names; max length |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
 For each **missing** category, ask the user for that category's details. **Ask one category at a time**: emit a single question, wait for the answer, then move to the next missing category. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
-Keep each question to a single short prompt. The details to gather per category are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as five separate questions crammed into one string.
+Keep each question to a single short prompt. The details to gather per category are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
 - **Regions** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
-- **Naming** — subaccount pattern (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
+- **Account Setup** — global account subdomain (never a GUID) and the allowed runtime environments: Cloud Foundry, Kyma, or both.
+- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both);.
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
 
-If the prompt already covers all five categories, skip to Step 3 immediately.
+If the prompt already covers all six categories, skip to Step 3 immediately.
 
 ---
 
@@ -80,9 +82,16 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Compliance reason: <regulatory driver, e.g. "GDPR — customer data must not leave the EU">
 - Preferred region: <default region when none is specified, e.g. eu10>
 
+## Account Setup
+- Global account subdomain: <global account subdomain, never a GUID>
+- Allowed environments: <Cloud Foundry, Kyma, or both>
+
 ## Naming
 - Subaccount pattern: <pattern, e.g. {org}-{env}-{app}>
 - Pattern tokens: <token definitions, e.g. "{org} = organisation short code, {env} = environment tier, {app} = application identifier">
+- Cloud Foundry org pattern: <pattern for CF organization names>
+- Kyma environment pattern: <pattern for Kyma environment names>
+- Cloud Foundry space pattern: <pattern for CF space names>
 - Environments: <comma-separated tiers in order, e.g. dev, test, prod>
 - Directory structure: <flat or hierarchical>
 - Max name length: <character limit, e.g. 60>
@@ -125,6 +134,7 @@ Governance rules saved to memory/governance.md.
 
 The following rules are now in effect:
   Regions:        <summary>
+  Account Setup:  <summary>
   Naming:         <summary>
   Service Plans:  <summary>
   Security:       <summary>

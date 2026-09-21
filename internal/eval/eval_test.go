@@ -10,26 +10,37 @@ import (
 )
 
 func TestLoadAndFixture(t *testing.T) {
-	s, err := Load(filepath.Join("..", "..", "skills", "btp-iac-govern", "evals", "evals.json"))
-	if err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		skill string
+		paths []string
+	}{
+		{"btp-iac-govern", []string{"specs/.gitkeep", "memory/.gitkeep", "terraform/.gitkeep"}},
+		{"btp-iac-accounts", []string{"specs/scenario.md", "memory/governance.md", "terraform/.gitkeep"}},
 	}
-	if len(s.Evals) == 0 {
-		t.Fatal("expected at least one eval")
-	}
-	d, root, err := fixture(s.Evals[0])
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := os.RemoveAll(root); err != nil {
-			t.Errorf("remove fixture root: %v", err)
-		}
-	}()
-	for _, p := range []string{"specs/.gitkeep", "memory/.gitkeep", "terraform/.gitkeep"} {
-		if _, err := os.Stat(filepath.Join(d, p)); err != nil {
-			t.Errorf("missing fixture %s: %v", p, err)
-		}
+	for _, tc := range cases {
+		t.Run(tc.skill, func(t *testing.T) {
+			s, err := Load(filepath.Join("..", "..", "skills", tc.skill, "evals", "evals.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(s.Evals) == 0 {
+				t.Fatal("expected at least one eval")
+			}
+			d, root, err := fixture(s.Evals[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() {
+				if err := os.RemoveAll(root); err != nil {
+					t.Errorf("remove fixture root: %v", err)
+				}
+			})
+			for _, p := range tc.paths {
+				if _, err := os.Stat(filepath.Join(d, p)); err != nil {
+					t.Errorf("missing fixture %s: %v", p, err)
+				}
+			}
+		})
 	}
 }
 func TestExtractJSON(t *testing.T) {
