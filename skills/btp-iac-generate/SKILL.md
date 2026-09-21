@@ -11,7 +11,7 @@ metadata:
 
 Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac.design`.
 
-Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to the `terraform/` directory. Runs `terraform validate` and `terraform fmt` on completion.
+Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on completion, fixing any issues and retrying until both pass.
 
 ---
 
@@ -55,6 +55,14 @@ For each metered service resource:
 
 ---
 
+## Provider Version
+
+**Before writing `versions.tf`**, look up the latest version of each required Terraform provider. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.
+
+Use the retrieved version as the `~>` constraint in `required_providers`. Never hardcode a version.
+
+---
+
 ## Workflow
 
 Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac.design`.
@@ -65,9 +73,11 @@ For each task in dependency order:
 3. Continue to the next task
 
 After all tasks are complete:
-- Run `terraform fmt` on the `terraform/` directory
-- Run `terraform validate` on the `terraform/` directory
-- Report the outcome. If validate fails, identify the failing resource and the likely cause.
+1. Run `terraform init` on the `terraform/` directory
+2. Run `terraform fmt --recursive` on the `terraform/` directory
+3. Run `terraform validate` on the `terraform/` directory
+4. If `terraform fmt` or `terraform validate` fails: fix the reported issues in the affected files, then re-run `terraform fmt --recursive` and `terraform validate` until both pass
+5. Report the final outcome
 
 ---
 

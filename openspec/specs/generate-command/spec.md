@@ -68,16 +68,34 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **WHEN** the pre-generation pass passes
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
-### Requirement: run terraform fmt and validate on completion
-The command SHALL run `terraform fmt` and `terraform validate` after all files are written and report the outcome.
+### Requirement: resolve latest provider versions at runtime
+The command SHALL look up the current latest version of each required Terraform provider before writing `versions.tf`, and use those versions as `~>` constraints in `required_providers`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 
-#### Scenario: validate passes
-- **WHEN** all files are written and `terraform validate` succeeds
+#### Scenario: provider version resolved
+- **WHEN** generating `versions.tf`
+- **THEN** the command looks up the latest version for each provider via the terraform MCP server or WebFetch fallback, and uses it as the `~>` constraint
+
+### Requirement: run terraform init before fmt and validate
+The command SHALL run `terraform init` on the `terraform/` directory before `terraform fmt` and `terraform validate`.
+
+#### Scenario: init succeeds
+- **WHEN** all files are written and `terraform init` succeeds
+- **THEN** the command proceeds to `terraform fmt --recursive` then `terraform validate`
+
+#### Scenario: init fails
+- **WHEN** `terraform init` fails
+- **THEN** the command reports the error and does not proceed to fmt or validate
+
+### Requirement: run terraform fmt and validate on completion
+The command SHALL run `terraform fmt --recursive` and `terraform validate` after `terraform init` and report the outcome.
+
+#### Scenario: fmt and validate pass
+- **WHEN** all files are written and both commands succeed
 - **THEN** the command reports success
 
-#### Scenario: validate fails
-- **WHEN** `terraform validate` fails
-- **THEN** the command identifies the failing resource and the likely cause
+#### Scenario: fmt or validate fails — fix and retry
+- **WHEN** `terraform fmt --recursive` or `terraform validate` fails
+- **THEN** the command fixes the reported issues in the affected files, then re-runs `terraform fmt --recursive` and `terraform validate` until both pass
 
 ### Requirement: do not commit generated code by default
 The command SHALL NOT run `git commit` (or stage files) after generating Terraform HCL unless the user explicitly requests a commit.
