@@ -92,4 +92,10 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 
 ## BTP platform validation
 
+### BTP operation safety boundary
+
+The prohibition on state-changing CLI commands excludes the permitted target prelude.
+
+When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
+
 When this workflow needs to validate an observed BTP value against the platform, read `<project-root>/.btp-iac/platform-validation.md`. Prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking; if a recorded route fails, ask the user to resolve the setup before relying on it. Do not turn observed findings into desired state merely because a platform route is available.

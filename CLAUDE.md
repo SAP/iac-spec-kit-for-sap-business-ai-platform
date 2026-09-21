@@ -22,6 +22,7 @@ After every change (code, config, tooling, workflow), check whether anything doc
 - **Kind**: CLI tool (Go)
 - **Go version**: pinned in `go.mod` (respect what's there; don't bump silently)
 - **Supported agent adapters**: `claude`, `codex`, `cursor`, `copilot`
+- **BTP agent safety**: Agent command files may use only BTP CLI read/list commands and BTP MCP tools explicitly documented as read/list lookups. `btp target --global-account <subdomain>` is allowed only as the account-selection prelude to those CLI calls; BTP mutations are prohibited.
 
 ## Go conventions
 

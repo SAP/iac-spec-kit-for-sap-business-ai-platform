@@ -19,6 +19,12 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 
 ## BTP platform validation
 
+### BTP operation safety boundary
+
+The prohibition on state-changing CLI commands excludes the permitted target prelude.
+
+When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
+
 Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and inspect `btp list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
 If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.

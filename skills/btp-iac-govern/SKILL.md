@@ -15,6 +15,12 @@ Establishes governance guardrails for the project. Reads the optional global-acc
 
 ## BTP platform validation
 
+### BTP operation safety boundary
+
+The prohibition on state-changing CLI commands excludes the permitted target prelude.
+
+When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
+
 Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For any platform availability check, use the recorded BTP CLI route first; otherwise, only when this agent is listed under BTP MCP agents, discover BTP MCP tools and use an equivalent operation. If the record is missing or has no route, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete a lookup, pause and ask the user to resolve it. If a completed lookup shows a requested value is unavailable, ask the user for a valid replacement before writing output.
 
 For CLI validation, read the subdomain from `<project-root>/memory/global-account.md` and, when it is configured, target it with `btp target --global-account <subdomain>` before issuing account commands. For an MCP route, scope the equivalent lookup to that subdomain. Do not ask for a subdomain.

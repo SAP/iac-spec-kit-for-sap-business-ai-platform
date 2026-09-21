@@ -15,14 +15,15 @@ The command SHALL accept a plain-language description of the app or service to b
 
 ### Requirement: governance-aware targeted follow-up questions
 The command SHALL read `memory/governance.md` when it exists before asking follow-up questions. It SHALL ask at most three targeted follow-up questions covering unresolved runtime and Cloud Foundry sizing, destinations, and setup structure before writing output.
+Each follow-up SHALL be exactly one concise question per turn. The command SHALL wait for its answer before asking another and SHALL not use a structured question tool without satisfying that tool's complete parameter schema.
 
 #### Scenario: follow-ups asked
 - **WHEN** the description is ambiguous or incomplete
 - **THEN** the command asks up to three questions and no more
 
-#### Scenario: environment already governed
-- **WHEN** scenario input and governance together sufficiently determine the required runtime and setup structure
-- **THEN** the command does not ask an environment follow-up question
+#### Scenario: runtime already governed
+- **WHEN** scenario input and governance together sufficiently determine the required runtime
+- **THEN** the command does not ask a runtime follow-up question
 
 #### Scenario: environment decision remains unresolved
 - **WHEN** governance permits multiple runtimes and neither governance nor scenario input selects the runtime required by the scenario
@@ -39,6 +40,7 @@ The command SHALL read `memory/governance.md` when it exists before asking follo
 #### Scenario: setup structure unresolved
 - **WHEN** scenario input does not establish how stages should be structured
 - **THEN** the structure follow-up asks, for example, whether each stage needs its own subaccount
+- **AND** governance naming and tier constraints do not suppress that question
 
 ### Requirement: write scenario file
 The command SHALL write results to `specs/scenario.md`.
