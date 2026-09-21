@@ -38,3 +38,10 @@ The command SHALL write `specs/services.md` with the full dependency-ordered ser
 #### Scenario: services file written
 - **WHEN** the command completes successfully
 - **THEN** `specs/services.md` exists and is the direct input to `/btp-iac.tasks`
+
+### Requirement: validate resolved entitlements
+Before writing output, the command SHALL validate every resolved entitlement, subscription, service offering, and plan with the shared platform-validation capability scoped to the landscape global account.
+
+#### Scenario: resolved entitlement unavailable
+- **WHEN** the scoped platform lookup does not include a resolved entitlement or subscription
+- **THEN** the command asks for a valid replacement before writing `specs/services.md`

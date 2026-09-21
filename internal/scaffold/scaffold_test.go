@@ -3,6 +3,7 @@ package scaffold
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/SAP/btp-iac-spec-kit/skills"
@@ -231,8 +232,32 @@ func TestApplyAdoptPreservesGitignore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != existing {
-		t.Errorf("Adopt: .gitignore was overwritten; want %q got %q", existing, string(got))
+	want := existing + ".btp-iac/platform-validation.md\n"
+	if string(got) != want {
+		t.Errorf("Adopt: .gitignore = %q, want %q", string(got), want)
+	}
+}
+
+func TestEnsureGitignoreEntryRecognizesCRLFAndDirectoryRule(t *testing.T) {
+	for _, existing := range []string{
+		".btp-iac/platform-validation.md\r\n",
+		".btp-iac/\n",
+	} {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".gitignore")
+		if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := ensureGitignoreEntry(dir, ".btp-iac/platform-validation.md"); err != nil {
+			t.Fatal(err)
+		}
+		got, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != existing {
+			t.Errorf(".gitignore changed from %q to %q", existing, got)
+		}
 	}
 }
 
@@ -253,8 +278,9 @@ func TestApplyAgentOnly(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, ".cursor", "rules", "btp-iac.govern.mdc")); err != nil {
 		t.Error("AgentOnly: missing cursor rule file")
 	}
-	// .gitignore must NOT be created by AgentOnly.
-	if _, err := os.Stat(filepath.Join(dir, ".gitignore")); err == nil {
-		t.Error("AgentOnly: unexpected .gitignore created")
+	// AgentOnly records the local platform-validation ignore rule too.
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil || !strings.Contains(string(data), ".btp-iac/platform-validation.md") {
+		t.Errorf("AgentOnly: platform validation ignore rule missing: %v", err)
 	}
 }

@@ -17,6 +17,12 @@ Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/services.md`
 
 Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.
 
+## BTP platform validation
+
+Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the global-account subdomain in `specs/landscape.md`. Prefer the recorded CLI route: run `btp target --global-account <subdomain>` and inspect `btp list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support.
+
+If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
+
 ---
 
 ## Governance Check

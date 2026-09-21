@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/SAP/btp-iac-spec-kit/internal/platformvalidation"
 )
 
 // Mode controls which parts of the project are created or updated.
@@ -22,8 +24,8 @@ const (
 	// repo). Creates specs/, memory/, terraform/, agent files, and .gitignore
 	// if absent. Skips git init.
 	ModeAdopt
-	// ModeAgentOnly writes agent command files only. All other files and
-	// directories are left untouched.
+	// ModeAgentOnly updates agent command files and ensures the local
+	// platform-validation record is ignored, leaving project content untouched.
 	ModeAgentOnly
 )
 
@@ -106,10 +108,8 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 		}
 	}
 
-	if mode == ModeFresh || mode == ModeAdopt {
-		if err := writeGitignoreIfAbsent(dir); err != nil {
-			return "", err
-		}
+	if err := ensureGitignoreEntry(dir, platformvalidation.Ignore); err != nil {
+		return "", err
 	}
 
 	if mode != ModeFresh {
@@ -131,12 +131,30 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 	return "", nil
 }
 
-func writeGitignoreIfAbsent(dir string) error {
+func ensureGitignoreEntry(dir, entry string) error {
 	path := filepath.Join(dir, ".gitignore")
-	if _, err := os.Stat(path); err == nil {
-		return nil // already exists — preserve it
+	data, err := os.ReadFile(path)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("read .gitignore: %w", err)
 	}
-	if err := os.WriteFile(path, []byte(gitignore), 0o644); err != nil {
+	if os.IsNotExist(err) {
+		data = append([]byte(gitignore), entry+"\n"...)
+		if err := os.WriteFile(path, data, 0o644); err != nil {
+			return fmt.Errorf("write .gitignore: %w", err)
+		}
+		return nil
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSuffix(line, "\r")
+		if line == entry || line == platformvalidation.Directory || line == platformvalidation.Directory+"/" {
+			return nil
+		}
+	}
+	if len(data) > 0 && !strings.HasSuffix(string(data), "\n") {
+		data = append(data, '\n')
+	}
+	data = append(data, entry+"\n"...)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
 		return fmt.Errorf("write .gitignore: %w", err)
 	}
 	return nil

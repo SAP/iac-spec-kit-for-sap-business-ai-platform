@@ -26,3 +26,10 @@ The command SHALL write results to `specs/scenario.md`.
 #### Scenario: output written
 - **WHEN** the command completes
 - **THEN** `specs/scenario.md` exists and contains the structured requirements
+
+### Requirement: validate supplied platform values
+The command SHALL apply the shared platform-validation capability to supplied regions, named service offerings, subscriptions, and plan pairs. When a live check needs a global-account target that is absent from governance and input, it SHALL collect the subdomain within its targeted follow-up limit.
+
+#### Scenario: target needed for supplied region
+- **WHEN** scenario input supplies a region that needs live validation but no global-account subdomain
+- **THEN** the command obtains the subdomain in a targeted follow-up before checking the region

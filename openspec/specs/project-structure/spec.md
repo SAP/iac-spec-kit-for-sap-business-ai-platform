@@ -12,6 +12,7 @@ The CLI SHALL create the base project directories and the agent-specific directo
 #### Scenario: base dirs always present
 - **WHEN** `btp-iac init <name>` completes successfully
 - **THEN** `specs/`, `memory/`, and `terraform/` always exist regardless of agent selection
+- **AND** `.btp-iac/` exists with the local platform-validation record
 
 #### Scenario: agent dirs vary by selection
 - **WHEN** only `cursor` is selected

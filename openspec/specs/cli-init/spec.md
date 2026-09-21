@@ -33,6 +33,13 @@ The CLI SHALL verify that `terraform` is available on `$PATH` before creating an
 - **THEN** the CLI exits with a non-zero status and prints a message directing the user to install Terraform
 - **THEN** no directories or files are created
 
+### Requirement: optional BTP platform-validation pre-flight
+The CLI SHALL detect whether `btp` is on PATH and whether each selected agent has a BTP MCP server, then persist the non-sensitive result in `.btp-iac/platform-validation.md`. The record SHALL be ignored by Git and refreshed on fresh, adopt, and agent-only initialization.
+
+#### Scenario: no BTP validation route
+- **WHEN** neither the CLI nor a selected agent's BTP MCP server is available
+- **THEN** init warns for that agent and completes normally
+
 ### Requirement: git repository initialised
 The CLI SHALL run `git init` inside the newly created project directory.
 

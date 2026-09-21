@@ -10,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
 	"github.com/SAP/btp-iac-spec-kit/internal/mcpcheck"
+	"github.com/SAP/btp-iac-spec-kit/internal/platformvalidation"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
 	"github.com/SAP/btp-iac-spec-kit/internal/scaffold"
 	"github.com/SAP/btp-iac-spec-kit/internal/ui"
@@ -148,7 +149,13 @@ func initCmd() *cobra.Command {
 			for i, a := range agents {
 				agentIDs[i] = a.ID
 			}
-			for _, w := range mcpcheck.Run(mcpcheck.DefaultChecks, agentIDs) {
+			// Terraform MCP remains an independent advisory check. BTP validation
+			// is satisfied by either the CLI or a per-agent BTP MCP server.
+			for _, w := range mcpcheck.Run(mcpcheck.NonBTPChecks, agentIDs) {
+				cmd.PrintErrln(ui.Warn(w))
+			}
+			capabilities := platformvalidation.Detect(agentIDs)
+			for _, w := range capabilities.Warnings(agentIDs) {
 				cmd.PrintErrln(ui.Warn(w))
 			}
 
@@ -177,6 +184,9 @@ func initCmd() *cobra.Command {
 			}
 			if warning != "" {
 				cmd.PrintErrln(ui.Warn(warning))
+			}
+			if err := capabilities.Write(intent.dir); err != nil {
+				return err
 			}
 
 			ui.PrintSuccess(intent.dir, agentIDs, intent.mode, warning == "")

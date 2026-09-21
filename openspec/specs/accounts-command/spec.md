@@ -65,3 +65,10 @@ The command SHALL write `specs/landscape.md` as the authoritative account struct
 #### Scenario: landscape file written
 - **WHEN** the command completes successfully
 - **THEN** `specs/landscape.md` exists and is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`
+
+### Requirement: validate platform availability when values are supplied
+The command SHALL apply the shared platform-validation capability to topology regions and any named service offering, subscription, or plan pair. CLI checks SHALL target the resolved global-account subdomain and ignore NEO regions.
+
+#### Scenario: available Cloud Foundry region
+- **WHEN** a topology region is returned by the targeted platform lookup and is not labelled NEO
+- **THEN** the command accepts the region

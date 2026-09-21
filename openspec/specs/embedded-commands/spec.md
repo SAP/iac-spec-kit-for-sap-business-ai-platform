@@ -59,3 +59,10 @@ Each embedded command file SHALL be non-empty and readable as UTF-8 text.
 #### Scenario: files are readable
 - **WHEN** any embedded command file is written to disk
 - **THEN** it can be opened and read as plain text without error
+
+### Requirement: shared platform-validation guidance
+Every embedded command file SHALL contain the local BTP platform-validation capability contract. Commands requiring live BTP checks SHALL prefer the recorded CLI route and otherwise use a configured BTP MCP route without blocking when neither is available.
+
+#### Scenario: installed command contains capability guidance
+- **WHEN** an embedded command is installed during init
+- **THEN** it instructs the agent to read `.btp-iac/platform-validation.md` before a required live BTP check
