@@ -15,7 +15,7 @@ Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to t
 
 ## BTP platform validation
 
-If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data. For a non-`none` governed preferred infrastructure provider, target the governed global account and use `btp list accounts/available-region` (or the equivalent MCP lookup), ignoring `NEO` entries, to obtain provider metadata for every generated subaccount region. On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`.
+If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, target the governed global account and use `btp list accounts/available-region` (or the equivalent MCP lookup), ignoring `NEO` entries, to obtain provider metadata for every generated subaccount region. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`.
 
 ---
 
