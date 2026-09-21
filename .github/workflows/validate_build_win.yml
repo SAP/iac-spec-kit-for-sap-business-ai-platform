@@ -1,0 +1,63 @@
+# Validate that the Go sources can be built on WIndows
+name: Validate Build on Windows
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths-ignore:
+      - "*.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "*.md"
+  workflow_dispatch:
+  workflow_call:
+
+# Testing only needs permissions to read the repository contents.
+permissions:
+  contents: read
+
+jobs:
+  # Ensure project builds on Windows
+  build:
+    name: Build (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Detect Go source changes
+        id: go_changes
+        shell: pwsh
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          $base = $env:BASE_SHA
+          if ([string]::IsNullOrWhiteSpace($base) -or $base -match '^0+$') {
+            $base = "$env:GITHUB_SHA^"
+          }
+
+          $goFiles = git diff --name-only $base $env:GITHUB_SHA -- '*.go'
+          $hasGoChanges = -not [string]::IsNullOrWhiteSpace($goFiles)
+          "has_go_changes=$($hasGoChanges.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+      - name: No Go source changes
+        if: steps.go_changes.outputs.has_go_changes != 'true'
+        run: Write-Host 'No Go files changed; Windows build validation skipped successfully.'
+      - uses: actions/setup-go@v7
+        if: steps.go_changes.outputs.has_go_changes == 'true'
+        with:
+          go-version-file: "go.mod"
+          cache: false
+      - run: go mod download
+        if: steps.go_changes.outputs.has_go_changes == 'true'
+      - run: go mod tidy
+        if: steps.go_changes.outputs.has_go_changes == 'true'
+      - name: Build CLI
+        if: steps.go_changes.outputs.has_go_changes == 'true'
+        run: go build -v ./...
