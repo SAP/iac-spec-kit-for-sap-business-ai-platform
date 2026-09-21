@@ -28,6 +28,10 @@ A downstream command SHALL stop and report a violation when a decision contradic
 - **WHEN** a generated subaccount name does not match the required pattern
 - **THEN** the command stops with a message showing the expected pattern and the non-conforming name
 
+#### Scenario: account-environment violation blocked
+- **WHEN** a Cloud Foundry or Kyma environment is selected outside the allowed environment list, or its name or a CF space name violates the applicable pattern
+- **THEN** the command stops with a message showing the violated Account Setup or Naming rule
+
 #### Scenario: service plan violation blocked
 - **WHEN** a service instance is assigned a plan not permitted for its environment tier
 - **THEN** the command stops with a message identifying the plan, the tier, and the permitted plans for that tier

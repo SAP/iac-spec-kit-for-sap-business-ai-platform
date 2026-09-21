@@ -7,11 +7,11 @@ Defines the behaviour of `/btp-iac.generate`: running a full pre-generation gove
 ## Requirements
 
 ### Requirement: run pre-generation governance validation
-The command SHALL run a full pre-generation validation pass across all five governance categories before writing any Terraform HCL if `memory/governance.md` exists.
+The command SHALL run a full pre-generation validation pass across all six governance categories before writing any Terraform HCL if `memory/governance.md` exists.
 
 #### Scenario: governance file present
 - **WHEN** `memory/governance.md` exists
-- **THEN** the command validates every resource in `specs/tasks.md` against all five categories before writing a single file
+- **THEN** the command validates every resource in `specs/tasks.md` against all six categories before writing a single file
 
 #### Scenario: governance file absent
 - **WHEN** `memory/governance.md` does not exist
@@ -31,6 +31,14 @@ The command SHALL validate each subaccount resource name and environment tier ag
 #### Scenario: naming violation — hard block
 - **WHEN** a name does not match the required pattern or tier is undefined
 - **THEN** the command stops with the name, expected pattern, and fix instructions
+- **UNLESS** `- Override: true` is set
+
+### Requirement: validate account environments before generating
+The command SHALL validate each Cloud Foundry and Kyma environment resource against the permitted runtime environment list and its applicable naming pattern, including Cloud Foundry spaces.
+
+#### Scenario: account-environment violation — hard block
+- **WHEN** an environment type is not allowed or an organization, environment, or space name does not match its required pattern
+- **THEN** the command stops with the violated rule and fix instructions
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: validate service plans before generating

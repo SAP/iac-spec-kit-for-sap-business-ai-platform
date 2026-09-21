@@ -13,6 +13,13 @@ The command SHALL read `specs/landscape.md`, `specs/services.md`, and `specs/tru
 - **WHEN** all three input specs exist
 - **THEN** the command produces a dependency-ordered task list with unique IDs and parallel execution markers
 
+### Requirement: preserve account environments as tasks
+The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Environment tasks SHALL depend on their subaccount, and Cloud Foundry space tasks SHALL depend on their Cloud Foundry environment.
+
+#### Scenario: landscape contains account environments
+- **WHEN** `specs/landscape.md` defines Cloud Foundry or Kyma environments and Cloud Foundry spaces
+- **THEN** `specs/tasks.md` contains the corresponding dependency-ordered tasks with their subaccount, type, and name
+
 ### Requirement: write tasks file
 The command SHALL write the task list to `specs/tasks.md`.
 

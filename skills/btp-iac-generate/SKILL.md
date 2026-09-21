@@ -21,7 +21,7 @@ Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to t
 
 **If it does not exist:** proceed without constraints and note: "No governance rules found — proceeding without enforcement."
 
-**If it exists**, load all rules and run a full pre-generation validation pass across all five categories. Check every resource in `specs/tasks.md` against the governance rules before writing a single file.
+**If it exists**, load all rules and run a full pre-generation validation pass across all six categories. Check every resource in `specs/tasks.md` against the governance rules before writing a single file.
 
 ### Region validation
 For each subaccount resource:
@@ -33,6 +33,13 @@ For each subaccount resource:
 - Name must match `## Naming → Subaccount pattern`
 - Environment tier must be in `## Naming → Environments`
 - **STOP** on violation with name, expected pattern, and fix instructions
+
+### Account environment validation
+For each Cloud Foundry or Kyma environment resource:
+- Its type must be permitted by `## Account Setup → Allowed environments`
+- Its name must match the applicable Cloud Foundry organization or Kyma environment pattern
+- Every Cloud Foundry space name must match `## Naming → Cloud Foundry space pattern`
+- **STOP** on violation with the selected type or name, the expected rule, and fix instructions
 
 ### Service plan validation
 For each service instance resource:
