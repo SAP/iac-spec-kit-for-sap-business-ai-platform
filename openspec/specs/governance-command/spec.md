@@ -37,21 +37,21 @@ Before collecting any other missing governance details, the command SHALL determ
 - **WHEN** a new governance invocation does not state a provider preference
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
-### Requirement: evaluate prompt completeness
-The command SHALL assess whether the user's invocation prompt covers all six governance categories: regions, account setup, naming, service plans, security, and cost controls. Account setup covers permitted runtime environments; the command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
+### Requirement: fixed governance-question order
+The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
-#### Scenario: all categories covered in prompt
-- **WHEN** the user's prompt contains rules for all six categories and states a valid preferred infrastructure provider
+#### Scenario: all required details covered in prompt
+- **WHEN** the user's prompt contains every required governance detail and states a valid preferred infrastructure provider
 - **THEN** the command writes governance.md directly without asking follow-up questions
 
-#### Scenario: some categories missing from prompt
-- **WHEN** the user's prompt covers only some categories
-- **THEN** the command asks the preferred infrastructure provider first when it is unstated, then asks one targeted question per missing category and no more
-- **AND** does not re-ask about categories already addressed in the prompt
+#### Scenario: some required details missing from prompt
+- **WHEN** the user's prompt covers only some required details
+- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control
+- **AND** does not re-ask about details already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command first asks for the preferred infrastructure provider, then asks one targeted question for each of the six categories in sequence
+- **THEN** the command asks the seven questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control
 
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.
