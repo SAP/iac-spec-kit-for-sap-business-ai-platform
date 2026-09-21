@@ -15,7 +15,7 @@ Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to t
 
 ## BTP platform validation
 
-If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
+If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data. For a non-`none` governed preferred infrastructure provider, target the governed global account and use `btp list accounts/available-region` (or the equivalent MCP lookup), ignoring `NEO` entries, to obtain provider metadata for every generated subaccount region. On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`.
 
 ---
 
@@ -31,6 +31,7 @@ If a live BTP availability check is required while generating, read `<project-ro
 For each subaccount resource:
 - Region must be in `## Regions → Allowed` and not in `Forbidden`
 - **STOP** on violation with region, rule violated, and fix instructions
+- When `## Regions → Preferred infrastructure provider` is not `none`, compare it with unambiguous provider metadata from the targeted region lookup. Never infer a provider from a region code. A known mismatch logs a warning naming the region, preferred provider, and returned provider, but does not stop generation; unavailable or unmappable metadata is advisory only. A missing field in a legacy governance file means `none`.
 
 ### Naming validation
 For each subaccount resource:

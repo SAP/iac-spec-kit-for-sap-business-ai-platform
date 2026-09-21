@@ -7,16 +7,21 @@ Defines the structured markdown format of `memory/governance.md` and all require
 ## Requirements
 
 ### Requirement: regions section
-The governance file SHALL contain a Regions section specifying allowed and forbidden BTP regions, the data residency classification, the compliance reason behind the restriction, and the preferred default region.
+The governance file SHALL contain a Regions section specifying the preferred infrastructure provider, allowed and forbidden BTP regions, the data residency classification, the compliance reason behind the restriction, and the preferred default region.
 
 #### Scenario: regions section present
 - **WHEN** `memory/governance.md` is read by a downstream command
 - **THEN** it contains a `## Regions` section with:
+  - `- Preferred infrastructure provider:` — `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, `Alibaba Cloud`, or `none`
   - `- Allowed:` — comma-separated list of approved BTP region codes (e.g. `eu10, eu20`)
   - `- Forbidden:` — comma-separated list of explicitly disallowed region codes, or `none`
   - `- Data residency:` — classification such as `EU only`, `US only`, or `unrestricted`
   - `- Compliance reason:` — the regulatory or policy driver (e.g. `GDPR — customer data must not leave the EU`)
   - `- Preferred region:` — the default region to use when none is explicitly specified (e.g. `eu10`)
+
+#### Scenario: legacy regions section
+- **WHEN** an existing governance file lacks `Preferred infrastructure provider`
+- **THEN** downstream commands treat it as `none`
 
 ### Requirement: account setup section
 The governance file SHALL contain an Account Setup section specifying the global account subdomain and the runtime environment types permitted in the project.

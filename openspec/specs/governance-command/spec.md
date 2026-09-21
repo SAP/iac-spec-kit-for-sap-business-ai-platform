@@ -30,21 +30,28 @@ The command SHALL check whether `<project-root>/memory/governance.md` exists bef
 - **WHEN** `<project-root>/memory/governance.md` is absent
 - **THEN** the command proceeds to collect governance rules from scratch
 
+### Requirement: collect preferred infrastructure provider
+Before collecting any other missing governance details, the command SHALL determine the preferred infrastructure provider. Valid values are `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, `Alibaba Cloud`, and `none`.
+
+#### Scenario: provider preference absent
+- **WHEN** a new governance invocation does not state a provider preference
+- **THEN** the command asks for it as its first follow-up question, before any category question
+
 ### Requirement: evaluate prompt completeness
 The command SHALL assess whether the user's invocation prompt covers all six governance categories: regions, account setup, naming, service plans, security, and cost controls.
 
 #### Scenario: all categories covered in prompt
-- **WHEN** the user's prompt contains rules for all six categories
+- **WHEN** the user's prompt contains rules for all six categories and states a valid preferred infrastructure provider
 - **THEN** the command writes governance.md directly without asking follow-up questions
 
 #### Scenario: some categories missing from prompt
 - **WHEN** the user's prompt covers only some categories
-- **THEN** the command asks one targeted question per missing category and no more
+- **THEN** the command asks the preferred infrastructure provider first when it is unstated, then asks one targeted question per missing category and no more
 - **AND** does not re-ask about categories already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks one targeted question for each of the six categories in sequence
+- **THEN** the command first asks for the preferred infrastructure provider, then asks one targeted question for each of the six categories in sequence
 
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.
@@ -60,3 +67,8 @@ When the input identifies a global-account subdomain and named service offerings
 #### Scenario: no global-account target supplied
 - **WHEN** governance input names platform values but does not provide a global-account subdomain
 - **THEN** the command retains those values without a targeted live CLI check
+
+#### Scenario: provider mismatch
+- **WHEN** a requested region has unambiguous provider metadata that differs from the preferred infrastructure provider
+- **THEN** the command warns with the region and both providers
+- **AND** continues writing governance

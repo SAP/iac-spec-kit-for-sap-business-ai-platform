@@ -28,8 +28,13 @@ The command SHALL write results to `specs/scenario.md`.
 - **THEN** `specs/scenario.md` exists and contains the structured requirements
 
 ### Requirement: validate supplied platform values
-The command SHALL apply the shared platform-validation capability to supplied regions, named service offerings, subscriptions, and plan pairs. When a live check needs a global-account target that is absent from governance and input, it SHALL collect the subdomain within its targeted follow-up limit.
+The command SHALL apply the shared platform-validation capability to supplied regions, named service offerings, subscriptions, and plan pairs. When governance specifies a preferred infrastructure provider other than `none`, it SHALL compare each supplied region's unambiguous returned provider metadata to that preference and warn, without blocking, on a mismatch. It SHALL not infer a provider from a region code. When a live check needs a global-account target that is absent from governance and input, it SHALL collect the subdomain within its targeted follow-up limit.
 
 #### Scenario: target needed for supplied region
 - **WHEN** scenario input supplies a region that needs live validation but no global-account subdomain
 - **THEN** the command obtains the subdomain in a targeted follow-up before checking the region
+
+#### Scenario: preferred provider mismatch
+- **WHEN** governance selects a preferred infrastructure provider and a supplied region returns different unambiguous provider metadata
+- **THEN** the command warns with the region and both providers
+- **AND** retains the region for further scenario processing

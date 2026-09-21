@@ -40,6 +40,18 @@ A downstream command SHALL stop and report a violation when a decision contradic
 - **WHEN** a configuration decision contradicts a security rule (e.g. no custom IdP configured when required)
 - **THEN** the command stops with a message identifying the specific security rule violated
 
+### Requirement: advisory provider preference validation
+When a preferred infrastructure provider other than `none` is set and region provider metadata is available, commands that validate regions SHALL compare it to the preference. They SHALL not infer a provider from a region code.
+
+#### Scenario: provider mismatch
+- **WHEN** an unambiguous region provider differs from the preferred provider
+- **THEN** the command logs a warning naming the region, preferred provider, and returned provider
+- **AND** continues without requiring `- Override: true`
+
+#### Scenario: provider metadata unavailable
+- **WHEN** the platform route, provider metadata, or its mapping to a governed provider is unavailable
+- **THEN** the command retains the existing allowed/forbidden-region outcome and reports the provider check as advisory
+
 ### Requirement: override bypasses hard block
 When `memory/governance.md` contains `- Override: true`, downstream commands SHALL warn about violations but continue rather than blocking.
 

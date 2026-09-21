@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Govern
 
-Establishes governance guardrails for the project. Records global-account setup, approved regions, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations.
+Establishes governance guardrails for the project. Records global-account setup, approved regions and infrastructure-provider preference, naming conventions, permitted service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
 
 ---
 
@@ -23,7 +23,7 @@ For CLI validation, target the global account subdomain with `btp target --globa
 
 After collecting the global-account subdomain and before writing governance, validate every explicitly named service offering, subscription, and service-plan pair with the targeted `btp list accounts/entitlement` result (or an equivalent BTP MCP entitlement/subscription lookup). Do not infer an offering from a standalone plan name. If no global-account subdomain is supplied, do not target the CLI; retain user input without live validation.
 
-Validate each requested region with `btp list accounts/available-region` against the targeted global account, ignoring every entry labelled `NEO`. If no live region lookup route is available, consult SAP Help's [Regions and API Endpoints Available for the Cloud Foundry Environment](https://help.sap.com/docs/btp/sap-business-technology-platform/regions-and-api-endpoints-available-for-cloud-foundry-environment?locale=en-US&version=LATEST), exclude NEO entries, and present the result as advisory only.
+Validate each requested region with `btp list accounts/available-region` against the targeted global account, ignoring every entry labelled `NEO`. If the preferred infrastructure provider for this run is not `none` — the value supplied by the user, or `## Regions → Preferred infrastructure provider` from an existing governance file — compare it with the provider metadata returned for that region (or an equivalent MCP result). On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`. Map only unambiguous provider labels to `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, or `Alibaba Cloud`; never infer a provider from a region code. A known mismatch produces a warning naming the region, selected preference, and returned provider, but does not prevent the governance file from being written. If provider metadata is absent or unmappable, report that provider validation was unavailable and retain the region. If no live region lookup route is available, consult SAP Help's [Regions and API Endpoints Available for the Cloud Foundry Environment](https://help.sap.com/docs/btp/sap-business-technology-platform/regions-and-api-endpoints-available-for-cloud-foundry-environment?locale=en-US&version=LATEST), exclude NEO entries, and present the result as advisory only.
 
 ---
 
@@ -45,6 +45,7 @@ Check whether `<project-root>/memory/governance.md` exists.
 
 **If it exists:**
 - Read the file and display a summary of the current rules grouped by category
+- Treat a missing `Preferred infrastructure provider` field in a legacy file as `none`
 - Ask the user: "Here are the current governance rules. What would you like to change, or type 'done' to keep them as-is."
 - If the user says done or makes no changes, stop here
 - Otherwise collect the changes and proceed to Step 3
@@ -55,6 +56,8 @@ Check whether `<project-root>/memory/governance.md` exists.
 ---
 
 ### Step 2 — Evaluate prompt completeness
+
+Before collecting any other missing governance detail, determine the preferred infrastructure provider. The valid values are `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, `Alibaba Cloud`, and `none`. If it is absent from the invocation, ask this as the first follow-up question, using exactly these choices.
 
 Assess whether the user's invocation message already covers all six governance categories:
 
@@ -75,7 +78,7 @@ Keep each question to a single short prompt. The details to gather per category 
 - **Account Setup** — global account subdomain (never a GUID) and the allowed runtime environments: Cloud Foundry, Kyma, or both.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`) and what each token means; environment tiers (e.g. dev, test, prod); flat or hierarchical directory structure; max subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
-- **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both);.
+- **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
 
 If the prompt already covers all six categories, skip to Step 3 immediately.
@@ -90,6 +93,7 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 # BTP Governance
 
 ## Regions
+- Preferred infrastructure provider: <AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none>
 - Allowed: <comma-separated region codes, e.g. eu10, eu20>
 - Forbidden: <comma-separated region codes, or "none">
 - Data residency: <classification, e.g. "EU only">
