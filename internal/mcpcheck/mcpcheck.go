@@ -1,10 +1,10 @@
 // Package mcpcheck probes the local environment for MCP server presence
 // and returns warnings for any that are missing.
 //
-// # Extension points
-//
-// To add a new check, append a Check literal to DefaultChecks.
-// Set Agents to nil to match all agents; otherwise list the agent IDs it applies to.
+// BTP availability is consumed by platformvalidation through BTPMCPAvailable.
+// To add another independent init warning, append a Check literal to
+// NonBTPChecks. Set Agents to nil to match all agents; otherwise list the
+// agent IDs it applies to.
 package mcpcheck
 
 import "slices"
@@ -23,12 +23,9 @@ type Check struct {
 	Warning string
 }
 
-// DefaultChecks is the set of checks run during `btp-iac init`.
-// Append to extend; order determines warning output order.
-var DefaultChecks = []Check{
-	terraformCheck,
-	btpAdminCheck,
-}
+// NonBTPChecks are the default MCP checks that remain independent from the
+// combined CLI-or-MCP BTP platform-validation capability.
+var NonBTPChecks = []Check{terraformCheck}
 
 // Run executes every check that applies to at least one of the selected agents.
 // Probe is called once per (check, agent) pair; a warning is emitted for each

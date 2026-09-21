@@ -13,6 +13,10 @@ Generates the complete, validated Terraform HCL by executing each task in depend
 
 Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on completion, fixing any issues and retrying until both pass.
 
+## BTP platform validation
+
+If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
+
 ---
 
 ## Governance Check

@@ -53,3 +53,10 @@ The command SHALL write the collected rules to `<project-root>/memory/governance
 - **WHEN** all required information has been collected
 - **THEN** `<project-root>/memory/governance.md` is created or overwritten with the structured rules
 - **AND** the command confirms the file was saved and lists the rules that will be enforced
+
+### Requirement: validate explicitly specified platform values
+When the input identifies a global-account subdomain and named service offerings, subscriptions, service-plan pairs, or regions, the command SHALL validate them against the platform using the shared platform-validation capability before writing governance. CLI checks SHALL target that global account; region checks SHALL exclude NEO entries.
+
+#### Scenario: no global-account target supplied
+- **WHEN** governance input names platform values but does not provide a global-account subdomain
+- **THEN** the command retains those values without a targeted live CLI check
