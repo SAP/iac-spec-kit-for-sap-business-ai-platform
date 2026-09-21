@@ -64,20 +64,20 @@ Assess whether the user's invocation message already covers the required governa
 | Question group | Covered if the prompt mentions… |
 |---|---|
 | **Region** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
+| **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma)|
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length |
-| **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma) and environment tier names (for example dev, test, prod) |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Naming → Environments → Service Plans → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming →  Service Plans → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
 - **Preferred Infrastructure** — one of AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none.
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
-- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, flat or hierarchical directory structure, and maximum subaccount name length.
-- **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both) and environment tiers (e.g. dev, test, prod). The global account subdomain is set only during `btp-iac init` and is read from `memory/global-account.md`; never ask for it here.
+- **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `btp-iac init` and is read from `memory/global-account.md`; never ask for it here.
+- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
@@ -112,29 +112,34 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Cloud Foundry org pattern: <pattern for CF organization names>
 - Kyma environment pattern: <pattern for Kyma environment names>
 - Cloud Foundry space pattern: <pattern for CF space names>
-- Environments: <comma-separated tiers in order, e.g. dev, test, prod>
-- Directory structure: <flat or hierarchical>
+- Directory structure: <none or hierarchical>
 - Max name length: <character limit, e.g. 60>
 
 ## Service Plans
+
 ### <env-tier-1>
+
 - Permitted: <comma-separated plan names>
 - Forbidden: <comma-separated plan names, or "none">
 - Forbidden reason: <why these plans are not allowed, or omit if none forbidden>
 - Default plan: <plan to use when multiple are permitted and none is specified>
+
 ### <env-tier-2>
+
 - Permitted: <comma-separated plan names>
 - Forbidden: <comma-separated plan names, or "none">
 - Forbidden reason: <why these plans are not allowed, or omit if none forbidden>
 - Default plan: <plan to use when multiple are permitted and none is specified>
 
 ## Security
+
 - Custom IdP: <required / optional / not required>
 - IdP type: <SAML 2.0 / OIDC / N/A>
 - Default role collections: <name → user group, e.g. "BTP_OPERATOR → platform admins, BTP_VIEWER → developers">
 - Role collection scope: <platform / application / both>
 
 ## Cost Controls
+
 - Metered service warning: <enabled / disabled>
 - Metered services: <comma-separated BTP service names, or "all">
 - Cost centre tag: <required / optional / not required>
