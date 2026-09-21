@@ -1,0 +1,90 @@
+# Visit https://goreleaser.com for documentation on how to customize this
+# behavior.
+version: 2
+
+before:
+  hooks:
+    # this is just an example and not a requirement for provider building/publishing
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w"
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: windows
+        goarch: arm
+    binary: "sap-iac_v{{ .Version }}"
+archives:
+  - formats: ["binary"]
+    name_template: "sap-iac_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  algorithm: sha256
+  split: true
+changelog:
+  use: github-native
+
+nfpms:
+  - id: sap-iac
+    # Name of the package - Default: ProjectName.
+
+    # File name of the package.
+    # Default: '{{ .PackageName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'.
+
+    # Your app's vendor.
+    vendor: SAP SE
+
+    # Your app's homepage.
+    #
+    # Default: inferred from global metadata.
+    homepage: https://github.com/SAP/sap-iac-spec-kit/
+
+    # Your app's description.
+    #
+    # Default: inferred from global metadata.
+    description: |-
+      The SAP IAC Spec Kit is a spec-driven development toolkit for creating Terraform configurations.
+
+    # Your app's license.
+    #
+    # Default: inferred from global metadata.
+    license: Apache 2.0
+
+    # Formats to be generated.
+    formats:
+      - deb
+      - rpm
+
+    # Packages your package recommends installing. (overridable)
+    recommends:
+      - terraform
+
+    # Path that the binaries should be installed.
+    #
+    # Default: '/usr/bin'.
+
+    # Section.
+    section: default
+
+    # Priority.
+    priority: normal
+
+    # Makes a meta package - an empty package that contains only supporting
+    # files and dependencies.
+    # When set to `true`, the `builds` option is ignored.
+    meta: false
+
+    maintainer: "See GitHub <https://github.com/SAP/sap-iac-spec-kit>"
