@@ -24,14 +24,14 @@
       "description": "Only uncovered governance categories receive one targeted question.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "turns": [
-        {"role": "user", "content": "In this btp-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use a flat directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
+        {"role": "user", "content": "In this btp-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use no directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
         {"role": "user", "content": "For service plans, dev may use free (default free), test may use standard (default standard), and prod may use standard (default standard); free is forbidden in prod because it has no SLA. Enable metered-service warnings for hana-cloud and ai-core. The cost centre tag is required and its Terraform key is cost_center."}
       ],
-      "trap": "Regions, Naming, and Security are complete. Asking about any of those again violates the command contract; the file must not be written until service-plan and cost-control information has been collected.",
+      "trap": "Region, Naming, Environments, and Security are complete. Asking about any of those again violates the command contract; the file must not be written until service-plan and cost-control information has been collected.",
       "assertions": [
         {"id": "2.1", "text": "Requests only the missing Service Plans details, covering permitted plans, forbidden plans and reasons, and defaults per environment"},
         {"id": "2.2", "text": "Requests only the missing Cost Controls details, covering metered-service warnings and the cost-centre tag"},
-        {"id": "2.3", "text": "Does not ask a Regions, Naming, or Security question"},
+        {"id": "2.3", "text": "Does not ask a Region, Naming, Environments, or Security question"},
         {"id": "2.4", "text": "Does not create or overwrite memory/governance.md before the missing answers are supplied"},
         {"id": "2.5", "text": "After the second user turn, writes a complete structured governance file retaining the initially supplied rules and adding the supplied Service Plans and Cost Controls rules"},
         {"id": "2.6", "text": "Confirms the saved governance file and summarizes all six categories after the second user turn"}
@@ -43,16 +43,16 @@
       "description": "A bare invocation initiates complete governance discovery without writing a partial policy.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Set up governance for this btp-iac project.",
-      "trap": "No governance details were supplied. The skill must ask for the infrastructure provider first, then ask one question per governance category at a time rather than batch questions or manufacture defaults.",
+      "trap": "No governance details were supplied. The skill must ask one question at a time in the fixed order Preferred Infrastructure, Region, Environments, Naming, Service Plans, Security, Cost Control; it must not batch questions or manufacture defaults.",
       "assertions": [
         {"id": "3.0", "text": "Its first question asks for the preferred infrastructure provider and presents AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, and none"},
-        {"id": "3.1", "text": "Requests the Regions details: approved and forbidden regions, data residency, compliance reason, and preferred default"},
-        {"id": "3.2", "text": "Requests Account Setup details: global account subdomain and allowed Cloud Foundry/Kyma environments"},
-        {"id": "3.3", "text": "Requests the Naming details: subaccount, CF org, Kyma, and CF-space patterns; token meanings; environment tiers; directory structure; and length limit"},
+        {"id": "3.1", "text": "Requests Region details second: approved and forbidden regions, data residency, compliance reason, and preferred default"},
+        {"id": "3.2", "text": "Requests Environments details third: allowed Cloud Foundry/Kyma runtimes; it never requests the global account subdomain"},
+        {"id": "3.3", "text": "Requests Naming details fourth: subaccount, CF org, Kyma, and CF-space patterns; token meanings; directory structure; and length limit"},
         {"id": "3.4", "text": "Requests the Service Plans details: permitted and forbidden plans, reasons, and defaults per environment"},
         {"id": "3.5", "text": "Requests the Security details: IdP, role collections and scope"},
         {"id": "3.6", "text": "Requests the Cost Controls details: metered-service warning policy and cost-centre tag requirements"},
-        {"id": "3.7", "text": "Asks exactly one category question per turn, waits for the answer, then asks the next — never bundles multiple categories into a single question or tool call"},
+        {"id": "3.7", "text": "Asks exactly one question per turn, waits for the answer, then follows the fixed sequence — never bundles multiple categories into a single question or tool call"},
         {"id": "3.8", "text": "Does not create or overwrite memory/governance.md until all required information is collected"}
       ]
     },
@@ -95,7 +95,7 @@
       "name": "override-is-explicit-only",
       "description": "Override is emitted only when the user expressly requests weaker enforcement.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In a btp-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod in a flat structure with 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
+      "prompt": "In a btp-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod with no directory structure and 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
       "trap": "Override is a powerful exception. The skill must add it when directly requested, but must not treat any ordinary full-policy prompt as authorization to add it.",
       "assertions": [
         {"id": "6.1", "text": "Writes a complete governance file containing a top-level '- Override: true' entry because the user explicitly requested it"},
@@ -129,11 +129,11 @@
       "name": "five-of-six-policy-ask-one-missing",
       "description": "A nearly complete policy triggers exactly one question for its single missing category.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are flat and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope.",
+      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope.",
       "trap": "Only Cost Controls is absent. The skill must not ask a broad discovery questionnaire or write a partial governance file.",
       "assertions": [
         {"id": "8.1", "text": "Requests only the missing Cost Controls details, covering metered-service warnings and the cost-centre tag requirement and key"},
-        {"id": "8.2", "text": "Does not ask a Regions, Account Setup, Naming, Service Plans, or Security question"},
+        {"id": "8.2", "text": "Does not ask a Region, Naming, Environments, Service Plans, or Security question"},
         {"id": "8.3", "text": "Does not create or overwrite memory/governance.md before the Cost Controls answer is supplied"}
       ]
     }

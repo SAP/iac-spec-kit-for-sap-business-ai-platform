@@ -7,11 +7,11 @@ Defines the behaviour of `/btp-iac.accounts`: defining the BTP account topology 
 ## Requirements
 
 ### Requirement: read inputs
-The command SHALL read `specs/scenario.md` and, if present, `memory/governance.md` before defining any account topology.
+The command SHALL read `specs/scenario.md`, `memory/global-account.md`, and, if present, `memory/governance.md` before defining any account topology.
 
 #### Scenario: inputs read
 - **WHEN** the command starts
-- **THEN** it reads `specs/scenario.md` and optionally `memory/governance.md`
+- **THEN** it reads `specs/scenario.md`, `memory/global-account.md`, and optionally `memory/governance.md`
 
 ### Requirement: define account topology
 The command SHALL define the BTP account topology: global account subdomain, directory groupings, subaccounts per environment tier with name, region, description, and subdomain, and optional Cloud Foundry and Kyma environments.
@@ -28,7 +28,7 @@ For every subaccount, the command SHALL determine whether Cloud Foundry, Kyma, b
 - **THEN** the command asks targeted questions before writing `specs/landscape.md`
 
 ### Requirement: validate account setup governance
-The command SHALL use the governed global account subdomain when present, and validate each selected runtime environment type and applicable name against Account Setup and Naming rules.
+The command SHALL use the global account subdomain from `memory/global-account.md` when present, without requesting it, and validate each selected runtime environment type and applicable name against Account Setup and Naming rules.
 
 #### Scenario: governed environment violation
 - **WHEN** a selected environment type is not allowed or an environment, organization, or space name violates its pattern

@@ -11,7 +11,7 @@ metadata:
 
 Defines the BTP account topology — subaccounts, regions, and directory groupings.
 
-Reads `specs/scenario.md` and (if present) `memory/governance.md`. Produces `specs/landscape.md` as the authoritative account structure that all service and trust configuration will reference.
+Reads `specs/scenario.md`, `memory/global-account.md`, and (if present) `memory/governance.md`. Produces `specs/landscape.md` as the authoritative account structure that all service and trust configuration will reference.
 
 ## Tool preferences
 
@@ -19,7 +19,13 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 
 ## BTP platform validation
 
-Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. Target the global-account subdomain from governance or the landscape decision using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries. When governance selects a preferred infrastructure provider other than `none`, use returned region provider metadata to check it. On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`. Map only unambiguous provider labels to the governed values and never infer a provider from the region code; report a mismatch as a warning, and report unavailable or unmappable provider metadata as advisory only.
+### BTP operation safety boundary
+
+The prohibition on state-changing CLI commands excludes the permitted target prelude.
+
+When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
+
+Read `<project-root>/.btp-iac/platform-validation.md`, `<project-root>/memory/global-account.md`, and `<project-root>/memory/governance.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. When `memory/global-account.md` contains a subdomain, target it using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, use returned region provider metadata to check it. Map only unambiguous provider labels to the governed values and never infer a provider from a region code; report a mismatch as a warning, and report unavailable or unmappable provider metadata as advisory only. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`.
 
 If no recorded live route exists, retain user input without blocking. If a live route cannot authenticate, target, or complete a lookup, ask the user to resolve it. A completed unavailable result requires a replacement before output is written. With no live region route, consult the SAP Help Cloud Foundry region list as advisory only and retain user input.
 
@@ -63,10 +69,10 @@ For each account environment you are about to define:
 
 ## Workflow
 
-Read `specs/scenario.md` to understand the application's environment and deployment requirements.
+Read `specs/scenario.md` and `memory/global-account.md` to understand the application's environment, deployment requirements, and configured global account.
 
 Define the account topology:
-- Global account subdomain. Use `## Account Setup → Global account subdomain` when present. Otherwise ask for it before writing the landscape. It must be the global account's subdomain, not its GUID; if the supplied value is a GUID, ask for the subdomain instead.
+- Global account subdomain. Use the value in `memory/global-account.md`. If it is blank or the file is absent, leave it unspecified and do not ask for one.
 - Directory groupings (if applicable)
 - Subaccounts per environment tier — name, region, description, subdomain
 - Per subaccount, determine whether to create no runtime environment, Cloud Foundry, Kyma, or both. Respect any decision already supplied in the scenario or governance. If it is not known, ask the user.

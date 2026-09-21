@@ -51,6 +51,11 @@ var KnownAgents = map[string]Agent{
 
 var baseDirs = []string{"specs", "memory", "terraform"}
 
+// GlobalAccountFile is the project-local source of truth for the global
+// account selected during initialization. It is deliberately separate from
+// governance so every skill can use it without prompting again.
+const GlobalAccountFile = "global-account.md"
+
 const gitignore = `.terraform/
 *.tfstate
 *.tfstate.backup
@@ -108,8 +113,10 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 		}
 	}
 
-	if err := ensureGitignoreEntry(dir, platformvalidation.Ignore); err != nil {
-		return "", err
+	for _, entry := range []string{platformvalidation.Ignore, filepath.Join("memory", GlobalAccountFile)} {
+		if err := ensureGitignoreEntry(dir, entry); err != nil {
+			return "", err
+		}
 	}
 
 	if mode != ModeFresh {
@@ -131,6 +138,29 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 	return "", nil
 }
 
+// WriteGlobalAccountSubdomain stores the optional global-account subdomain
+// selected during initialization. An empty input creates the record for a new
+// project but never replaces an existing configured value.
+func WriteGlobalAccountSubdomain(dir, subdomain string) error {
+	path := filepath.Join(dir, "memory", GlobalAccountFile)
+	if subdomain == "" {
+		if _, err := os.Stat(path); err == nil {
+			return nil
+		} else if !os.IsNotExist(err) {
+			return fmt.Errorf("stat global account record: %w", err)
+		}
+	}
+
+	content := "# Global Account\n\n- Subdomain:\n"
+	if subdomain != "" {
+		content = fmt.Sprintf("# Global Account\n\n- Subdomain: %s\n", subdomain)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		return fmt.Errorf("write global account record: %w", err)
+	}
+	return nil
+}
+
 func ensureGitignoreEntry(dir, entry string) error {
 	path := filepath.Join(dir, ".gitignore")
 	data, err := os.ReadFile(path)
@@ -146,7 +176,10 @@ func ensureGitignoreEntry(dir, entry string) error {
 	}
 	for _, line := range strings.Split(string(data), "\n") {
 		line = strings.TrimSuffix(line, "\r")
-		if line == entry || line == platformvalidation.Directory || line == platformvalidation.Directory+"/" {
+		if line == entry ||
+			line == platformvalidation.Directory ||
+			line == platformvalidation.Directory+"/" ||
+			(entry == filepath.Join("memory", GlobalAccountFile) && (line == "memory" || line == "memory/")) {
 			return nil
 		}
 	}

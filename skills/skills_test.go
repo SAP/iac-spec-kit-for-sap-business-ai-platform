@@ -2,9 +2,12 @@ package skills
 
 import (
 	"io/fs"
+	"regexp"
 	"strings"
 	"testing"
 )
+
+const btpReadOnlyBoundary = "When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**."
 
 func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
 	err := fs.WalkDir(Commands, ".", func(path string, entry fs.DirEntry, err error) error {
@@ -20,6 +23,44 @@ func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
 		}
 		if !strings.Contains(string(data), ".btp-iac/platform-validation.md") {
 			t.Errorf("%s is missing platform validation guidance", path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAllSkillsEnforceBTPReadOnlyBoundary(t *testing.T) {
+	forbiddenCLICommand := regexp.MustCompile(`(?m)(?:^|[\s` + "`" + `])btp\s+(?:create|update|delete|assign|unassign|enable|disable|set|unset|login|logout|config|profile)\b`)
+	err := fs.WalkDir(Commands, ".", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() || !strings.HasSuffix(path, "/SKILL.md") {
+			return nil
+		}
+
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		content := string(data)
+		for _, requirement := range []string{
+			btpReadOnlyBoundary,
+			"BTP MCP, invoke only a tool explicitly documented as a read/list lookup.",
+			"`btp target --global-account <subdomain>` is the sole permitted account-selection prelude",
+			"Never invoke, suggest, or approve a BTP operation that creates, updates, deletes",
+		} {
+			if !strings.Contains(content, requirement) {
+				t.Errorf("%s is missing BTP read-only requirement %q", path, requirement)
+			}
+		}
+		if strings.Contains(content, "MCO") {
+			t.Errorf("%s refers to MCO; BTP MCP is the supported integration", path)
+		}
+		if forbiddenCLICommand.MatchString(content) {
+			t.Errorf("%s contains a forbidden mutating BTP CLI command", path)
 		}
 		return nil
 	})

@@ -61,7 +61,7 @@ Each embedded command file SHALL be non-empty and readable as UTF-8 text.
 - **THEN** it can be opened and read as plain text without error
 
 ### Requirement: shared platform-validation guidance
-Every embedded command file SHALL contain the local BTP platform-validation capability contract. Commands requiring live BTP checks SHALL prefer the recorded CLI route and otherwise use a configured BTP MCP route without blocking when neither is available.
+Every embedded command file SHALL contain the local BTP platform-validation capability contract and a mandatory BTP read-only boundary. Commands requiring live BTP checks SHALL prefer the recorded CLI route and otherwise use a configured BTP MCP read/list route without blocking when neither is available. The commands SHALL never invoke BTP mutations; `btp target --global-account <subdomain>` is permitted only as an account-selection prelude to BTP CLI read/list commands.
 
 #### Scenario: installed command contains capability guidance
 - **WHEN** an embedded command is installed during init
