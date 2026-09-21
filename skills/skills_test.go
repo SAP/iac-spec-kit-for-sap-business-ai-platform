@@ -30,9 +30,10 @@ func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
 
 func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 	checks := map[string][]string{
-		"btp-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO"},
-		"btp-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO"},
-		"btp-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO"},
+		"btp-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider"},
+		"btp-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
+		"btp-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
+		"btp-iac-generate/SKILL.md": {"available-region", "NEO", "Preferred infrastructure provider"},
 		"btp-iac-services/SKILL.md": {"btp list accounts/entitlement"},
 	}
 	for path, wants := range checks {

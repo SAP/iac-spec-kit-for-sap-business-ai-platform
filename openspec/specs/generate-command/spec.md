@@ -25,6 +25,11 @@ The command SHALL validate each subaccount resource region against governance ru
 - **THEN** the command stops with the region, rule violated, and fix instructions
 - **UNLESS** `- Override: true` is set
 
+#### Scenario: preferred provider mismatch
+- **WHEN** a preferred infrastructure provider is configured and the targeted platform lookup returns different unambiguous provider metadata for a generated subaccount region
+- **THEN** the command logs a warning with the region and both providers
+- **AND** continues generation without requiring an override
+
 ### Requirement: validate naming before generating
 The command SHALL validate each subaccount resource name and environment tier against governance naming rules.
 

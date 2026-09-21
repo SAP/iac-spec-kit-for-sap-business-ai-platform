@@ -47,6 +47,11 @@ The command SHALL validate each subaccount region against governance rules if `m
 - **THEN** the command stops with the region, the rule violated, and fix instructions
 - **UNLESS** `- Override: true` is set, in which case a warning is logged and the command continues
 
+#### Scenario: preferred provider mismatch
+- **WHEN** a preferred infrastructure provider is configured and the targeted platform lookup returns different unambiguous provider metadata for a subaccount region
+- **THEN** the command warns with the region and both providers
+- **AND** continues without requiring an override
+
 ### Requirement: validate naming against governance
 The command SHALL validate each subaccount name and environment tier against governance naming rules if `memory/governance.md` exists.
 

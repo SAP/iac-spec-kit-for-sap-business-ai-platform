@@ -21,8 +21,12 @@ Every generated skill SHALL read the capability record before a live platform va
 - **THEN** it retains the user-provided value without blocking
 
 ### Requirement: region validation sources
-CLI region checks SHALL target the global account subdomain and use `btp list accounts/available-region`; all NEO-labelled entries SHALL be ignored. If no live region route exists, the SAP Help Cloud Foundry region list SHALL be advisory only.
+CLI region checks SHALL target the global account subdomain and use `btp list accounts/available-region`; all NEO-labelled entries SHALL be ignored. When the returned region data includes infrastructure-provider metadata, skills MAY compare it with governance's preferred provider after mapping only unambiguous labels; they SHALL not infer the provider from a region code. On the first successful lookup that exposes this metadata, the skill SHALL record its exact field name as `- Region provider field: <field>` in the local capability record. If no live region route exists, the SAP Help Cloud Foundry region list SHALL be advisory only.
 
 #### Scenario: NEO region returned
 - **WHEN** a region lookup returns an entry labelled NEO
 - **THEN** the command excludes it from its validation result
+
+#### Scenario: provider metadata field observed
+- **WHEN** a successful region lookup exposes infrastructure-provider metadata and the local record lacks its field name
+- **THEN** the command records the exact field name in `.btp-iac/platform-validation.md`

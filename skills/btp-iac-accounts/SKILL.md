@@ -19,7 +19,7 @@ Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MC
 
 ## BTP platform validation
 
-Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. Target the global-account subdomain from governance or the landscape decision using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries.
+Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. Target the global-account subdomain from governance or the landscape decision using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries. When governance selects a preferred infrastructure provider other than `none`, use returned region provider metadata to check it. On the first successful lookup that exposes this metadata, record its exact field name as `- Region provider field: <field>` in `.btp-iac/platform-validation.md`. Map only unambiguous provider labels to the governed values and never infer a provider from the region code; report a mismatch as a warning, and report unavailable or unmappable provider metadata as advisory only.
 
 If no recorded live route exists, retain user input without blocking. If a live route cannot authenticate, target, or complete a lookup, ask the user to resolve it. A completed unavailable result requires a replacement before output is written. With no live region route, consult the SAP Help Cloud Foundry region list as advisory only and retain user input.
 
@@ -39,6 +39,7 @@ For each subaccount region you are about to assign:
 - If the region is **not** in the `## Regions → Allowed` list: **STOP**
   > "GOVERNANCE VIOLATION: Region `<region>` is not in the approved list (`<allowed>`). Change the region or add `- Override: true` to memory/governance.md to bypass enforcement."
 - If the region appears in the `## Regions → Forbidden` list: **STOP** with the same message.
+- If `## Regions → Preferred infrastructure provider` is present and not `none`, compare it with the provider metadata from the platform region lookup. A known mismatch logs a warning naming the region, preferred provider, and returned provider, but does not stop. A missing field in a legacy governance file means `none`; missing or unmappable metadata is advisory only.
 
 ### Naming validation
 
