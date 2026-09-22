@@ -54,7 +54,7 @@ Apply the following decision table (first matching rule wins):
 |---|---|
 | `memory/governance.md` missing | **Run `/btp-iac.govern`** — establish guardrails before anything else. |
 | `specs/scenario.md` missing | **Run `/btp-iac.scenario`** — describe your application. |
-| `specs/landscape.md` missing | **Run `/btp-iac.accounts`** — map your app to BTP directories and subaccounts. |
+| `specs/landscape.md` missing | **Run `/btp-iac.accounts`** — map your scenario to BTP directories and subaccounts. |
 | `specs/services.md` missing | **Run `/btp-iac.services`** — resolve which BTP services each subaccount needs. |
 | `specs/trust.md` missing | **Run `/btp-iac.security`** — set up IdP trust, roles, and role collection assignments. |
 | `specs/tasks.md` missing and `specs/connectivity.md` missing | **Run `/btp-iac.connectivity`** (optional) — define destinations and certificates, or **`/btp-iac.tasks`** to skip connectivity. |
