@@ -1,15 +1,17 @@
 ---
 name: btp-iac-tasks
-description: Consolidates landscape, services, and trust specs into a single dependency-ordered task list.
+description: Consolidates landscape, services, trust, and (optionally) connectivity specs into a single dependency-ordered task list.
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Tasks
 
 Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment.
+
+If `specs/connectivity.md` exists, also read it and append destination and certificate tasks (see **Connectivity tasks** below).
 
 Produces `specs/tasks.md`, which is the direct input to `/btp-iac.design` and `/btp-iac.generate`.
 
@@ -22,6 +24,25 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
 If this workflow needs a live BTP availability check, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
+
+---
+
+## Connectivity tasks
+
+When `specs/connectivity.md` exists, read it after the three mandatory inputs and append the following tasks to `specs/tasks.md` in dependency order:
+
+**Destination tasks** (`btp_subaccount_destination_generic`):
+- Create one task per destination listed in `specs/connectivity.md`.
+- Each destination task **depends on** the subaccount task it is scoped to.
+- If the destination is service-instance-scoped, it additionally **depends on** the corresponding service instance task.
+- Mark tasks that share the same subaccount (and have no mutual dependency) as parallelisable.
+
+**Certificate tasks** (`btp_subaccount_destination_certificate`):
+- Create one task per certificate listed in `specs/connectivity.md`.
+- Each certificate task **depends on** its subaccount task.
+- If the certificate is service-instance-scoped, it additionally **depends on** the corresponding service instance task.
+
+Destination and certificate tasks from `specs/connectivity.md` are ordered after all landscape, service, and trust tasks that they depend on. They do not block any existing task.
 
 ## Workflow
 
@@ -80,4 +101,3 @@ Task list written to specs/tasks.md (<N> tasks across <K> groups):
 Open specs/tasks.md to review or update completion state.
 Next step: /btp-iac.design
 ```
-

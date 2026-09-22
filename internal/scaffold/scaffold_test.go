@@ -34,6 +34,26 @@ func TestScaffoldClaude(t *testing.T) {
 			t.Errorf("missing: myproject/%s", rel)
 		}
 	}
+
+	// All ten command files must be present.
+	allCmds := []string{
+		"btp-iac.govern.md", "btp-iac.scenario.md", "btp-iac.analyse.md",
+		"btp-iac.accounts.md", "btp-iac.services.md", "btp-iac.security.md",
+		"btp-iac.connectivity.md", "btp-iac.tasks.md", "btp-iac.design.md",
+		"btp-iac.generate.md",
+	}
+	for _, f := range allCmds {
+		if _, err := os.Stat(filepath.Join("myproject", ".claude", "commands", f)); err != nil {
+			t.Errorf("missing command file: .claude/commands/%s", f)
+		}
+	}
+	entries, err := os.ReadDir(filepath.Join("myproject", ".claude", "commands"))
+	if err != nil {
+		t.Fatalf("ReadDir .claude/commands: %v", err)
+	}
+	if got := len(entries); got != len(allCmds) {
+		t.Errorf(".claude/commands has %d files, want %d", got, len(allCmds))
+	}
 	// Cursor dir must NOT be created.
 	if _, err := os.Stat(filepath.Join("myproject", ".cursor")); err == nil {
 		t.Error("unexpected .cursor dir created for claude-only selection")

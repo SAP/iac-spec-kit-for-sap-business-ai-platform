@@ -90,12 +90,13 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 		{"3)", "btp-iac.accounts", "Map your app to BTP directories and subaccounts."},
 		{"4)", "btp-iac.services", "Resolve which BTP services each subaccount needs."},
 		{"5)", "btp-iac.security", "Set up IdP trust, roles, role collections and role collection assignments."},
+		{"6)", "btp-iac.connectivity", "Define destinations and certificates (optional)."},
 	})
 
 	section(&body, "Generate Terraform", []stepRow{
-		{"6)", "btp-iac.tasks", "Build a dependency-ordered execution plan."},
-		{"7)", "btp-iac.design", "Plan the Terraform file and module layout."},
-		{"8)", "btp-iac.generate", "Write and validate all Terraform HCL."},
+		{"7)", "btp-iac.tasks", "Build a dependency-ordered execution plan."},
+		{"8)", "btp-iac.design", "Plan the Terraform file and module layout."},
+		{"9)", "btp-iac.generate", "Write and validate all Terraform HCL."},
 	})
 
 	sb.WriteString(panel.Render(body.String()))

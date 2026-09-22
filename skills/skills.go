@@ -3,7 +3,7 @@ package skills
 
 import "embed"
 
-// Commands holds the nine btp-iac agent skill files installed by btp-iac init.
+// Commands holds the btp-iac agent skill files installed by btp-iac init.
 //
 //go:embed */SKILL.md
 var Commands embed.FS

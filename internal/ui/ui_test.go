@@ -14,8 +14,8 @@ func TestPrintSuccessContainsCommands(t *testing.T) {
 
 	for _, cmd := range []string{
 		"btp-iac.scenario", "btp-iac.accounts", "btp-iac.services",
-		"btp-iac.security", "btp-iac.tasks", "btp-iac.design",
-		"btp-iac.generate", "btp-iac.govern", "btp-iac.analyse",
+		"btp-iac.security", "btp-iac.connectivity", "btp-iac.tasks",
+		"btp-iac.design", "btp-iac.generate", "btp-iac.govern", "btp-iac.analyse",
 	} {
 		if !strings.Contains(output, cmd) {
 			t.Errorf("output missing command %q", cmd)
