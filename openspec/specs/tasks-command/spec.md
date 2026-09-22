@@ -7,11 +7,19 @@ Defines the behaviour of `/btp-iac.tasks`: consolidating landscape, services, an
 ## Requirements
 
 ### Requirement: consolidate specs into task list
-The command SHALL read `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` and consolidate them into a single dependency-ordered task list with IDs and parallel execution markers.
+The command SHALL read `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` and, when `specs/connectivity.md` exists, also read `specs/connectivity.md`. It SHALL consolidate all inputs into a single dependency-ordered task list with IDs and parallel execution markers.
 
 #### Scenario: task list produced
-- **WHEN** all three input specs exist
+- **WHEN** `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` exist
 - **THEN** the command produces a dependency-ordered task list with unique IDs and parallel execution markers
+
+#### Scenario: task list produced — without connectivity
+- **WHEN** `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` exist and `specs/connectivity.md` does not exist
+- **THEN** the command produces a dependency-ordered task list from the three mandatory inputs, with unique IDs and parallel execution markers
+
+#### Scenario: task list produced — with connectivity
+- **WHEN** `specs/landscape.md`, `specs/services.md`, `specs/trust.md`, and `specs/connectivity.md` all exist
+- **THEN** the command produces a dependency-ordered task list that also includes destination and certificate tasks derived from `specs/connectivity.md`
 
 ### Requirement: preserve account environments as tasks
 The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Environment tasks SHALL depend on their subaccount, and Cloud Foundry space tasks SHALL depend on their Cloud Foundry environment.
@@ -26,6 +34,21 @@ The command SHALL write the task list to `specs/tasks.md`.
 #### Scenario: tasks file written
 - **WHEN** the command completes
 - **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
+
+### Requirement: include connectivity tasks when connectivity spec exists
+When `specs/connectivity.md` exists, the command SHALL append a dependency-ordered set of destination and certificate tasks to `specs/tasks.md`. Each destination task SHALL depend on the subaccount it is scoped to. Each certificate task SHALL depend on its subaccount and, when service-instance-scoped, on the relevant service instance task.
+
+#### Scenario: subaccount-level destination task
+- **WHEN** `specs/connectivity.md` defines a destination scoped to a subaccount
+- **THEN** `specs/tasks.md` contains a task for that destination that depends on the corresponding subaccount task
+
+#### Scenario: service-instance-scoped destination task
+- **WHEN** `specs/connectivity.md` defines a destination scoped to a service instance
+- **THEN** `specs/tasks.md` contains a task for that destination that depends on both the subaccount task and the service instance task
+
+#### Scenario: certificate task ordering
+- **WHEN** `specs/connectivity.md` defines one or more certificates
+- **THEN** each certificate has a corresponding task in `specs/tasks.md` ordered after its subaccount task (and service instance task when applicable)
 
 ### Requirement: summarise output in terminal
 When the task list is extensive the command SHALL display a short summary in the terminal and instruct the user to open `specs/tasks.md` for the full list.
