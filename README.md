@@ -2,8 +2,6 @@
 [![CodeQL](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/btp-iac-spec-kit)](https://api.reuse.software/info/github.com/SAP/btp-iac-spec-kit)
 
-
-
 # infrastructure-as-code specification toolkit for SAP BTP
 
 ## About this project
@@ -14,11 +12,26 @@ The `btp-iac init` workflow currently scaffolds agent integrations for Claude Co
 
 ## Requirements and Setup
 
-*Insert a short description what is required to get your project running...*
+The [developer documentation](DEVELOPER.md) is a basic outline on how to build and develop the toolkit.
+
+## Usage
+Refer to the [Quick Start Guide](https://sap.github.io/btp-iac-spec-kit/) for instructions to efficiently begin utilizing the IaC Spec Kit for SAP BTP.
+
+## Updating
+
+To update the CLI and refresh the `btp-iac.*` command files in an existing project, see the [Updating guide](https://sap.github.io/btp-iac-spec-kit/updating/).
 
 ## Support, Feedback, Contributing
 
-This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp/issues). Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
+❓ - If you have a *question* you can ask it here in [GitHub Discussions](https://github.com/SAP/btp-iac-spec-kit/discussions/).
+
+🐞 - If you find a bug, feel free to create a [bug report](https://github.com/SAP/btp-iac-spec-kit/issues/new).
+
+💡 - If you have an idea for improvement or a feature request, please open a [feature request](https://github.com/SAP/btp-iac-spec-kit/issues/new).
+
+Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
+
+> **Note**: We take security and our user's trust seriously. If you believe you have found a security issue in this project, please responsibly disclose it. You find more details on the process in [our security policy](https://github.com/SAP/btp-iac-spec-kit/security/policy). Please do not create GitHub issues for security-related doubts or problems.
 
 ## Security / Disclosure
 If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.

@@ -31,6 +31,9 @@ go.work.sum
 # env file
 .env
 
+# Docs build output (Zensical / MkDocs)
+site/
+
 # Editor/IDE
 # .idea/
 # .vscode/
