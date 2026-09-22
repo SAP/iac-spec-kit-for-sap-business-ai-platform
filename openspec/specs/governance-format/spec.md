@@ -26,10 +26,31 @@ The governance file SHALL contain a Regions section specifying the preferred inf
 ### Requirement: account setup section
 The governance file SHALL contain an Account Setup section specifying the runtime environment types permitted in the project. The global account subdomain is stored separately in `memory/global-account.md`, which initialization creates. The `Environments` question group writes its runtime answer here and its environment-tier answer to `## Naming → Environments`; it does not rename either persisted section.
 
+The section MAY additionally contain a `Tier classifications` mapping to override the default keyword-based inference of `usage` and `beta_enabled` in the accounts command. The mapping is optional; when absent, inference applies. Each entry explicitly records both independent attributes for one tier.
+
 #### Scenario: account setup section present
 - **WHEN** `memory/governance.md` is read by a downstream command
 - **THEN** it contains a `## Account Setup` section with:
   - `- Allowed environments:` — `Cloud Foundry`, `Kyma`, or both
+  - `- Tier classifications:` _(optional)_ — exact, case-insensitive tier-name mapping. Each nested entry specifies both `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`), using this nested form:
+
+    ```markdown
+    - Tier classifications:
+      - integration: usage = NOT_USED_FOR_PRODUCTION, beta_enabled = false
+    ```
+
+#### Scenario: optional tier override fields absent
+- **WHEN** `memory/governance.md` does not contain `- Tier classifications:`
+- **THEN** the accounts command applies keyword-based inference for `usage` and `beta_enabled`
+
+#### Scenario: tier override fields present
+- **WHEN** `memory/governance.md` contains a matching `Tier classifications` entry
+- **THEN** the accounts command uses its explicit values instead of keyword inference
+
+#### Scenario: duplicate tier classification
+- **WHEN** `Tier classifications` contains the same normalized tier name more than once
+- **THEN** the accounts command stops and asks the user to correct the conflicting governance entries before classifying accounts
+- **AND** `- Override: true` does not bypass this governance-data error
 
 ### Requirement: naming section
 The governance file SHALL contain a Naming section specifying the subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space naming patterns, token definitions, environment tiers, directory structure preference, and maximum subaccount name length.
