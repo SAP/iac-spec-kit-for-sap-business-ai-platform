@@ -85,9 +85,9 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 	})
 
 	section(&body, "Define your infrastructure", []stepRow{
-		{"1)", "btp-iac.scenario", "Describe your app."},
+		{"1)", "btp-iac.scenario", "Describe your scenario."},
 		{"2)", "btp-iac.analyse", "Scan source code to extract service dependencies automatically (optional)."},
-		{"3)", "btp-iac.accounts", "Map your app to BTP directories and subaccounts."},
+		{"3)", "btp-iac.accounts", "Map your scenario to BTP directories and subaccounts."},
 		{"4)", "btp-iac.services", "Resolve which BTP services each subaccount needs."},
 		{"5)", "btp-iac.security", "Set up IdP trust, roles, role collections and role collection assignments."},
 		{"6)", "btp-iac.connectivity", "Define destinations and certificates (optional)."},

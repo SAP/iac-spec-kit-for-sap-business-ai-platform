@@ -4,14 +4,14 @@ description: Translates the task list into a concrete Terraform folder structure
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Design
 
 Translates the task list into a concrete Terraform folder structure — how resources are split across files, whether modules are introduced, and how environment-specific variable files are organised.
 
-Reads `specs/tasks.md`. Annotates each task in `specs/tasks.md` with the file path it will be written to.
+Reads `specs/tasks.md`. Annotates each task in `specs/tasks.md` with the file path it will be written to, while preserving its Task metadata unchanged.
 
 Respect each service instance task's `location` (`btp` or `cf`): keep BTP-provider and CF-provider resources in separate files so `/btp-iac.generate` can emit the correct provider per file.
 

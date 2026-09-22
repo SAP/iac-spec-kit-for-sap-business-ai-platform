@@ -14,11 +14,12 @@ The command SHALL read `specs/tasks.md` and define a concrete Terraform folder s
 - **THEN** the command produces a Terraform folder structure decision for the task set
 
 ### Requirement: annotate tasks with file paths
-The command SHALL annotate each task in `specs/tasks.md` with the file path it will be written to.
+The command SHALL annotate each task in `specs/tasks.md` with the file path it will be written to and preserve all existing Task metadata unchanged.
 
 #### Scenario: tasks annotated
 - **WHEN** the folder structure is defined
 - **THEN** every task in `specs/tasks.md` has a file path annotation indicating which Terraform file will contain it
+- **AND** every task retains its existing Task metadata
 
 ### Requirement: separate provider files by service instance location
 The command SHALL place BTP-provider and Cloud Foundry-provider service instance resources in separate Terraform files, driven by each service instance task's `location` (`btp` or `cf`).

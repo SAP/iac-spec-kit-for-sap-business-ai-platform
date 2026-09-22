@@ -39,6 +39,7 @@ After every change (code, config, tooling, workflow), check whether anything doc
 - Test: `go test ./...`
 - Lint: `golangci-lint run`
 - Run: _fill in once `main` exists_
+- Docs: Material-themed static site under `docs/` (config `mkdocs.yml`). Built and served by **Zensical** (`zensical build` / `zensical serve`), which reads the existing `mkdocs.yml` unchanged; `mkdocs` also still builds it as a reversible fallback. Published to GitHub Pages by `.github/workflows/create-gh-page.yml` (manual `workflow_dispatch` / `workflow_call`), which runs `zensical build --clean --strict` and deploys via the GitHub Actions Pages artifact flow. The `configure-pages` step uses `enablement: true` to create/enable the Pages site on first run, so no manual Settings change is needed unless the SAP org restricts Pages for the repo — in that case an admin must set the Pages source to "GitHub Actions" (not a `gh-pages` branch). Mermaid diagrams render via the `pymdownx.superfences` custom fence; the `!!python/name:` tag in `mkdocs.yml` is declared in `.vscode/settings.json` so editors don't flag it. Keep user docs in `docs/`, not in the README — the README is a minimal developer entry point that links the Pages site.
 
 ## Definition of done
 

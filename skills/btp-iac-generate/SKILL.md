@@ -4,14 +4,14 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Generate
 
 Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac.design`.
 
-Reads `specs/tasks.md` (with file path annotations). Writes Terraform files to the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on completion, fixing any issues and retrying until both pass.
+Reads `specs/tasks.md` (with file path annotations and task metadata). Writes Terraform files to the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on completion, fixing any issues and retrying until both pass.
 
 ## BTP platform validation
 
@@ -97,6 +97,8 @@ Include whichever providers the resolved locations require in `versions.tf`'s `r
 Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac.design`.
 
 **Stage filter**: Ask the user: "Which stage(s) should be generated? (e.g. dev, test, prod — or 'all')" Only process tasks whose stage annotation matches the answer. Tasks outside the requested stages are skipped — they remain in `specs/tasks.md` as spec-only and are not generated.
+
+For each selected `btp_subaccount` task, read `usage` and `beta_enabled` from its Task metadata. Emit every value that is present and valid; do not infer defaults or substitute governance values. Legacy tasks may omit either value, in which case omit that Terraform attribute and note the task ID as using legacy classification metadata. Stop and report the task ID only when a present value is invalid. Tasks outside the selected stages are not checked for these attributes.
 
 For each task in dependency order:
 1. Generate the Terraform HCL resource(s) for that task

@@ -1,0 +1,46 @@
+site_name: IaC Spec Kit for SAP BTP
+theme:
+  name: material
+  features:
+    - navigation.footer
+  logo: img/logo.svg
+  palette:
+    primary: black
+plugins:
+  - tags
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+repo_url: https://github.com/SAP/btp-iac-spec-kit
+extra:
+  generator: false
+copyright: Copyright © 2026 SAP SE or an SAP affiliate company. All rights reserved.
+nav:
+  - Home: index.md
+  - Installation & Setup: setup.md
+  - Usage: usage.md
+  - Commands:
+      - Overview: commands/index.md
+      - btp-iac.govern: commands/govern.md
+      - btp-iac.scenario: commands/scenario.md
+      - btp-iac.analyse: commands/analyse.md
+      - btp-iac.accounts: commands/accounts.md
+      - btp-iac.services: commands/services.md
+      - btp-iac.security: commands/security.md
+      - btp-iac.connectivity: commands/connectivity.md
+      - btp-iac.tasks: commands/tasks.md
+      - btp-iac.design: commands/design.md
+      - btp-iac.generate: commands/generate.md
+      - btp-iac.next: commands/next.md
+  - Examples:
+      - Usage Walkthrough: walkthrough.md
+      - Scenario Examples: scenarios.md
+  - Updating: updating.md
+  - Troubleshooting: troubleshooting.md

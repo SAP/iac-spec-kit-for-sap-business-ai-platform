@@ -4,7 +4,7 @@ description: Establishes governance guardrails — infrastructure, regions, nami
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Govern
@@ -111,6 +111,10 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 
 ## Account Setup
 - Allowed environments: <Cloud Foundry, Kyma, or both>
+<!-- Optional exact tier classifications; add one line per tier when needed.
+- Tier classifications:
+  - <tier>: usage = <USED_FOR_PRODUCTION or NOT_USED_FOR_PRODUCTION>, beta_enabled = <true or false>
+-->
 
 ## Naming
 - Subaccount pattern: <pattern, e.g. {org}-{env}-{app}>
