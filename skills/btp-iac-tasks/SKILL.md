@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Tasks
 
-Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment.
+Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs, structured task metadata, and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment.
 
 If `specs/connectivity.md` exists, also read it and append destination and certificate tasks (see **Connectivity tasks** below).
 
@@ -61,6 +61,9 @@ Produce a dependency-ordered task list. Each task MUST have:
 - Dependencies (IDs of tasks that must complete first, or `—` if none)
 - A parallel marker (`✦` if this task can run in parallel with others at the same dependency level, `—` if it must run alone)
 - A checkbox `- [ ]` (all tasks start unchecked; `/btp-iac.generate` marks them `- [x]` as it completes them)
+- An indented `Task metadata` block containing the resource type and the values needed to generate that resource
+
+For every `btp_subaccount` task, copy any confirmed `usage` and `beta_enabled` values from the matching entry in `specs/landscape.md` into its `Task metadata` block without changing them. A legacy landscape may omit either value; still create the task, do not infer or request missing values, and omit only the unavailable metadata fields.
 
 ### Step 3 — Write `specs/tasks.md`
 
@@ -80,11 +83,14 @@ Write the full task list to `specs/tasks.md` using this structure:
 | T-003 | <title> | all | T-001 | ✦ |
 
 - [ ] T-001 `[dev]` <title>
+  - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
 - [ ] T-002 `[dev, test]` <title>
+  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
 - [ ] T-003 `[all]` <title>
+  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
 ```
 
-Use one section per group. The table is for dependency/parallel overview; the checkbox list is updated by `/btp-iac.generate` as tasks are completed.
+Use one section per group. The table is for dependency/parallel overview; the checkbox list and its indented metadata are the machine-readable generation input. `/btp-iac.generate` updates only the checkbox state.
 
 ### Step 4 — Report in terminal
 

@@ -81,6 +81,25 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **WHEN** the pre-generation pass passes
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
+### Requirement: emit available subaccount classification attributes
+For each `btp_subaccount` task selected by the stage filter, the command SHALL read `usage` and `beta_enabled` from task metadata and emit every present, valid value on the generated `btp_subaccount` resource. It SHALL NOT infer defaults or substitute governance values. Missing values are supported for legacy tasks and SHALL NOT stop generation; invalid values that are present SHALL stop before writing that resource.
+
+#### Scenario: classified subaccount generated
+- **WHEN** a selected `btp_subaccount` task contains valid `usage` and `beta_enabled` metadata
+- **THEN** the generated `btp_subaccount` resource contains the same `usage` and `beta_enabled` values
+
+#### Scenario: subaccount classification metadata missing
+- **WHEN** a selected `btp_subaccount` task omits `usage` or `beta_enabled` metadata
+- **THEN** the command omits the unavailable Terraform attribute, identifies the task as using legacy classification metadata, and continues
+
+#### Scenario: missing metadata on an unselected stage
+- **WHEN** a `btp_subaccount` task outside the selected stages omits `usage` or `beta_enabled` metadata
+- **THEN** the command skips that task without checking its classification metadata
+
+#### Scenario: invalid subaccount classification metadata
+- **WHEN** a selected `btp_subaccount` task contains an invalid `usage` or `beta_enabled` value
+- **THEN** the command stops before writing that resource and identifies the invalid task metadata
+
 ### Requirement: resolve latest provider versions at runtime
 The command SHALL look up the current latest version of each required Terraform provider before writing `versions.tf`, and use those versions as `~>` constraints in `required_providers`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 

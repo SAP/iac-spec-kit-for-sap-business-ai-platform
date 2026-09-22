@@ -28,6 +28,17 @@ The command SHALL create a task for every Cloud Foundry environment, Kyma enviro
 - **WHEN** `specs/landscape.md` defines Cloud Foundry or Kyma environments and Cloud Foundry spaces
 - **THEN** `specs/tasks.md` contains the corresponding dependency-ordered tasks with their subaccount, type, and name
 
+### Requirement: preserve confirmed subaccount classification metadata
+For every subaccount task, the command SHALL copy any confirmed `usage` and `beta_enabled` values from `specs/landscape.md` into structured task metadata. The task metadata is generation input and SHALL NOT alter values downstream. When a legacy landscape omits either value, the command SHALL still create the task without inferring, requesting, or inventing the unavailable metadata.
+
+#### Scenario: classified subaccount task
+- **WHEN** `specs/landscape.md` defines a subaccount with confirmed `usage` and `beta_enabled` values
+- **THEN** its `btp_subaccount` task contains those values in its task metadata
+
+#### Scenario: legacy subaccount classification metadata absent
+- **WHEN** a subaccount in `specs/landscape.md` omits `usage`, `beta_enabled`, or both
+- **THEN** the command creates its `btp_subaccount` task without the unavailable metadata and continues
+
 ### Requirement: write tasks file
 The command SHALL write the task list to `specs/tasks.md`.
 
