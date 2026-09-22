@@ -85,10 +85,13 @@ Use the retrieved version as the `~>` constraint in `required_providers`. Never 
 
 Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac.design`.
 
+**Stage filter**: Ask the user: "Which stage(s) should be generated? (e.g. dev, test, prod — or 'all')" Only process tasks whose stage annotation matches the answer. Tasks outside the requested stages are skipped — they remain in `specs/tasks.md` as spec-only and are not generated.
+
 For each task in dependency order:
 1. Generate the Terraform HCL resource(s) for that task
 2. Write to the file path annotated by `/btp-iac.design`
-3. Continue to the next task
+3. Mark the task as complete in `specs/tasks.md` by changing its checkbox from `- [ ]` to `- [x]`
+4. Continue to the next task
 
 After all tasks are complete:
 1. Run `terraform init` on the `terraform/` directory
