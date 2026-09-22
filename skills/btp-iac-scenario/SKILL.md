@@ -51,3 +51,7 @@ Ask at most one question for each unresolved topic, in this order:
 3. **Setup structure** — unless the scenario explicitly states the desired topology, ask how the setup should be structured, for example whether each stage has its own subaccount. Governance naming and tier constraints do not suppress this question.
 
 For destinations and setup structure, skip a question only when the scenario input explicitly provides a sufficient answer.
+
+## Next step
+
+Next: `/btp-iac.accounts` — map your app to BTP directories and subaccounts.

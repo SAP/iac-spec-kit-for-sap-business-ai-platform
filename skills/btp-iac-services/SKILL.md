@@ -60,3 +60,7 @@ For each subaccount, resolve:
 - Dependencies between services (ordered)
 
 Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac.tasks`.
+
+## Next step
+
+Next: `/btp-iac.security` — set up IdP trust, roles, and role collection assignments.

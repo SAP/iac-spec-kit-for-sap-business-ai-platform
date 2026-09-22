@@ -35,12 +35,12 @@ func TestScaffoldClaude(t *testing.T) {
 		}
 	}
 
-	// All ten command files must be present.
+	// All eleven command files must be present.
 	allCmds := []string{
 		"btp-iac.govern.md", "btp-iac.scenario.md", "btp-iac.analyse.md",
 		"btp-iac.accounts.md", "btp-iac.services.md", "btp-iac.security.md",
-		"btp-iac.connectivity.md", "btp-iac.tasks.md", "btp-iac.design.md",
-		"btp-iac.generate.md",
+		"btp-iac.connectivity.md", "btp-iac.next.md", "btp-iac.tasks.md",
+		"btp-iac.design.md", "btp-iac.generate.md",
 	}
 	for _, f := range allCmds {
 		if _, err := os.Stat(filepath.Join("myproject", ".claude", "commands", f)); err != nil {

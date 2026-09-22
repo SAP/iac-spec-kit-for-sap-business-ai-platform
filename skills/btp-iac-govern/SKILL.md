@@ -177,3 +177,7 @@ against these rules and stop on any violation.
 
 To bypass enforcement, add "- Override: true" to memory/governance.md.
 ```
+
+## Next step
+
+Next: `/btp-iac.scenario` — describe your application.

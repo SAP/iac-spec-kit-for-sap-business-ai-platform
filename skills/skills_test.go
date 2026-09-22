@@ -9,12 +9,20 @@ import (
 
 const btpReadOnlyBoundary = "When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**."
 
+// noBTPBoundary lists skills that perform no BTP operations and are exempt from BTP boundary assertions.
+var noBTPBoundary = map[string]bool{
+	"btp-iac-next/SKILL.md": true,
+}
+
 func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
 	err := fs.WalkDir(Commands, ".", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if entry.IsDir() || !strings.HasSuffix(path, "/SKILL.md") {
+			return nil
+		}
+		if noBTPBoundary[strings.TrimPrefix(path, "./")] {
 			return nil
 		}
 		data, err := Commands.ReadFile(path)
@@ -38,6 +46,9 @@ func TestAllSkillsEnforceBTPReadOnlyBoundary(t *testing.T) {
 			return err
 		}
 		if entry.IsDir() || !strings.HasSuffix(path, "/SKILL.md") {
+			return nil
+		}
+		if noBTPBoundary[strings.TrimPrefix(path, "./")] {
 			return nil
 		}
 
@@ -87,5 +98,48 @@ func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 				t.Errorf("%s is missing %q", path, want)
 			}
 		}
+	}
+}
+
+func TestGreenfieldSkillsHaveSingleNextStepFooter(t *testing.T) {
+	linearFlowSkills := []string{
+		"btp-iac-govern/SKILL.md",
+		"btp-iac-scenario/SKILL.md",
+		"btp-iac-accounts/SKILL.md",
+		"btp-iac-services/SKILL.md",
+		"btp-iac-security/SKILL.md",
+		"btp-iac-connectivity/SKILL.md",
+		"btp-iac-tasks/SKILL.md",
+		"btp-iac-design/SKILL.md",
+		"btp-iac-generate/SKILL.md",
+	}
+	for _, path := range linearFlowSkills {
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := strings.Count(string(data), "## Next step"); got != 1 {
+			t.Errorf("%s has %d Next step sections, want 1", path, got)
+		}
+	}
+
+	for _, path := range []string{"btp-iac-analyse/SKILL.md", "btp-iac-next/SKILL.md"} {
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(data), "## Next step") {
+			t.Errorf("%s must not have a linear-flow Next step footer", path)
+		}
+	}
+}
+
+func TestTasksSkillHasNoDuplicateNextStepInstruction(t *testing.T) {
+	data, err := Commands.ReadFile("btp-iac-tasks/SKILL.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "Next step: /btp-iac.design") {
+		t.Error("tasks skill has a duplicate next-step instruction in its output template")
 	}
 }

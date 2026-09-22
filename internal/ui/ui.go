@@ -99,6 +99,10 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 		{"9)", "btp-iac.generate", "Write and validate all Terraform HCL."},
 	})
 
+	section(&body, "Utilities", []stepRow{
+		{"  ", "btp-iac.next", "Show current project state and recommend the next command."},
+	})
+
 	sb.WriteString(panel.Render(body.String()))
 	sb.WriteString("\n\n")
 

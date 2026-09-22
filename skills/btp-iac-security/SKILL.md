@@ -59,3 +59,7 @@ Define for each subaccount:
 - User and group assignments to role collections
 
 Write `specs/trust.md` with the complete security configuration. This file is the direct input to `/btp-iac.tasks`.
+
+## Next step
+
+Next: `/btp-iac.connectivity` (optional) — define destinations and certificates, or `/btp-iac.tasks` to skip.
