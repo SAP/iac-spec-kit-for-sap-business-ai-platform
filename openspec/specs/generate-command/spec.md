@@ -81,6 +81,21 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **WHEN** the pre-generation pass passes
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
+### Requirement: select provider by service instance location
+The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider (`SAP/cloudfoundry`) for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
+
+#### Scenario: btp service instance
+- **WHEN** a service instance task has `location: btp`
+- **THEN** the command generates a BTP-provider service instance resource
+
+#### Scenario: cf service instance
+- **WHEN** a service instance task has `location: cf`
+- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space`
+
+#### Scenario: entitlement-only service
+- **WHEN** a service is classified as entitlement-only
+- **THEN** the command generates only the entitlement assignment and no instance or subscription resource
+
 ### Requirement: emit available subaccount classification attributes
 For each `btp_subaccount` task selected by the stage filter, the command SHALL read `usage` and `beta_enabled` from task metadata and emit every present, valid value on the generated `btp_subaccount` resource. It SHALL NOT infer defaults or substitute governance values. Missing values are supported for legacy tasks and SHALL NOT stop generation; invalid values that are present SHALL stop before writing that resource.
 

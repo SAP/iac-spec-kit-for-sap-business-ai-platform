@@ -21,6 +21,7 @@ After `btp-iac.accounts`, `btp-iac.services`, and `btp-iac.security` have all pr
 - Merges the specs into one ordered list.
 - Assigns task IDs and adds parallel-execution markers.
 - Creates a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space in the landscape; each Cloud Foundry space task depends on its Cloud Foundry environment.
+- Preserves each service instance's `location`; a CF-located instance also retains its `cf_space` and depends on that specific Cloud Foundry space task.
 - Annotates each task with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`). All tasks are written regardless of stage; the annotation is consumed by [`btp-iac.generate`](generate.md) to filter which tasks are generated.
 - Writes every task unchecked (`- [ ]`); [`btp-iac.generate`](generate.md) marks tasks `- [x]` as it completes them.
 - When `specs/connectivity.md` exists, appends one task per destination and certificate, ordered after the landscape, service, and trust tasks they depend on.

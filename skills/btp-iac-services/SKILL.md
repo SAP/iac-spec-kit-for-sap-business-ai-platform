@@ -49,17 +49,65 @@ For each service instance you are about to define, identify its environment tier
 
 ---
 
+## Service Type Classification
+
+**Before writing `specs/services.md`**, determine how each service will be consumed. This drives both the output structure and which Terraform provider downstream commands use.
+
+### Step 1 — Check governance for pre-stated decisions
+
+Read `<project-root>/memory/governance.md` if it exists. Look for any section or note that states:
+- Which services are entitlement-only
+- Which services require a subscription vs. a service instance
+- Whether service instances are created on BTP or in a Cloud Foundry space
+
+If any of these decisions are already recorded there, use them without asking the user again. Note which decisions were sourced from governance.
+
+### Step 2 — Classify each service
+
+For every service identified from `specs/scenario.md`, determine its `consumption_type`, one of: `instance` (service instance), `subscription` (app subscription), or `entitlement-only` (entitlement assigned, nothing created).
+
+The **default** is:
+- SaaS applications → `subscription`
+- Technical services → `instance`
+
+Ask the user to confirm or override the type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke:
+
+> "For `<service-name>`: (1) service instance, (2) app subscription, or (3) entitlement only? Default is (`<default>`)."
+
+Skip the question only for a service whose type is already fixed by governance (Step 1). This guarantees the user can always mark any service — including a clearly technical one — as entitlement-only.
+
+If a service is classified as `entitlement-only`, record `consumption_type: entitlement-only` — no instance or subscription is created; the entitlement is assigned to the subaccount for future manual use.
+
+### Step 3 — Determine service instance location
+
+For every service with `consumption_type: instance`, determine where the instance is created:
+
+- **BTP** (`location: btp`) — created directly in the subaccount using the BTP Terraform provider (`SAP/btp`)
+- **Cloud Foundry** (`location: cf`) — created inside a specific CF space using the Cloud Foundry Terraform provider (`SAP/cloudfoundry`)
+
+Check `specs/landscape.md` for the Cloud Foundry environment and its spaces in the relevant subaccount:
+
+- If **no** Cloud Foundry environment exists for the subaccount, record `location: btp` without asking.
+- If a Cloud Foundry environment exists, ask:
+  > "Service instance `<service-name>` in subaccount `<subaccount>`: create on BTP (BTP provider) or inside a Cloud Foundry space (CF provider)? Default is BTP."
+- If the user chooses CF and the subaccount has **more than one** space, ask which space (list the spaces from `specs/landscape.md`); if it has exactly one, use that space without asking. Record the chosen space as `cf_space: <name>`.
+- If the user chooses CF but the subaccount's Cloud Foundry environment has **no space** defined in `specs/landscape.md`, **STOP**: a CF service instance requires a space. Tell the user to add a Cloud Foundry space via `/btp-iac.accounts` (the authoritative source for spaces), then re-run `/btp-iac.services`. Do not invent a space name here.
+
+Record `location` for every service instance, plus `cf_space` when `location: cf`. These are passed through to `specs/services.md` and consumed by `/btp-iac.tasks`, `/btp-iac.design`, and `/btp-iac.generate` to select the correct provider and CF space.
+
+---
+
 ## Workflow
 
-Read `specs/scenario.md` and `specs/landscape.md` to understand the application requirements and the account topology.
+Read `specs/scenario.md` and `specs/landscape.md` to understand the application requirements and the account topology. Run Service Type Classification before resolving dependencies.
 
 For each subaccount, resolve:
-- Required entitlements (service + plan)
-- Subscriptions (SaaS applications)
-- Service instances with configuration parameters
+- Required entitlements (service + plan) — includes `entitlement-only` services
+- Subscriptions (services with `consumption_type: subscription`)
+- Service instances (`consumption_type: instance`) with configuration parameters, `location`, and `cf_space` when CF-located
 - Dependencies between services (ordered)
 
-Write `specs/services.md` with the full dependency-ordered list. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. This file is the direct input to `/btp-iac.tasks`.
 
 ## Next step
 
