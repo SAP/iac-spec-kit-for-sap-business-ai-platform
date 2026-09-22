@@ -18,11 +18,11 @@ The CLI binary SHALL embed command files for all four supported agents (`claude`
 - **THEN** it can install command files for any combination of the four supported agents without external assets
 
 ### Requirement: command files written on init
-The CLI SHALL write the embedded command files for each selected agent to that agent's directory during `btp-iac init`. Six of the ten files contain substantive agent instructions rather than placeholder content.
+The CLI SHALL write the embedded command files for each selected agent to that agent's directory during `btp-iac init`. Every command file contains substantive agent instructions.
 
-#### Scenario: all ten files present after init (Claude)
+#### Scenario: all eleven files present after init (Claude)
 - **WHEN** `btp-iac init <name> --agent claude` completes successfully
-- **THEN** ten `.md` files exist under `<name>/.claude/commands/`:
+- **THEN** eleven `.md` files exist under `<name>/.claude/commands/`:
   - `btp-iac.govern.md`
   - `btp-iac.scenario.md`
   - `btp-iac.analyse.md`
@@ -30,21 +30,22 @@ The CLI SHALL write the embedded command files for each selected agent to that a
   - `btp-iac.services.md`
   - `btp-iac.security.md`
   - `btp-iac.connectivity.md`
+  - `btp-iac.next.md`
   - `btp-iac.tasks.md`
   - `btp-iac.design.md`
   - `btp-iac.generate.md`
 
 #### Scenario: Cursor files present after init with cursor selected
 - **WHEN** `btp-iac init <name> --agent cursor` completes successfully
-- **THEN** ten `.mdc` files exist under `<name>/.cursor/rules/`
+- **THEN** eleven `.mdc` files exist under `<name>/.cursor/rules/`
 
 #### Scenario: Codex files present after init with codex selected
 - **WHEN** `btp-iac init <name> --agent codex` completes successfully
-- **THEN** ten `.md` files exist under `<name>/.codex/prompts/`
+- **THEN** eleven `.md` files exist under `<name>/.codex/prompts/`
 
 #### Scenario: Copilot files present after init with copilot selected
 - **WHEN** `btp-iac init <name> --agent copilot` completes successfully
-- **THEN** ten `.instructions.md` files exist under `<name>/.github/instructions/`
+- **THEN** eleven `.instructions.md` files exist under `<name>/.github/instructions/`
 
 #### Scenario: govern command has full implementation
 - **WHEN** `btp-iac init <name>` completes successfully
@@ -62,8 +63,12 @@ Each embedded command file SHALL be non-empty and readable as UTF-8 text.
 - **THEN** it can be opened and read as plain text without error
 
 ### Requirement: shared platform-validation guidance
-Every embedded command file SHALL contain the local BTP platform-validation capability contract and a mandatory BTP read-only boundary. Commands requiring live BTP checks SHALL prefer the recorded CLI route and otherwise use a configured BTP MCP read/list route without blocking when neither is available. The commands SHALL never invoke BTP mutations; `btp target --global-account <subdomain>` is permitted only as an account-selection prelude to BTP CLI read/list commands.
+Every embedded command file that invokes BTP operations SHALL contain the local BTP platform-validation capability contract and a mandatory BTP read-only boundary. Commands that do not invoke BTP operations are exempt. Commands requiring live BTP checks SHALL prefer the recorded CLI route and otherwise use a configured BTP MCP read/list route without blocking when neither is available. The commands SHALL never invoke BTP mutations; `btp target --global-account <subdomain>` is permitted only as an account-selection prelude to BTP CLI read/list commands.
 
-#### Scenario: installed command contains capability guidance
-- **WHEN** an embedded command is installed during init
+#### Scenario: installed BTP-invoking command contains capability guidance
+- **WHEN** an embedded command that performs BTP operations is installed during init
 - **THEN** it instructs the agent to read `.btp-iac/platform-validation.md` before a required live BTP check
+
+#### Scenario: btp-iac-next exempt from BTP boundary
+- **WHEN** `btp-iac.next` is installed during init
+- **THEN** it does not contain BTP platform-validation boilerplate, as it performs no BTP operations

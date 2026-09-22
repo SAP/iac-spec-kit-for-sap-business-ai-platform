@@ -224,3 +224,7 @@ Write the collected requirements to `<project-root>/specs/connectivity.md` using
 ```
 
 This file is the direct input to `/btp-iac.tasks` (read when it exists) and informs `/btp-iac.generate` which produces `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` Terraform resources.
+
+## Next step
+
+Next: `/btp-iac.tasks` — build a dependency-ordered execution plan.

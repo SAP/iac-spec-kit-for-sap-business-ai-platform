@@ -99,5 +99,8 @@ Task list written to specs/tasks.md (<N> tasks across <K> groups):
   ...
 
 Open specs/tasks.md to review or update completion state.
-Next step: /btp-iac.design
 ```
+
+## Next step
+
+Next: `/btp-iac.design` — plan the Terraform file and module layout.

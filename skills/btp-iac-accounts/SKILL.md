@@ -80,3 +80,7 @@ Define the account topology:
 - For each selected Kyma environment, collect its environment name.
 
 Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. This file is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`.
+
+## Next step
+
+Next: `/btp-iac.services` — resolve which BTP services each subaccount needs.

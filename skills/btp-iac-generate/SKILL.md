@@ -109,3 +109,7 @@ After all tasks are complete:
 **Do not push** the generated Terraform files unless the user explicitly asks (e.g. "push", "git push").
 
 Default behaviour after a successful generate run is to leave the files as unstaged changes in the working tree so the user can review, iterate, and decide when to commit.
+
+## Next step
+
+Your Terraform code is in `terraform/`. Review the generated files, then commit and apply when ready.
