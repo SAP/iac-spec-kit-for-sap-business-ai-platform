@@ -21,6 +21,7 @@ After `btp-iac.tasks`, and before `btp-iac.generate`.
 - Decides how resources are split across files.
 - Decides whether modules are introduced.
 - Decides how per-environment variable files are organised.
+- Keeps BTP-provider and Cloud Foundry-provider service instances in separate files, based on each task's `location`, so generation can use the correct provider.
 - Annotates each task with its target file path, which `generate` then follows.
 - Performs no BTP access for its core function — it only reads and rewrites `specs/tasks.md`, unlike the BTP-touching commands.
 
@@ -34,12 +35,12 @@ After `btp-iac.tasks`, and before `btp-iac.generate`.
 
 ```markdown
 1. [T1] Create subaccount hr-leave-prod          -> subaccount.tf
-2. [T2] Create xsuaa (application)               -> services.tf
-3. [T3] Create hana-cloud (hana)                 -> services.tf
+2. [T2] Create xsuaa (application, BTP)          -> services-btp.tf
+3. [T3] Create hana-cloud (hana, CF)             -> services-cf.tf
 4. [T4] Create role collection HR_Leave_Employee -> security.tf
 ```
 
-For a single small application it keeps everything in a flat set of files; a larger, multi-subaccount scenario is where it introduces modules and per-environment variable files.
+For a single small application it keeps everything in a flat set of files, while still separating BTP and Cloud Foundry provider resources. A larger, multi-subaccount scenario is where it introduces modules and per-environment variable files.
 
 ## Related
 

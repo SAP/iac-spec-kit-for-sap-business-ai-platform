@@ -86,7 +86,7 @@ Use the retrieved version as the `~>` constraint in `required_providers`. Never 
 Each service instance task carries a `location` (`btp` or `cf`) sourced from `specs/services.md`:
 
 - `btp` — generate the instance with the BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
-- `cf` — generate the instance with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving the offering/plan via CF data sources.
+- `cf` — generate the instance with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving the offering/plan via CF data sources. Use `SAP/cloudfoundry` as its `required_providers` source.
 
 Include whichever providers the resolved locations require in `versions.tf`'s `required_providers`. Entitlement-only services generate only the entitlement assignment — no instance or subscription resource.
 

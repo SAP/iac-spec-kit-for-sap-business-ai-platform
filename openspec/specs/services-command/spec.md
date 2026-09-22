@@ -14,7 +14,7 @@ The command SHALL read `specs/scenario.md`, `specs/landscape.md`, and if present
 - **THEN** it reads both spec files and optionally governance
 
 ### Requirement: classify service consumption type
-Before resolving any service dependencies, the command SHALL determine each service's `consumption_type`, one of `instance`, `subscription`, or `entitlement-only`. The default is: SaaS applications → `subscription`, technical services → `instance`. The command SHALL let the user confirm or override the type for every service so that any service can be marked `entitlement-only`.
+Before resolving any service dependencies, the command SHALL determine each service's `consumption_type`, one of `instance`, `subscription`, or `entitlement-only`. The default is: SaaS applications → `subscription`, technical services → `instance`. For every service whose type is not fixed by governance, the command SHALL let the user confirm or override the type so that any service can be marked `entitlement-only`.
 
 #### Scenario: governance pre-states consumption type
 - **WHEN** `memory/governance.md` records the consumption type for a service

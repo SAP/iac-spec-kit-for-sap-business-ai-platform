@@ -82,7 +82,7 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
 ### Requirement: select provider by service instance location
-The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
+The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider (`SAP/cloudfoundry`) for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
 
 #### Scenario: btp service instance
 - **WHEN** a service instance task has `location: btp`

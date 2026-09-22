@@ -47,7 +47,7 @@ The command SHALL write the task list to `specs/tasks.md`.
 - **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
 
 ### Requirement: preserve service instance location
-The command SHALL preserve each service instance's `location` (`btp` or `cf`), and its `cf_space` when CF-located, from `specs/services.md` on the corresponding task so that `/btp-iac.design` and `/btp-iac.generate` select the correct Terraform provider and CF space.
+The command SHALL preserve each service instance's `location` (`btp` or `cf`), and its `cf_space` when CF-located, from `specs/services.md` on the corresponding task so that `/btp-iac.design` and `/btp-iac.generate` select the correct Terraform provider and CF space. A CF-located service instance task SHALL depend on its specific Cloud Foundry space task.
 
 #### Scenario: btp-located service instance
 - **WHEN** a service instance in `specs/services.md` has `location: btp`

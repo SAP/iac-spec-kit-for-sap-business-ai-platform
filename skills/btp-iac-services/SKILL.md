@@ -74,7 +74,7 @@ Ask the user to confirm or override the type for **each** service (one question 
 
 > "For `<service-name>`: (1) service instance, (2) app subscription, or (3) entitlement only? Default is (`<default>`)."
 
-Skip the question only for a service whose type is already fixed by governance (Step 1). This guarantees the user can always mark any service — including a clearly technical one — as entitlement-only, as issue #62 requires.
+Skip the question only for a service whose type is already fixed by governance (Step 1). This guarantees the user can always mark any service — including a clearly technical one — as entitlement-only.
 
 If a service is classified as `entitlement-only`, record `consumption_type: entitlement-only` — no instance or subscription is created; the entitlement is assigned to the subaccount for future manual use.
 
@@ -83,7 +83,7 @@ If a service is classified as `entitlement-only`, record `consumption_type: enti
 For every service with `consumption_type: instance`, determine where the instance is created:
 
 - **BTP** (`location: btp`) — created directly in the subaccount using the BTP Terraform provider (`SAP/btp`)
-- **Cloud Foundry** (`location: cf`) — created inside a specific CF space using the Cloud Foundry Terraform provider (`cloudfoundry-community/cloudfoundry` or `SAP/cloudfoundry`)
+- **Cloud Foundry** (`location: cf`) — created inside a specific CF space using the Cloud Foundry Terraform provider (`SAP/cloudfoundry`)
 
 Check `specs/landscape.md` for the Cloud Foundry environment and its spaces in the relevant subaccount:
 
