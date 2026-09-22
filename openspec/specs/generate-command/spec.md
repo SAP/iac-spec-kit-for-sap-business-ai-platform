@@ -81,6 +81,21 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **WHEN** the pre-generation pass passes
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
+### Requirement: select provider by service instance location
+The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
+
+#### Scenario: btp service instance
+- **WHEN** a service instance task has `location: btp`
+- **THEN** the command generates a BTP-provider service instance resource
+
+#### Scenario: cf service instance
+- **WHEN** a service instance task has `location: cf`
+- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space`
+
+#### Scenario: entitlement-only service
+- **WHEN** a service is classified as entitlement-only
+- **THEN** the command generates only the entitlement assignment and no instance or subscription resource
+
 ### Requirement: resolve latest provider versions at runtime
 The command SHALL look up the current latest version of each required Terraform provider before writing `versions.tf`, and use those versions as `~>` constraints in `required_providers`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 

@@ -50,6 +50,8 @@ Destination and certificate tasks from `specs/connectivity.md` are ordered after
 
 Read all three input files: `specs/landscape.md`, `specs/services.md`, `specs/trust.md`.
 
+For each service instance in `specs/services.md`, preserve its `location` (`btp` or `cf`) on the corresponding task so `/btp-iac.design` and `/btp-iac.generate` select the correct provider. A `cf` service instance also carries `cf_space`; its task **depends on** that specific Cloud Foundry space task.
+
 ### Step 2 — Build task list
 
 Produce a dependency-ordered task list. Each task MUST have:

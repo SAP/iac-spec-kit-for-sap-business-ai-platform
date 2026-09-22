@@ -19,3 +19,10 @@ The command SHALL annotate each task in `specs/tasks.md` with the file path it w
 #### Scenario: tasks annotated
 - **WHEN** the folder structure is defined
 - **THEN** every task in `specs/tasks.md` has a file path annotation indicating which Terraform file will contain it
+
+### Requirement: separate provider files by service instance location
+The command SHALL place BTP-provider and Cloud Foundry-provider service instance resources in separate Terraform files, driven by each service instance task's `location` (`btp` or `cf`).
+
+#### Scenario: mixed locations
+- **WHEN** the task set contains both `btp` and `cf` service instances
+- **THEN** the file path annotations separate BTP-provider resources from CF-provider resources

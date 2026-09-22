@@ -35,6 +35,17 @@ The command SHALL write the task list to `specs/tasks.md`.
 - **WHEN** the command completes
 - **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
 
+### Requirement: preserve service instance location
+The command SHALL preserve each service instance's `location` (`btp` or `cf`), and its `cf_space` when CF-located, from `specs/services.md` on the corresponding task so that `/btp-iac.design` and `/btp-iac.generate` select the correct Terraform provider and CF space.
+
+#### Scenario: btp-located service instance
+- **WHEN** a service instance in `specs/services.md` has `location: btp`
+- **THEN** its task retains the `btp` location
+
+#### Scenario: cf-located service instance
+- **WHEN** a service instance in `specs/services.md` has `location: cf` with a `cf_space`
+- **THEN** its task retains the `cf` location and `cf_space`, and depends on that specific Cloud Foundry space task
+
 ### Requirement: include connectivity tasks when connectivity spec exists
 When `specs/connectivity.md` exists, the command SHALL append a dependency-ordered set of destination and certificate tasks to `specs/tasks.md`. Each destination task SHALL depend on the subaccount it is scoped to. Each certificate task SHALL depend on its subaccount and, when service-instance-scoped, on the relevant service instance task.
 
