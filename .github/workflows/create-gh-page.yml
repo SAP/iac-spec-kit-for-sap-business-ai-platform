@@ -1,0 +1,38 @@
+name: Deploy gh-page
+# Pages are built on demand (manual dispatch) or when invoked by another
+# workflow (e.g. on release) via workflow_call.
+on:
+  workflow_dispatch:
+  workflow_call:
+
+# Zensical builds a static site into ./site and publishes it via the GitHub
+# Pages artifact flow (no gh-pages branch). Requires Settings > Pages source
+# to be set to "GitHub Actions".
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v6
+      - uses: actions/checkout@v7
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 20241106+github-actions[bot]@users.noreply.github.com
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.x
+      - run: pip install zensical
+      - run: zensical build --clean --strict
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - uses: actions/deploy-pages@v5
+        id: deployment
