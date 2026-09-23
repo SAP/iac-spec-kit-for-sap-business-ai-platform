@@ -22,7 +22,7 @@ The CLI SHALL accept a single positional argument `<name>` and use it as the new
 - **THEN** the CLI exits with a non-zero status and prints a usage message
 
 ### Requirement: optional global-account subdomain
-For fresh and adopted infrastructure projects, the CLI SHALL offer an optional global-account subdomain input. It SHALL reject a GUID-shaped value and write the selected value to `memory/global-account.md`. Leaving the input blank SHALL be accepted and SHALL create an empty subdomain record for a new project. The record SHALL be ignored by Git. Agent-only updates SHALL not prompt for or change this record.
+For fresh and adopted infrastructure projects, the CLI SHALL offer an optional global-account subdomain input and write the selected value to `memory/global-account.md`. GUID-shaped values SHALL be accepted because they can be valid global-account subdomains. Leaving the input blank SHALL be accepted and SHALL create an empty subdomain record for a new project. The record SHALL be ignored by Git. Agent-only updates SHALL not prompt for or change this record.
 
 #### Scenario: subdomain supplied
 - **WHEN** a user enters `acme-global` during initialization

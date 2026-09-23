@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -41,8 +40,6 @@ type initIntent struct {
 	mode scaffold.Mode
 }
 
-var globalAccountGUID = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
-
 // validProjectName rejects names with path separators or leading dots to
 // prevent directory traversal and hidden-directory confusion.
 func validProjectName(name string) error {
@@ -58,13 +55,6 @@ func collectGlobalAccountSubdomain() (string, error) {
 	if err := survey.AskOne(
 		&survey.Input{Message: "Global account subdomain (optional):"},
 		&subdomain,
-		survey.WithValidator(func(val any) error {
-			value := strings.TrimSpace(fmt.Sprintf("%v", val))
-			if globalAccountGUID.MatchString(value) {
-				return fmt.Errorf("enter the global account subdomain, not its GUID")
-			}
-			return nil
-		}),
 	); err != nil {
 		return "", fmt.Errorf("prompt: %w", err)
 	}

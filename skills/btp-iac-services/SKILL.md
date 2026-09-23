@@ -40,7 +40,9 @@ If no route is recorded, retain user input without blocking. If a recorded route
 **If it exists**, load all rules and validate every service plan decision against the `## Service Plans` section.
 
 ### Service plan validation
+
 For each service instance you are about to define, identify its environment tier from `specs/landscape.md` and check the plan:
+
 - If the plan is **not** in the `Permitted` list for that tier: **STOP**
   > "GOVERNANCE VIOLATION: Plan `<plan>` is not permitted for environment `<tier>` (permitted: `<permitted-plans>`). Change the plan or add `- Override: true` to memory/governance.md."
 - If the plan appears in the `Forbidden` list for that tier: **STOP** with the same message.
@@ -67,12 +69,19 @@ If any of these decisions are already recorded there, use them without asking th
 For every service identified from `specs/scenario.md`, determine its `consumption_type`, one of: `instance` (service instance), `subscription` (app subscription), or `entitlement-only` (entitlement assigned, nothing created).
 
 The **default** is:
+
 - SaaS applications → `subscription`
 - Technical services → `instance`
 
-Ask the user to confirm or override the type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke:
+Ask the user to confirm or override the type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke. Present the following question depding on the the service's default type.
 
-> "For `<service-name>`: (1) service instance, (2) app subscription, or (3) entitlement only? Default is (`<default>`)."
+**If the type is `instance`** ask for **each** service of type `instance`
+
+> "For `<service-name>`: (1) service instance or (2) entitlement only? Default is (`<default>`)."
+
+**If the type is `subscription`** ask for **each** service of type `subscription`
+
+> "For `<service-name>`: (1) app subscription or (2) entitlement only? Default is (`<default>`)."
 
 Skip the question only for a service whose type is already fixed by governance (Step 1). This guarantees the user can always mark any service — including a clearly technical one — as entitlement-only.
 
