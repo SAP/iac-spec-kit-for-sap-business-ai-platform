@@ -81,8 +81,15 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 - **WHEN** the pre-generation pass passes
 - **THEN** the command writes Terraform HCL for each task to its annotated file path
 
-### Requirement: select provider by service instance location
-The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider (`SAP/cloudfoundry`) for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
+### Requirement: select provider by service resource type
+The command SHALL generate each service resource with the provider indicated by its `resource_type`:
+
+- `btp_subaccount_service_instance` — BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
+- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving offering/plan via CF data sources. Use `SAP/cloudfoundry` as its `required_providers` source.
+- `btp_subaccount_subscription` — BTP provider (`btp_subaccount_subscription`) paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
+- `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
+
+The `required_providers` block SHALL include every provider the resolved resource types require.
 
 #### Scenario: btp service instance
 - **WHEN** a service instance task has `location: btp`
@@ -91,6 +98,10 @@ The command SHALL generate each service instance with the provider indicated by 
 #### Scenario: cf service instance
 - **WHEN** a service instance task has `location: cf`
 - **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space`
+
+#### Scenario: subscription service
+- **WHEN** a service task has `resource_type: btp_subaccount_subscription`
+- **THEN** the command generates a `btp_subaccount_subscription` resource paired with its `btp_subaccount_entitlement`, both via the BTP provider, with no `location` or `cf_space`
 
 #### Scenario: entitlement-only service
 - **WHEN** a service is classified as entitlement-only

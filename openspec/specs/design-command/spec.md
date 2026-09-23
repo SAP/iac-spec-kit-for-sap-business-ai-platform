@@ -21,9 +21,13 @@ The command SHALL annotate each task in `specs/tasks.md` with the file path it w
 - **THEN** every task in `specs/tasks.md` has a file path annotation indicating which Terraform file will contain it
 - **AND** every task retains its existing Task metadata
 
-### Requirement: separate provider files by service instance location
-The command SHALL place BTP-provider and Cloud Foundry-provider service instance resources in separate Terraform files, driven by each service instance task's `location` (`btp` or `cf`).
+### Requirement: separate provider files by resource type and location
+The command SHALL place BTP-provider and Cloud Foundry-provider resources in separate Terraform files. For service instance tasks the split is driven by `location` (`btp` or `cf`). Subscription tasks (`resource_type = btp_subaccount_subscription`) and entitlement-only tasks (`resource_type = btp_subaccount_entitlement`) carry no `location` but are always BTP-provider resources and SHALL be placed in the BTP-provider file.
 
 #### Scenario: mixed locations
 - **WHEN** the task set contains both `btp` and `cf` service instances
 - **THEN** the file path annotations separate BTP-provider resources from CF-provider resources
+
+#### Scenario: subscription tasks
+- **WHEN** the task set contains `btp_subaccount_subscription` tasks
+- **THEN** those tasks are placed in the BTP-provider file alongside BTP service instance tasks

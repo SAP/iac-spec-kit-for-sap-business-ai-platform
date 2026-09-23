@@ -14,15 +14,50 @@ The command SHALL read `specs/scenario.md`, `specs/landscape.md`, and if present
 - **THEN** it reads both spec files and optionally governance
 
 ### Requirement: classify service consumption type
-Before resolving any service dependencies, the command SHALL determine each service's `consumption_type`, one of `instance`, `subscription`, or `entitlement-only`. The default is: SaaS applications → `subscription`, technical services → `instance`. For every service whose type is not fixed by governance, the command SHALL let the user confirm or override the type so that any service can be marked `entitlement-only`.
+Before resolving any service dependencies, the command SHALL determine each service's `consumption_type`, one of `instance`, `subscription`, or `entitlement-only`. The instance-vs-subscription distinction SHALL be **derived from the entitlement plan `category`** of the matched service/plan, not guessed from whether the service is SaaS or technical:
+
+- `SERVICE`, `ELASTIC_SERVICE`, `ELASTIC_LIMITED` → service instance (default `consumption_type: instance`)
+- `APPLICATION`, `QUOTA_BASED_APPLICATION` → subscription (default `consumption_type: subscription`)
+
+The command SHALL obtain the `category` from the global account's entitlement data. When the BTP CLI is available it SHALL parse the JSON from `btp --format json list accounts/entitlement` (preceded by the permitted `btp target --global-account <subdomain>` prelude when a subdomain is recorded), matching the service by its `name` or `displayName` and the plan by its `name` or `displayName` under `servicePlans`, with no dependency on external tooling such as `jq`. When the CLI is unavailable and the agent is recorded as having BTP MCP support, the command SHALL ask the BTP MCP tool for the service category of the service-name/plan-name combination and map it the same way. When neither the CLI nor MCP is available, or when the required service/plan is not found in the entitlement data, the command SHALL fall back to asking the user.
+
+For every service whose type is not fixed by governance, the command SHALL let the user confirm or override the type so that any service can be marked `entitlement-only`, tailoring the question to the derived type.
 
 #### Scenario: governance pre-states consumption type
 - **WHEN** `memory/governance.md` records the consumption type for a service
-- **THEN** the command uses that decision without asking the user
+- **THEN** the command uses that decision without asking the user or deriving from category
+
+#### Scenario: category derives service instance
+- **WHEN** the matched plan's `category` is `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`
+- **THEN** the command derives the default `consumption_type: instance` and records the summary type `service instance`
+
+#### Scenario: category derives subscription
+- **WHEN** the matched plan's `category` is `APPLICATION` or `QUOTA_BASED_APPLICATION`
+- **THEN** the command derives the default `consumption_type: subscription` and records the summary type `subscription`
+
+#### Scenario: CLI entitlement lookup and matching
+- **WHEN** the BTP CLI is available
+- **THEN** the command parses `btp --format json list accounts/entitlement`, searches `entitledServices` for a service matching by `name` or `displayName` (case-insensitive, first match wins), then matches the plan by `name` or `displayName` under `servicePlans`, and reads that plan's `category` without relying on external tooling
+
+#### Scenario: MCP category lookup
+- **WHEN** the BTP CLI is unavailable and the agent is recorded as having BTP MCP support
+- **THEN** the command asks the BTP MCP tool for the service category of the service-name/plan-name combination and maps the returned category to instance or subscription
 
 #### Scenario: user confirms or overrides type
 - **WHEN** a service's consumption type is not fixed by governance
-- **THEN** the command asks the user for that service (one question per service), offering the default and the three choices `instance`, `subscription`, `entitlement-only`
+- **THEN** the command asks the user for that service (one question per service), offering the default and always allowing `entitlement-only`
+
+#### Scenario: user confirms instance-derived type
+- **WHEN** a service's derived type is `instance` and it is not fixed by governance
+- **THEN** the command asks that service (one question per service): "For `<service-name>`: (1) service instance or (2) entitlement only? Default is (`<default>`)."
+
+#### Scenario: user confirms subscription-derived type
+- **WHEN** a service's derived type is `subscription` and it is not fixed by governance
+- **THEN** the command asks that service (one question per service): "For `<service-name>`: (1) app subscription or (2) entitlement only? Default is (`<default>`)."
+
+#### Scenario: no tooling or no match — three-option fallback
+- **WHEN** neither the BTP CLI nor BTP MCP is available, or the required service/plan is not found in the entitlement data, or the plan's `category` is not one of the five mapped values
+- **THEN** the command informs the user that the type cannot be derived automatically and asks, per service/plan, to choose among three options: `service instance`, `subscription`, or `entitlement-only`
 
 #### Scenario: entitlement-only service
 - **WHEN** a service is classified as `entitlement-only`
@@ -60,7 +95,7 @@ The command SHALL produce a dependency-ordered list of BTP entitlements, subscri
 
 #### Scenario: services resolved
 - **WHEN** inputs are read and services are classified
-- **THEN** the command resolves required entitlements, SaaS subscriptions, service instances with configuration, location, and CF space, and inter-service dependencies in order
+- **THEN** the command resolves required entitlements, subscriptions, service instances with configuration, location, and CF space, and inter-service dependencies in order
 
 ### Requirement: validate service plans against governance
 The command SHALL validate each service instance plan against governance rules if `memory/governance.md` exists.
@@ -75,11 +110,15 @@ The command SHALL validate each service instance plan against governance rules i
 - **UNLESS** `- Override: true` is set, in which case a warning is logged and the command continues
 
 ### Requirement: write services file
-The command SHALL write `specs/services.md` with the full dependency-ordered service list. Every service entry SHALL record `consumption_type` (`instance`, `subscription`, or `entitlement-only`); every `instance` entry SHALL also record `location` (`btp` or `cf`) and, when `location: cf`, `cf_space`.
+The command SHALL write `specs/services.md` with the full dependency-ordered service list. Every service entry SHALL record `consumption_type` (`instance`, `subscription`, or `entitlement-only`); every `instance` entry SHALL also record `location` (`btp` or `cf`) and, when `location: cf`, `cf_space`. For each service/plan combination, the summary SHALL record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`).
 
 #### Scenario: services file written
 - **WHEN** the command completes successfully
 - **THEN** `specs/services.md` exists, each entry carries `consumption_type`, each `instance` entry carries `location` (and `cf_space` when `cf`), and the file is the direct input to `/btp-iac.tasks`
+
+#### Scenario: derived type recorded per service/plan
+- **WHEN** a service/plan combination is written to `specs/services.md`
+- **THEN** the summary records its derived type as `service instance` or `subscription`
 
 ### Requirement: validate resolved entitlements
 Before writing output, the command SHALL validate every resolved entitlement, subscription, service offering, and plan with the shared platform-validation capability scoped to the landscape global account.

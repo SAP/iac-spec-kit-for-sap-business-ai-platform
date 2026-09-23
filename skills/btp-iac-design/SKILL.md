@@ -13,7 +13,7 @@ Translates the task list into a concrete Terraform folder structure — how reso
 
 Reads `specs/tasks.md`. Annotates each task in `specs/tasks.md` with the file path it will be written to, while preserving its Task metadata unchanged.
 
-Respect each service instance task's `location` (`btp` or `cf`): keep BTP-provider and CF-provider resources in separate files so `/btp-iac.generate` can emit the correct provider per file.
+Respect each service instance task's `location` (`btp` or `cf`): keep BTP-provider and CF-provider resources in separate files so `/btp-iac.generate` can emit the correct provider per file. Subscription tasks (`resource_type = btp_subaccount_subscription`) carry no `location` but are always BTP-provider resources — place them in the BTP-provider file.
 
 ## BTP platform validation
 

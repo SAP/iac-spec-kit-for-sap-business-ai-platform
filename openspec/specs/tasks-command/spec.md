@@ -46,16 +46,28 @@ The command SHALL write the task list to `specs/tasks.md`.
 - **WHEN** the command completes
 - **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
 
-### Requirement: preserve service instance location
-The command SHALL preserve each service instance's `location` (`btp` or `cf`), and its `cf_space` when CF-located, from `specs/services.md` on the corresponding task so that `/btp-iac.design` and `/btp-iac.generate` select the correct Terraform provider and CF space. A CF-located service instance task SHALL depend on its specific Cloud Foundry space task.
+### Requirement: map service consumption type to resource type and preserve provider metadata
+The command SHALL read each service entry's `consumption_type` from `specs/services.md` and record the corresponding `resource_type` in that entry's task metadata:
+
+- `instance` → `btp_subaccount_service_instance` (or `cloudfoundry_service_instance` when `location: cf`). The task SHALL carry `location` (`btp` or `cf`) and, when CF-located, `cf_space`. A CF-located instance task SHALL depend on its specific Cloud Foundry space task.
+- `subscription` → `btp_subaccount_subscription`. No `location` or `cf_space` applies; subscriptions are always BTP-provider-managed.
+- `entitlement-only` → `btp_subaccount_entitlement`. Only the entitlement assignment task is created — no service instance or subscription task.
 
 #### Scenario: btp-located service instance
-- **WHEN** a service instance in `specs/services.md` has `location: btp`
-- **THEN** its task retains the `btp` location
+- **WHEN** a service entry in `specs/services.md` has `consumption_type: instance` and `location: btp`
+- **THEN** its task carries `resource_type = btp_subaccount_service_instance` and `location: btp`
 
 #### Scenario: cf-located service instance
-- **WHEN** a service instance in `specs/services.md` has `location: cf` with a `cf_space`
-- **THEN** its task retains the `cf` location and `cf_space`, and depends on that specific Cloud Foundry space task
+- **WHEN** a service entry in `specs/services.md` has `consumption_type: instance` and `location: cf` with a `cf_space`
+- **THEN** its task carries `resource_type = cloudfoundry_service_instance`, `location: cf`, and `cf_space`, and depends on that specific Cloud Foundry space task
+
+#### Scenario: subscription service
+- **WHEN** a service entry in `specs/services.md` has `consumption_type: subscription`
+- **THEN** its task carries `resource_type = btp_subaccount_subscription` with no `location` or `cf_space` fields
+
+#### Scenario: entitlement-only service
+- **WHEN** a service entry in `specs/services.md` has `consumption_type: entitlement-only`
+- **THEN** the command creates only an entitlement assignment task with `resource_type = btp_subaccount_entitlement` and no instance or subscription task
 
 ### Requirement: include connectivity tasks when connectivity spec exists
 When `specs/connectivity.md` exists, the command SHALL append a dependency-ordered set of destination and certificate tasks to `specs/tasks.md`. Each destination task SHALL depend on the subaccount it is scoped to. Each certificate task SHALL depend on its subaccount and, when service-instance-scoped, on the relevant service instance task.

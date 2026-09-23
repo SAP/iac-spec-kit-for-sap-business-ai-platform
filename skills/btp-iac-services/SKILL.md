@@ -25,7 +25,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and inspect `btp list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
+Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and inspect `btp --format json list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
 If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
 
@@ -68,18 +68,33 @@ If any of these decisions are already recorded there, use them without asking th
 
 For every service identified from `specs/scenario.md`, determine its `consumption_type`, one of: `instance` (service instance), `subscription` (app subscription), or `entitlement-only` (entitlement assigned, nothing created).
 
-The **default** is:
+The instance-vs-subscription default is **derived from the entitlement plan `category`** of the matched service/plan — not guessed from whether the service is SaaS or technical. The `category` value maps as follows:
 
-- SaaS applications → `subscription`
-- Technical services → `instance`
+| Plan `category` | Derived type | `consumption_type` default | Summary type |
+|---|---|---|---|
+| `SERVICE`, `ELASTIC_SERVICE`, `ELASTIC_LIMITED` | service instance | `instance` | `service instance` |
+| `APPLICATION`, `QUOTA_BASED_APPLICATION` | subscription | `subscription` | `subscription` |
 
-Ask the user to confirm or override the type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke. Present the following question depding on the the service's default type.
+These are the only `category` values the entitlement data contains.
 
-**If the type is `instance`** ask for **each** service of type `instance`
+#### Obtaining the category
+
+The entitlement data is fetched **once** and shared with BTP platform validation — both classification (this step) and validation (before writing output) read from the same single lookup. Do not issue a separate lookup for either purpose. Read the `category` from that data using the route that was available:
+
+- **BTP CLI available** — parse the JSON from `btp --format json list accounts/entitlement` (preceded by the permitted `btp target --global-account <subdomain>` prelude when a subdomain is recorded). In `entitledServices`, match the service by its `name` **or** `displayName` (case-insensitive, first match wins), then match the plan by its `name` **or** `displayName` under that service's `servicePlans`. Read the matched plan's `category`. Parse the JSON directly — **do not assume `jq` or any other external tooling is available**.
+- **BTP MCP** — when the CLI was unavailable and this agent is recorded as having BTP MCP support, ask the BTP MCP tool for the **service category** of the service-name/plan-name combination, then map the returned category with the table above.
+- **Fallback** — when neither the BTP CLI nor BTP MCP is available, **or** the required service/plan is not found in the entitlement data, **or** the plan's `category` is not one of the five mapped values, the type cannot be derived automatically. Inform the user and ask, per service/plan, to choose among **three** options:
+  > "For `<service-name>` / plan `<plan-name>`: classification could not be determined automatically. Choose: (1) service instance, (2) subscription, or (3) entitlement only."
+
+#### Confirming the type
+
+Ask the user to confirm or override the derived type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke. When the category is known, keep the entitlement-only escape hatch as a **two-option** question tailored to the derived type:
+
+**If the derived type is `instance`** ask for **each** such service
 
 > "For `<service-name>`: (1) service instance or (2) entitlement only? Default is (`<default>`)."
 
-**If the type is `subscription`** ask for **each** service of type `subscription`
+**If the derived type is `subscription`** ask for **each** such service
 
 > "For `<service-name>`: (1) app subscription or (2) entitlement only? Default is (`<default>`)."
 
@@ -116,7 +131,7 @@ For each subaccount, resolve:
 - Service instances (`consumption_type: instance`) with configuration parameters, `location`, and `cf_space` when CF-located
 - Dependencies between services (ordered)
 
-Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. This file is the direct input to `/btp-iac.tasks`.
 
 ## Next step
 
