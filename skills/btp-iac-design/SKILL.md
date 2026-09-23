@@ -1,19 +1,74 @@
 ---
 name: btp-iac-design
-description: Translates the task list into a concrete Terraform folder structure and annotates each task with its target file path.
+description: Translates the task list into a concrete Terraform folder structure and annotates each task with its target directory and file path.
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Design
 
-Translates the task list into a concrete Terraform folder structure — how resources are split across files, whether modules are introduced, and how environment-specific variable files are organised.
+Translates the task list into a concrete Terraform folder structure and annotates each task in `specs/tasks.md` with the directory and file path it will be written to, preserving each task's metadata unchanged.
 
-Reads `specs/tasks.md`. Annotates each task in `specs/tasks.md` with the file path it will be written to, while preserving its Task metadata unchanged.
+Reads `specs/tasks.md`. Performs no BTP mutations — see the safety boundary below.
 
-Respect each service instance task's `location` (`btp` or `cf`): keep BTP-provider and CF-provider resources in separate files so `/btp-iac.generate` can emit the correct provider per file. Subscription tasks (`resource_type = btp_subaccount_subscription`) carry no `location` but are always BTP-provider resources — place them in the BTP-provider file.
+## Standard file layout
+
+Every configuration unit (a directory Terraform is run in) uses the standard layout:
+
+- `main.tf` — resources
+- `variables.tf` — input variables
+- `outputs.tf` — output values
+- `providers.tf` — provider configuration and the `required_providers` block
+- `backend.tf` — backend configuration, defaulting to a **local** backend
+
+Do not reintroduce ad-hoc resource-type files. `required_providers` lives in `providers.tf`; there is no separate `versions.tf`.
+
+## Stage modelling
+
+Determine how stages are modelled by reading `memory/governance.md`. If governance records a stage-modelling choice, use it. If governance is absent or records no choice, **prompt the user** to pick one of:
+
+- **Per-stage directories** — one directory per stage, named after the stage (`terraform/<stage>/…`), each containing the standard layout.
+- **Single configuration** — one directory whose configuration handles all stages via stage-specific variables declared in `variables.tf`, with values supplied through per-stage tfvars files named after the stage (e.g. `<stage>.tfvars`). These stage variables propagate into the configuration to satisfy naming conventions.
+
+## BTP / CF / Kyma split
+
+When a configuration unit contains a Cloud Foundry or Kyma environment, split it into subdirectories: all BTP-provider resources under `btp/`, and all Cloud Foundry- or Kyma-provider resources under a sibling `cf/` or `kyma/`. Drive service-instance placement by `location` (`btp` or `cf`). Subscription tasks (`resource_type = btp_subaccount_subscription`) and entitlement-only tasks (`resource_type = btp_subaccount_entitlement`) carry no `location` but are always BTP-provider resources — place them under `btp/`.
+
+When no CF or Kyma environment is present, do not split: use the standard layout directly in the unit directory.
+
+Per-stage-directory mode, CF present:
+
+```
+terraform/
+  dev/
+    btp/     { main.tf variables.tf outputs.tf providers.tf backend.tf }
+    cf/      { main.tf variables.tf outputs.tf providers.tf backend.tf terraform.tfvars.example }
+  prod/
+    btp/ …
+    cf/  …
+```
+
+Single-configuration mode, CF present:
+
+```
+terraform/
+  btp/   { main.tf variables.tf outputs.tf providers.tf backend.tf <stage>.tfvars }
+  cf/    { main.tf variables.tf outputs.tf providers.tf backend.tf <stage>.tfvars terraform.tfvars.example }
+```
+
+BTP-only (no CF/Kyma): the standard five files directly in the unit directory, no `btp/`/`cf/`/`kyma/` split.
+
+The `btp/` `outputs.tf` carries the connection details the downstream provider needs (CF API URL, Kyma kubeconfig URL); the consuming `cf/`/`kyma/` directory receives them by manual tfvars handover (`/btp-iac.generate` emits a `terraform.tfvars.example` there). Directories are independent Terraform roots on the local backend — do not couple them with `terraform_remote_state`.
+
+## BTP directory-per-stage layer
+
+Only when governance or tasks indicate BTP **directories** are used to model stages, define a dedicated directory-per-stage configuration using the same standard layout. Its `outputs.tf` exposes the directory ID, which is handed (via manual tfvars) into the BTP configuration's `parent_id`. When directories are not used for stages, do not define this layer — subaccounts sit directly under the global account.
+
+## Task annotations
+
+Annotate every task in `specs/tasks.md` with the directory and file path it will be written to under the selected structure, while preserving its existing Task metadata unchanged.
 
 ## BTP platform validation
 

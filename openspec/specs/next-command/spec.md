@@ -19,7 +19,7 @@ Before inspecting project state, the command SHALL walk upward from the current 
 - **AND** it stops without printing a state summary or recommendation
 
 ### Requirement: inspect project state
-The command SHALL determine the current position in the greenfield flow by checking the existence of the following files in order: `memory/governance.md`, `specs/scenario.md`, `specs/landscape.md`, `specs/services.md`, `specs/trust.md`, `specs/connectivity.md`, `specs/tasks.md`, and at least one `terraform/*.tf` file.
+The command SHALL determine the current position in the greenfield flow by checking the existence of the following files in order: `memory/governance.md`, `specs/scenario.md`, `specs/landscape.md`, `specs/services.md`, `specs/trust.md`, `specs/connectivity.md`, `specs/tasks.md`, and at least one `terraform/**/*.tf` file. The generated-code check SHALL match `.tf` files in any subdirectory of `terraform/` (recursive glob), because the design/generate layout places files under provider and stage subdirectories (e.g. `terraform/btp/…`, `terraform/<stage>/btp/…`). The generated-code check SHALL match `.tf` files in any subdirectory of `terraform/` (recursive glob), because the design/generate layout places files under provider and stage subdirectories (e.g. `terraform/btp/…`, `terraform/<stage>/btp/…`).
 
 #### Scenario: no files exist
 - **WHEN** none of the inspected files exist
@@ -46,11 +46,11 @@ The command SHALL determine the current position in the greenfield flow by check
 - **THEN** the command recommends `/btp-iac.tasks`
 
 #### Scenario: tasks present, no terraform files
-- **WHEN** `specs/tasks.md` exists and no `terraform/*.tf` files exist
+- **WHEN** `specs/tasks.md` exists and no `terraform/**/*.tf` files exist
 - **THEN** the command recommends `/btp-iac.design`
 
 #### Scenario: terraform files present
-- **WHEN** at least one `terraform/*.tf` file exists
+- **WHEN** at least one `terraform/**/*.tf` file exists
 - **THEN** the command outputs a completion message indicating Terraform code is ready to review and apply
 
 ### Requirement: standalone output format

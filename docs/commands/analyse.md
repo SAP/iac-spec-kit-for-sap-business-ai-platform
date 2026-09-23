@@ -58,7 +58,7 @@ Choosing Terraform instead points `analyse` at your `*.tf`/`*.tf.json` files, wh
 | Signal | Evidence | Confidence | Downstream consumer |
 |---|---|---|---|
 | Subaccount `dev` in region `eu10` | `btp_subaccount.dev` in `main.tf` | observed | btp-iac.accounts |
-| Provider `SAP/btp` pinned to `~> 1.5` | `required_providers` in `versions.tf` | observed | btp-iac.design |
+| Provider `SAP/btp` pinned to `~> 1.5` | `required_providers` in `providers.tf` | observed | btp-iac.design |
 | Sensitive variable `idp_secret` (value redacted) | `variable "idp_secret"` (`sensitive = true`) in `variables.tf` | observed | btp-iac.security |
 | Local module `./modules/entitlements` | `module "entitlements" source` in `main.tf` | observed | btp-iac.services |
 | External module `terraform-sap/subaccount` v0.3.0 (not inspected) | `module "sa" source`/`version` in `main.tf` | unresolved | btp-iac.accounts |

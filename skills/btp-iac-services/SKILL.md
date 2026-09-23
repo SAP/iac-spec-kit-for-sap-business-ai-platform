@@ -107,7 +107,7 @@ If a service is classified as `entitlement-only`, record `consumption_type: enti
 For every service with `consumption_type: instance`, determine where the instance is created:
 
 - **BTP** (`location: btp`) — created directly in the subaccount using the BTP Terraform provider (`SAP/btp`)
-- **Cloud Foundry** (`location: cf`) — created inside a specific CF space using the Cloud Foundry Terraform provider (`SAP/cloudfoundry`)
+- **Cloud Foundry** (`location: cf`) — created inside a specific CF space using the Cloud Foundry Terraform provider (`cloudfoundry/cloudfoundry`)
 
 Check `specs/landscape.md` for the Cloud Foundry environment and its spaces in the relevant subaccount:
 

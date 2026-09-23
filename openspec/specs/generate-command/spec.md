@@ -75,21 +75,25 @@ The command SHALL apply cost controls governance during the pre-generation pass.
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: generate Terraform HCL in dependency order
-The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the file paths annotated by `/btp-iac.design`.
+The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the directory and file paths annotated by `/btp-iac.design`, using the standard file layout per configuration unit: resources in `main.tf`, input variables in `variables.tf`, output values in `outputs.tf`, provider configuration and `required_providers` in `providers.tf`, and a `backend.tf` defaulting to a local backend.
 
 #### Scenario: resources generated
 - **WHEN** the pre-generation pass passes
-- **THEN** the command writes Terraform HCL for each task to its annotated file path
+- **THEN** the command writes Terraform HCL for each task to its annotated path using the standard `main.tf` / `variables.tf` / `outputs.tf` / `providers.tf` / `backend.tf` layout
+
+#### Scenario: local backend emitted
+- **WHEN** a configuration unit is written
+- **THEN** it includes a `backend.tf` configured for a local backend by default
 
 ### Requirement: select provider by service resource type
 The command SHALL generate each service resource with the provider indicated by its `resource_type`:
 
 - `btp_subaccount_service_instance` — BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
-- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving offering/plan via CF data sources. Use `SAP/cloudfoundry` as its `required_providers` source.
+- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving offering/plan via CF data sources. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
 - `btp_subaccount_subscription` — BTP provider (`btp_subaccount_subscription`) paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
 - `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
 
-The `required_providers` block SHALL include every provider the resolved resource types require.
+Kyma-provider resources SHALL use the `hashicorp/kubernetes` provider. The `required_providers` block in `providers.tf` SHALL include every provider the resolved resource types require.
 
 #### Scenario: btp service instance
 - **WHEN** a service instance task has `location: btp`
@@ -97,7 +101,7 @@ The `required_providers` block SHALL include every provider the resolved resourc
 
 #### Scenario: cf service instance
 - **WHEN** a service instance task has `location: cf`
-- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space`
+- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space` using the `cloudfoundry/cloudfoundry` provider
 
 #### Scenario: subscription service
 - **WHEN** a service task has `resource_type: btp_subaccount_subscription`
@@ -106,6 +110,37 @@ The `required_providers` block SHALL include every provider the resolved resourc
 #### Scenario: entitlement-only service
 - **WHEN** a service is classified as entitlement-only
 - **THEN** the command generates only the entitlement assignment and no instance or subscription resource
+
+#### Scenario: kyma resources
+- **WHEN** a configuration unit contains Kyma-provider resources
+- **THEN** those resources use the `hashicorp/kubernetes` provider
+
+### Requirement: emit BTP outputs for CF and Kyma provider wiring
+When a configuration unit is split for a Cloud Foundry or Kyma environment, the command SHALL emit in the BTP directory's `outputs.tf` the connection values the downstream provider needs, derived from the environment instance labels: the Cloud Foundry API endpoint via `provider::btp::extract_cf_api_url(...)` and the Kyma kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(...)`. For Kyma the command SHALL expose only the kubeconfig URL; it SHALL NOT generate the download or parsing of the kubeconfig for the `hashicorp/kubernetes` provider.
+
+#### Scenario: cf api url output
+- **WHEN** a unit contains a Cloud Foundry environment
+- **THEN** the BTP `outputs.tf` exposes the CF API endpoint using `provider::btp::extract_cf_api_url` against the environment instance labels
+
+#### Scenario: kyma kubeconfig url output
+- **WHEN** a unit contains a Kyma environment
+- **THEN** the BTP `outputs.tf` exposes the kubeconfig URL using `provider::btp::extract_kyma_kubeconfig_url` against the environment instance labels
+- **AND** the command does not generate kubeconfig download or parsing for the kubernetes provider
+
+### Requirement: emit directory ID output when a directory-per-stage layer exists
+When `/btp-iac.design` defined a BTP directory-per-stage layer, the command SHALL emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
+
+#### Scenario: directory id output
+- **WHEN** a directory-per-stage layer was defined
+- **THEN** its `outputs.tf` exposes the directory ID
+
+### Requirement: emit tfvars handover placeholder between directories
+Because separate directories are independent Terraform roots on a local backend, the command SHALL move cross-directory values by manual tfvars handover rather than `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), the command SHALL emit the declaring directory's `outputs.tf` together with a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The command SHALL NOT generate `terraform_remote_state` coupling.
+
+#### Scenario: handover scaffolding emitted
+- **WHEN** a consuming directory depends on values produced by another directory
+- **THEN** the command emits the producing directory's `outputs.tf` and a `terraform.tfvars.example` in the consuming directory naming the variables to copy
+- **AND** the command does not generate a `terraform_remote_state` data source
 
 ### Requirement: emit available subaccount classification attributes
 For each `btp_subaccount` task selected by the stage filter, the command SHALL read `usage` and `beta_enabled` from task metadata and emit every present, valid value on the generated `btp_subaccount` resource. It SHALL NOT infer defaults or substitute governance values. Missing values are supported for legacy tasks and SHALL NOT stop generation; invalid values that are present SHALL stop before writing that resource.
@@ -127,32 +162,36 @@ For each `btp_subaccount` task selected by the stage filter, the command SHALL r
 - **THEN** the command stops before writing that resource and identifies the invalid task metadata
 
 ### Requirement: resolve latest provider versions at runtime
-The command SHALL look up the current latest version of each required Terraform provider before writing `versions.tf`, and use those versions as `~>` constraints in `required_providers`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
+The command SHALL look up the current latest version of each required Terraform provider before writing `providers.tf`, and use those versions as `~>` constraints in `required_providers`. The provider set SHALL include, as required by the resolved resource types, each of `SAP/btp`, `cloudfoundry/cloudfoundry`, and `hashicorp/kubernetes`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 
 #### Scenario: provider version resolved
-- **WHEN** generating `versions.tf`
-- **THEN** the command looks up the latest version for each provider via the terraform MCP server or WebFetch fallback, and uses it as the `~>` constraint
+- **WHEN** generating `providers.tf`
+- **THEN** the command looks up the latest version for each required provider via the terraform MCP server or WebFetch fallback, and uses it as the `~>` constraint
+
+#### Scenario: kyma provider included
+- **WHEN** the task set contains a Kyma environment
+- **THEN** the resolved provider set includes `hashicorp/kubernetes` at its latest version
 
 ### Requirement: run terraform init before fmt and validate
-The command SHALL run `terraform init` on the `terraform/` directory before `terraform fmt` and `terraform validate`.
+The command SHALL run `terraform init` on each generated directory before `terraform fmt` and `terraform validate` for that directory.
 
 #### Scenario: init succeeds
-- **WHEN** all files are written and `terraform init` succeeds
-- **THEN** the command proceeds to `terraform fmt --recursive` then `terraform validate`
+- **WHEN** all files are written and `terraform init` succeeds for a generated directory
+- **THEN** the command proceeds to `terraform fmt --recursive` then `terraform validate` for that directory
 
 #### Scenario: init fails
-- **WHEN** `terraform init` fails
-- **THEN** the command reports the error and does not proceed to fmt or validate
+- **WHEN** `terraform init` fails for a generated directory
+- **THEN** the command reports the error and does not proceed to fmt or validate for that directory
 
 ### Requirement: run terraform fmt and validate on completion
-The command SHALL run `terraform fmt --recursive` and `terraform validate` after `terraform init` and report the outcome.
+The command SHALL run `terraform fmt --recursive` and `terraform validate` on each generated directory after its `terraform init` and report the outcome per directory.
 
 #### Scenario: fmt and validate pass
-- **WHEN** all files are written and both commands succeed
-- **THEN** the command reports success
+- **WHEN** all files are written and both commands succeed for a generated directory
+- **THEN** the command reports success for that directory
 
 #### Scenario: fmt or validate fails — fix and retry
-- **WHEN** `terraform fmt --recursive` or `terraform validate` fails
+- **WHEN** `terraform fmt --recursive` or `terraform validate` fails for a generated directory
 - **THEN** the command fixes the reported issues in the affected files, then re-runs `terraform fmt --recursive` and `terraform validate` until both pass
 
 ### Requirement: do not commit generated code by default

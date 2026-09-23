@@ -23,9 +23,10 @@ Last, after `btp-iac.design` has annotated every task with its target file path.
 At the start of the run, `generate` asks which stage(s) to generate — `Which stage(s) should be generated? (e.g. dev, test, prod — or 'all')`. Only tasks whose stage annotation matches the answer are processed; tasks outside the chosen stage(s) are skipped and remain in `specs/tasks.md` as spec-only, ungenerated entries.
 
 - Runs a full governance validation pass across all six categories **before writing any file**.
-- Generates HCL per task in dependency order and writes it to the annotated paths.
-- Generates BTP-located service instances with the BTP provider and CF-located instances with `SAP/cloudfoundry`; entitlement-only services generate only their entitlement assignment.
-- Runs `terraform init`, then `terraform fmt --recursive`, and `terraform validate` on completion; on a `fmt` or `validate` failure it fixes the failing resource and retries until both pass.
+- Generates HCL per task in dependency order and writes each configuration unit with the standard layout — `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf` (with `required_providers`), and `backend.tf` (default local backend).
+- Generates BTP-located service instances with the BTP provider, CF-located instances with `cloudfoundry/cloudfoundry`, and Kyma resources with `hashicorp/kubernetes`; entitlement-only services generate only their entitlement assignment.
+- For a CF/Kyma split, emits the `btp/` `outputs.tf` with the CF API URL (`provider::btp::extract_cf_api_url`) or Kyma kubeconfig URL (`provider::btp::extract_kyma_kubeconfig_url`, URL only), plus a `terraform.tfvars.example` in the consuming `cf/`/`kyma/` directory for the manual handover. When a directory-per-stage layer exists, its `outputs.tf` exposes the directory ID for the BTP config's `parent_id`. No `terraform_remote_state` coupling is generated.
+- Runs `terraform init`, then `terraform fmt --recursive`, and `terraform validate` on **each generated directory**; on a `fmt` or `validate` failure it fixes the failing resource and retries until both pass.
 - If `terraform init` fails it reports the error and does not proceed to `fmt` or `validate`.
 
 !!! warning "Generation stops before writing on a governance violation"
@@ -40,10 +41,10 @@ At the start of the run, `generate` asks which stage(s) to generate — `Which s
 /btp-iac.generate
 ```
 
-`generate` validates against governance, then writes the HCL for the HR leave-request project into `terraform/` — `versions.tf`, `subaccount.tf`, `services-btp.tf`, `services-cf.tf`, and `security.tf` — and runs `terraform fmt --recursive` and `terraform validate`. The provider version constraints in `versions.tf` are resolved at runtime (via the `terraform` MCP server, falling back to a `WebFetch` against the Terraform registry) and written as `~>` constraints — never hardcoded. When a `specs/connectivity.md` was produced, it also emits `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` resources. When it finishes you can review and apply the result yourself:
+`generate` validates against governance, then writes the HCL for the HR leave-request project into `terraform/` using the standard per-unit layout — `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, and `backend.tf` (default local backend) — and runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory. The provider version constraints in `providers.tf` are resolved at runtime (via the `terraform` MCP server, falling back to a `WebFetch` against the Terraform registry) and written as `~>` constraints — never hardcoded. When a `specs/connectivity.md` was produced, it also emits `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` resources. When it finishes you can review and apply the result yourself:
 
 ```sh
-cd terraform
+cd terraform/btp
 terraform init
 terraform plan
 ```

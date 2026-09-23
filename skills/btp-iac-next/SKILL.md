@@ -4,7 +4,7 @@ description: Inspects local project state and recommends the next command in the
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.0"
+  version: "1.1"
 ---
 
 # BTP IaC — Next
@@ -44,7 +44,7 @@ Check for the existence of each of the following, in order:
 | 5 | `specs/trust.md` | `/btp-iac.security` |
 | 6 | `specs/connectivity.md` | `/btp-iac.connectivity` (optional) |
 | 7 | `specs/tasks.md` | `/btp-iac.tasks` |
-| 8 | `terraform/*.tf` (any file) | `/btp-iac.generate` |
+| 8 | `terraform/**/*.tf` (any file) | `/btp-iac.generate` |
 
 ### Step 3 — Determine recommendation
 
@@ -59,8 +59,8 @@ Apply the following decision table (first matching rule wins):
 | `specs/trust.md` missing | **Run `/btp-iac.security`** — set up IdP trust, roles, and role collection assignments. |
 | `specs/tasks.md` missing and `specs/connectivity.md` missing | **Run `/btp-iac.connectivity`** (optional) — define destinations and certificates, or **`/btp-iac.tasks`** to skip connectivity. |
 | `specs/tasks.md` missing and `specs/connectivity.md` exists | **Run `/btp-iac.tasks`** — build a dependency-ordered execution plan. |
-| `terraform/*.tf` missing | **Run `/btp-iac.design`** — plan the Terraform file and module layout, then `/btp-iac.generate`. |
-| `terraform/*.tf` exists | **Done** — Terraform code is in `terraform/`. Review, commit, and apply. |
+| `terraform/**/*.tf` missing | **Run `/btp-iac.design`** — plan the Terraform file and module layout, then `/btp-iac.generate`. |
+| `terraform/**/*.tf` exists | **Done** — Terraform code is in `terraform/`. Review, commit, and apply. |
 
 ### Step 4 — Output
 
@@ -76,7 +76,7 @@ BTP IaC — Project State
 ✗ specs/trust.md
 ✗ specs/connectivity.md
 ✗ specs/tasks.md
-✗ terraform/*.tf
+✗ terraform/**/*.tf
 
 Next: /btp-iac.services — resolve which BTP services each subaccount needs.
 ```

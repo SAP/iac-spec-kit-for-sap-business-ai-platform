@@ -4,14 +4,14 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Generate
 
-Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the file paths defined by `/btp-iac.design`.
+Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the directory and file paths defined by `/btp-iac.design`.
 
-Reads `specs/tasks.md` (with file path annotations and task metadata). Writes Terraform files to the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on completion, fixing any issues and retrying until both pass.
+Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` (default local backend) — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
 
 ## BTP platform validation
 
@@ -75,9 +75,9 @@ For each metered service resource:
 
 ## Provider Version
 
-**Before writing `versions.tf`**, look up the latest version of each required Terraform provider. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.
+**Before writing `providers.tf`**, look up the latest version of each required Terraform provider. The provider set spans `SAP/btp`, `cloudfoundry/cloudfoundry`, and `hashicorp/kubernetes` (Kyma) as required by the resolved resource types. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.
 
-Use the retrieved version as the `~>` constraint in `required_providers`. Never hardcode a version.
+Use the retrieved version as the `~>` constraint in `required_providers` inside `providers.tf`. Never hardcode a version.
 
 ---
 
@@ -86,11 +86,32 @@ Use the retrieved version as the `~>` constraint in `required_providers`. Never 
 Each service task carries a `resource_type` set by `/btp-iac.tasks` from the service's `consumption_type`:
 
 - `btp_subaccount_service_instance` — generate with the BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
-- `cloudfoundry_service_instance` — generate with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving the offering/plan via CF data sources. Use `SAP/cloudfoundry` as its `required_providers` source.
+- `cloudfoundry_service_instance` — generate with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving the offering/plan via CF data sources. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
 - `btp_subaccount_subscription` — generate with the BTP provider (`btp_subaccount_subscription`), paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
 - `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
 
-Include whichever providers the resolved resource types require in `versions.tf`'s `required_providers`.
+Kyma-provider resources use the `hashicorp/kubernetes` provider. Include whichever providers the resolved resource types require in `providers.tf`'s `required_providers`.
+
+---
+
+## File layout and cross-directory wiring
+
+Write each configuration unit using the standard layout defined by `/btp-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.
+
+### BTP outputs for CF / Kyma
+
+When a unit is split into `btp/` + `cf/`|`kyma/`, emit in the `btp/` `outputs.tf` the connection details the downstream provider needs, derived from the environment instance `labels`:
+
+- Cloud Foundry — the API endpoint via `provider::btp::extract_cf_api_url(<environment-instance>.labels)`.
+- Kyma — the kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(<environment-instance>.labels)`. Expose **only the URL**; do not generate the kubeconfig download or parsing, and do not emit provider configuration (kubeconfig) for the kubernetes provider.
+
+### Directory-ID output
+
+When `/btp-iac.design` defined a BTP directory-per-stage layer, emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
+
+### Manual tfvars handover
+
+Separate directories are independent Terraform roots on the local backend, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
 
 ---
 
@@ -108,12 +129,12 @@ For each task in dependency order:
 3. Mark the task as complete in `specs/tasks.md` by changing its checkbox from `- [ ]` to `- [x]`
 4. Continue to the next task
 
-After all tasks are complete:
-1. Run `terraform init` on the `terraform/` directory
-2. Run `terraform fmt --recursive` on the `terraform/` directory
-3. Run `terraform validate` on the `terraform/` directory
+After all tasks are complete, for **each generated directory** (each independent Terraform root — e.g. `btp/`, `cf/`, `kyma/`, per-stage or directory-per-stage directories):
+1. Run `terraform init` on the directory
+2. Run `terraform fmt --recursive` on the directory
+3. Run `terraform validate` on the directory
 4. If `terraform fmt` or `terraform validate` fails: fix the reported issues in the affected files, then re-run `terraform fmt --recursive` and `terraform validate` until both pass
-5. Report the final outcome
+5. Report the final outcome per directory
 
 ---
 
