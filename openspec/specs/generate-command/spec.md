@@ -172,6 +172,30 @@ The command SHALL look up the current latest version of each required Terraform 
 - **WHEN** the task set contains a Kyma environment
 - **THEN** the resolved provider set includes `hashicorp/kubernetes` at its latest version
 
+### Requirement: look up provider schema via MCP before writing HCL
+Before writing any HCL block for a resource or data source, the command SHALL query the terraform MCP server for the exact current schema of that resource type. The lookup sequence is: (1) `search_providers` to obtain the `provider_doc_id` for the resource type's provider, (2) `get_provider_details` to read the exact schema including all attributes, types, and required fields. The command SHALL use the returned schema as the authoritative source for attribute names, types, and required/optional classification. If the terraform MCP server is unavailable, the command SHALL fall back to WebFetch against the Terraform registry and note the fallback.
+
+#### Scenario: schema retrieved from MCP
+- **WHEN** the terraform MCP server is available
+- **THEN** the command calls `search_providers` then `get_provider_details` for each resource type before writing its HCL, and uses the returned schema as the authoritative attribute set
+
+#### Scenario: schema fallback to WebFetch
+- **WHEN** the terraform MCP server is unavailable
+- **THEN** the command fetches the provider documentation from the Terraform registry via WebFetch and notes that the MCP server was unavailable
+
+### Requirement: resolve service instance plan via named attributes, not data sources
+When generating a `btp_subaccount_service_instance` resource, the command SHALL use the `service_offering_name` and `service_plan_name` attributes directly on the resource. It SHALL NOT generate a `btp_subaccount_service_plan` data source or any other data source to look up a technical plan ID. When generating a `cloudfoundry_service_instance` resource, the command SHALL use the `service_offering_name` and `service_plan_name` attributes directly on the resource. It SHALL NOT generate a `cloudfoundry_service_plan` data source or any other data source to resolve the plan.
+
+#### Scenario: BTP service instance uses named attributes
+- **WHEN** a task has `resource_type: btp_subaccount_service_instance`
+- **THEN** the generated resource contains `service_offering_name` and `service_plan_name` attributes
+- **AND** no `data "btp_subaccount_service_plan"` block is generated for that service instance
+
+#### Scenario: CF service instance uses named attributes
+- **WHEN** a task has `resource_type: cloudfoundry_service_instance`
+- **THEN** the generated resource contains `service_offering_name` and `service_plan_name` attributes
+- **AND** no `data "cloudfoundry_service_plan"` block is generated for that service instance
+
 ### Requirement: run terraform init before fmt and validate
 The command SHALL run `terraform init` on each generated directory before `terraform fmt` and `terraform validate` for that directory.
 
@@ -184,15 +208,20 @@ The command SHALL run `terraform init` on each generated directory before `terra
 - **THEN** the command reports the error and does not proceed to fmt or validate for that directory
 
 ### Requirement: run terraform fmt and validate on completion
-The command SHALL run `terraform fmt --recursive` and `terraform validate` on each generated directory after its `terraform init` and report the outcome per directory.
+The command SHALL run `terraform fmt --recursive` and `terraform validate` on each generated directory after its `terraform init` and report the outcome per directory. Generation is not complete until `terraform validate` passes on every generated directory. The command SHALL NOT report generation success if `terraform validate` has not passed on all directories.
 
 #### Scenario: fmt and validate pass
 - **WHEN** all files are written and both commands succeed for a generated directory
 - **THEN** the command reports success for that directory
 
-#### Scenario: fmt or validate fails — fix and retry
+#### Scenario: fmt or validate fails — fix and retry until passing
 - **WHEN** `terraform fmt --recursive` or `terraform validate` fails for a generated directory
-- **THEN** the command fixes the reported issues in the affected files, then re-runs `terraform fmt --recursive` and `terraform validate` until both pass
+- **THEN** the command fixes the reported issues in the affected files, re-runs `terraform fmt --recursive` and `terraform validate`, and repeats until `terraform validate` passes
+- **AND** the command does not report generation success until all directories pass
+
+#### Scenario: user cancels during retry loop
+- **WHEN** the user explicitly cancels while the command is in the fix-and-retry loop
+- **THEN** the command stops and reports the directories that have not yet passed validation
 
 ### Requirement: do not commit generated code by default
 The command SHALL NOT run `git commit` (or stage files) after generating Terraform HCL unless the user explicitly requests a commit.

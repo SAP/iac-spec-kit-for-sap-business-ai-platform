@@ -81,12 +81,28 @@ Use the retrieved version as the `~>` constraint in `required_providers` inside 
 
 ---
 
+## Provider Schema Lookup
+
+**Before writing any HCL block** for a resource or data source, query the terraform MCP server to obtain the exact current schema for that resource type. Do not rely on prior knowledge, hardcoded attribute lists, or assumptions about attribute names, types, or required fields.
+
+**Lookup sequence (per distinct resource type):**
+
+1. Call `search_providers` with the resource type's provider name (e.g., `btp`, `cloudfoundry`, `kubernetes`) to obtain the `provider_doc_id`.
+2. Call `get_provider_details` with that `provider_doc_id` to read the exact schema: all attributes, their types, and which are required vs. optional.
+3. Use the returned schema as the authoritative source when writing the HCL block for that resource type.
+
+Perform this lookup once per **distinct resource type** encountered during a generation run — not once per resource instance. A typical run involves 3–6 distinct types.
+
+**Fallback**: If the terraform MCP server is unavailable, fetch the provider documentation from the Terraform public registry via WebFetch. Note once to the user that the MCP server was unavailable and the fallback was used.
+
+---
+
 ## Service instance, subscription, and entitlement provider selection
 
 Each service task carries a `resource_type` set by `/btp-iac.tasks` from the service's `consumption_type`:
 
-- `btp_subaccount_service_instance` — generate with the BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
-- `cloudfoundry_service_instance` — generate with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving the offering/plan via CF data sources. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
+- `btp_subaccount_service_instance` — generate with the BTP provider (`btp_subaccount_service_instance`). Use the `service_offering_name` and `service_plan_name` attributes directly on the resource. Do **not** generate a `btp_subaccount_service_plan` data source or any other data source to resolve a technical plan ID. Pair with `btp_subaccount_entitlement` as needed.
+- `cloudfoundry_service_instance` — generate with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task. Use the `service_offering_name` and `service_plan_name` attributes directly on the resource. Do **not** generate a `cloudfoundry_service_plan` data source or any other data source to resolve the plan. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
 - `btp_subaccount_subscription` — generate with the BTP provider (`btp_subaccount_subscription`), paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
 - `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
 
@@ -143,19 +159,22 @@ Separate directories are independent Terraform roots on the local backend, so cr
 
 ---
 
-## Resource Prohibitions (subaccount level)
+## Resource Prohibitions
 
-The following Terraform resource types MUST NEVER appear in any generated file. The positive mapping from intent to resource type is owned by `/btp-iac.tasks`.
+The following Terraform resource or data source types MUST NEVER appear in any generated file. The positive mapping from intent to resource type is owned by `/btp-iac.tasks`.
 
 | Prohibited resource | Use instead |
 |---|---|
 | `btp_subaccount_destination` | `btp_subaccount_destination_generic` |
 | `btp_subaccount_role_collection` | `btp_subaccount_role_collection_base` + `btp_subaccount_role_collection_role` |
+| `data "btp_subaccount_service_plan"` | `service_offering_name` + `service_plan_name` attributes on `btp_subaccount_service_instance` directly |
+| `data "cloudfoundry_service_plan"` | `service_offering_name` + `service_plan_name` attributes on `cloudfoundry_service_instance` directly |
 
 **Guard**: Before generating HCL for any task, check its `resource_type`. If it is `btp_subaccount_destination` or `btp_subaccount_role_collection`, **STOP** and report:
 > "Task <ID> carries a prohibited resource type `<type>`. Re-run `/btp-iac.tasks` to correct the mapping before generating."
 
-Do not attempt to substitute or remap — stop and require the user to fix the task list.
+Before generating any data source block, check whether it appears in the prohibited table above. If it does, **STOP** and report:
+> "Data source `<type>` is prohibited. Use the direct attribute approach shown in the table."
 
 ---
 
@@ -177,7 +196,7 @@ After all tasks are complete, for **each generated directory** (each independent
 1. Run `terraform init` on the directory
 2. Run `terraform fmt --recursive` on the directory
 3. Run `terraform validate` on the directory
-4. If `terraform fmt` or `terraform validate` fails: fix the reported issues in the affected files, then re-run `terraform fmt --recursive` and `terraform validate` until both pass
+4. If `terraform fmt` or `terraform validate` fails: fix the reported issues in the affected files, then re-run `terraform fmt --recursive` and `terraform validate`. Repeat until both pass — there is no retry limit. **Generation is not complete and success MUST NOT be reported until `terraform validate` passes on every generated directory.** The only exit from this loop (other than all directories passing) is explicit user cancellation. If the user cancels, report which directories have not yet passed validation. If the same directory fails three consecutive times with the same error, pause and ask the user how to proceed before retrying further.
 5. Report the final outcome per directory
 
 ---
