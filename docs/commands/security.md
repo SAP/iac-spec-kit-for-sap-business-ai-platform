@@ -3,7 +3,7 @@
 !!! abstract "Summary"
     **Role:** Required. · **Reads:** `specs/scenario.md`, `specs/landscape.md` (+ governance) · **Writes:** `specs/trust.md`
 
-Identifies the authentication and authorisation requirements — identity-provider trust, role collections, role-template assignments, and user/group assignments.
+Identifies the authentication and authorisation requirements — identity-provider trust, role collections, and user/group assignments.
 
 ## When to run it
 
@@ -14,7 +14,7 @@ Normally after `btp-iac.services`, following the site-wide `services` → `secur
 | | |
 |---|---|
 | **Reads** | `specs/scenario.md` and `specs/landscape.md`, and `memory/governance.md` if present. It also reads `.btp-iac/platform-validation.md` for an optional live BTP availability check, making only read/list BTP calls. |
-| **Writes** | `specs/trust.md` — per subaccount: platform and application IdP trust, role collections and their role-template assignments, and user/group assignments. |
+| **Writes** | `specs/trust.md` — per subaccount: platform and application IdP trust, role collections with their structured roles list (may be empty), and user/group assignments. |
 
 ## Behaviour
 
@@ -30,14 +30,17 @@ Normally after `btp-iac.services`, following the site-wide `services` → `secur
 /btp-iac.security
 ```
 
-For the HR leave-request app, `security` records XSUAA-based authentication and a role collection in `specs/trust.md`:
+For the HR leave-request app, `security` asks whether role collections are needed (yes) and whether individual roles should be assigned, then records the result in `specs/trust.md`:
 
 ```markdown
 ## hr-leave-prod
 ### IdP trust
 - Application IdP: default — no custom IdP required
 ### Role collections
-- HR_Leave_Employee -> role template: Employee
+- **Role collection**: HR_Leave_Employee
+  - Description: Employees using the leave-request app
+  - Roles:
+    - role_name: Employee, role_template_name: Employee, role_template_app_id: hr-leave-xsuaa!b1
 ### User assignments
 - (assign employees to HR_Leave_Employee)
 ```

@@ -44,11 +44,15 @@ After `btp-iac.accounts`, `btp-iac.services`, and `btp-iac.security` have all pr
 | T-002 | Entitle and create xsuaa (application) | prod | T-001 | ✦ |
 | T-003 | Entitle and create hana-cloud (hana) | prod | T-001 | ✦ |
 | T-004 | Create role collection HR_Leave_Employee | prod | T-002 | — |
+| T-005 | Assign role Employee to HR_Leave_Employee | prod | T-004 | — |
 
 - [ ] T-001 `[prod]` Create subaccount hr-leave-prod
 - [ ] T-002 `[prod]` Entitle and create xsuaa (application)
 - [ ] T-003 `[prod]` Entitle and create hana-cloud (hana)
 - [ ] T-004 `[prod]` Create role collection HR_Leave_Employee
+  - Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = HR_Leave_Employee`, `subaccount = hr-leave-prod`
+- [ ] T-005 `[prod]` Assign role Employee to HR_Leave_Employee
+  - Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = HR_Leave_Employee`, `subaccount = hr-leave-prod`, `role_name = Employee`, `role_template_name = Employee`, `role_template_app_id = hr-leave-xsuaa!b1`
 ```
 
 ## Related

@@ -4,7 +4,7 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.2"
+  version: "1.3"
 ---
 
 # BTP IaC — Generate
@@ -94,6 +94,34 @@ Kyma-provider resources use the `hashicorp/kubernetes` provider. Include whichev
 
 ---
 
+## Role collection and role generation (subaccount level)
+
+For tasks with `resource_type = btp_subaccount_role_collection_base`, emit:
+
+```hcl
+resource "btp_subaccount_role_collection_base" "<resource-label>" {
+  subaccount_id = <subaccount_id reference>
+  name          = "<collection-name>"
+  description   = "<optional description>"   # omit when not specified
+}
+```
+
+For tasks with `resource_type = btp_subaccount_role_collection_role`, emit:
+
+```hcl
+resource "btp_subaccount_role_collection_role" "<resource-label>" {
+  subaccount_id        = <subaccount_id reference>
+  name                 = btp_subaccount_role_collection_base.<base-resource-label>.name
+  role_name            = "<role-name>"
+  role_template_name   = "<role-template-name>"
+  role_template_app_id = "<role-template-app-id>"
+}
+```
+
+The `name` attribute MUST reference the corresponding `btp_subaccount_role_collection_base` resource via a Terraform expression (`btp_subaccount_role_collection_base.<base-resource-label>.name`), not a literal string. This creates an implicit graph dependency so Terraform will not attempt to create the role before the collection exists. Do NOT emit `btp_subaccount_role_collection` in any generated file.
+
+---
+
 ## File layout and cross-directory wiring
 
 Write each configuration unit using the standard layout defined by `/btp-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.
@@ -112,6 +140,22 @@ When `/btp-iac.design` defined a BTP directory-per-stage layer, emit that config
 ### Manual tfvars handover
 
 Separate directories are independent Terraform roots on the local backend, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
+
+---
+
+## Resource Prohibitions (subaccount level)
+
+The following Terraform resource types MUST NEVER appear in any generated file. The positive mapping from intent to resource type is owned by `/btp-iac.tasks`.
+
+| Prohibited resource | Use instead |
+|---|---|
+| `btp_subaccount_destination` | `btp_subaccount_destination_generic` |
+| `btp_subaccount_role_collection` | `btp_subaccount_role_collection_base` + `btp_subaccount_role_collection_role` |
+
+**Guard**: Before generating HCL for any task, check its `resource_type`. If it is `btp_subaccount_destination` or `btp_subaccount_role_collection`, **STOP** and report:
+> "Task <ID> carries a prohibited resource type `<type>`. Re-run `/btp-iac.tasks` to correct the mapping before generating."
+
+Do not attempt to substitute or remap — stop and require the user to fix the task list.
 
 ---
 

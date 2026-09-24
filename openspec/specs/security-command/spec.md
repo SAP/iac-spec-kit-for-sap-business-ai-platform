@@ -14,11 +14,21 @@ The command SHALL read `specs/scenario.md`, `specs/landscape.md`, and if present
 - **THEN** it reads both spec files and optionally governance
 
 ### Requirement: define security configuration
-The command SHALL define for each subaccount: IdP trust configurations, role collections with role template assignments, user and group assignments.
+The command SHALL confirm for each subaccount whether role collections are required. When role collections are required, the command SHALL optionally ask which individual roles should be assigned to each collection (each role identified by `role_name`, `role_template_name`, and `role_template_app_id`). Role collections with no roles specified are valid. The command SHALL write each role collection to `specs/trust.md` with its name, optional description, and a structured list of individually named roles (which may be empty). The command SHALL NOT write unstructured "role template assignments" to the trust file.
 
-#### Scenario: security configuration defined
-- **WHEN** inputs are read
-- **THEN** the command produces a complete security configuration for each subaccount
+The command SHALL also define for each subaccount: IdP trust configurations and user and group assignments to role collections.
+
+#### Scenario: role collections required, roles specified
+- **WHEN** the user confirms role collections are required and provides individual role entries (role_name, role_template_name, role_template_app_id) for a collection
+- **THEN** `specs/trust.md` records that collection with a structured roles list containing each named role
+
+#### Scenario: role collections required, no roles specified
+- **WHEN** the user confirms role collections are required but does not specify individual roles
+- **THEN** `specs/trust.md` records the collection with an empty roles list and no role assignments
+
+#### Scenario: role collections not required
+- **WHEN** the user confirms role collections are not required for a subaccount
+- **THEN** no role collection entries appear in `specs/trust.md` for that subaccount
 
 ### Requirement: validate IdP against governance
 The command SHALL validate the custom IdP configuration against governance rules if `memory/governance.md` exists.
