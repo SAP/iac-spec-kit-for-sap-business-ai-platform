@@ -73,9 +73,33 @@ For each metered service resource:
 
 ---
 
+## Subdomain Uniqueness
+
+For every `btp_subaccount` resource generated, append a random UUID suffix to the subdomain to guarantee uniqueness:
+
+1. Emit one `random_uuid` resource per `btp_subaccount`, using the same resource label (e.g. `random_uuid "subaccount_dev"`), in the same `main.tf`.
+2. Read the base subdomain from the task's `subdomain` metadata field (written there by `/btp-iac.tasks` from `specs/landscape.md`). BTP subdomains are limited to 63 characters. The suffix `-<uuid>` is 37 characters (1 hyphen + 36 UUID chars), so the base **must be truncated to at most 26 characters** before appending. Use a `locals` block with `substr` to enforce this; set the `subdomain` attribute to the local:
+   ```hcl
+   resource "random_uuid" "subaccount_dev" {}
+
+   locals {
+     subaccount_dev_subdomain = "${substr("my-subaccount-dev", 0, 26)}-${random_uuid.subaccount_dev.result}"
+   }
+
+   resource "btp_subaccount" "subaccount_dev" {
+     name      = "..."
+     subdomain = local.subaccount_dev_subdomain
+     region    = "..."
+   }
+   ```
+   When the base is already 26 characters or fewer, `substr` is a no-op and the value passes through unchanged. The local name follows the pattern `<resource_label>_subdomain`.
+3. Add `hashicorp/random` to `required_providers` in `providers.tf` for any configuration unit that contains at least one `btp_subaccount` resource. Look up its latest version at runtime exactly as for other providers — never hardcode it. Omit `hashicorp/random` from units that contain no `btp_subaccount` resources.
+
+---
+
 ## Provider Version
 
-**Before writing `providers.tf`**, look up the latest version of each required Terraform provider. The provider set spans `SAP/btp`, `cloudfoundry/cloudfoundry`, and `hashicorp/kubernetes` (Kyma) as required by the resolved resource types. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.
+**Before writing `providers.tf`**, look up the latest version of each required Terraform provider. The provider set spans `SAP/btp`, `cloudfoundry/cloudfoundry`, `hashicorp/kubernetes` (Kyma), and `hashicorp/random` (when `btp_subaccount` resources are present) as required by the resolved resource types. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.
 
 Use the retrieved version as the `~>` constraint in `required_providers` inside `providers.tf`. Never hardcode a version.
 
@@ -107,6 +131,19 @@ Each service task carries a `resource_type` set by `/btp-iac.tasks` from the ser
 - `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
 
 Kyma-provider resources use the `hashicorp/kubernetes` provider. Include whichever providers the resolved resource types require in `providers.tf`'s `required_providers`.
+
+### Entitlement quota — quota_required flag
+
+When a task's metadata contains `quota_required: true` (set by `/btp-iac.tasks` from the plan category recorded by `/btp-iac.services`), add `amount = 1` to every `btp_subaccount_entitlement` resource generated for that task. When the flag is absent, omit the `amount` attribute.
+
+```hcl
+resource "btp_subaccount_entitlement" "my_service" {
+  subaccount_id = btp_subaccount.dev.id
+  service_name  = "my-service"
+  plan_name     = "standard"
+  amount        = 1   # only when quota_required: true in task metadata
+}
+```
 
 ---
 
@@ -195,6 +232,113 @@ The following Terraform resource or data source types MUST NEVER appear in any g
 
 Before generating any data source block, check whether it appears in the prohibited table above. If it does, **STOP** and report:
 > "Data source `<type>` is prohibited. Use the direct attribute approach shown in the table."
+
+---
+
+## Provider Authentication
+
+**Ask once per run, after the stage-filter question and before writing any file.** The questions are independent — BTP auth and CF auth are separate prompts. The BTP prompt is only shown when the stage-filtered task set contains at least one BTP resource. The CF prompt is only shown when the stage-filtered task set contains at least one Cloud Foundry resource.
+
+### BTP Provider Authentication
+
+Ask the user: "How should BTP provider authentication be performed?"
+
+| Method | Variables emitted in `variables.tf` |
+|---|---|
+| username/password | `login_name`, `password` |
+| username/password with custom IdP | `login_name`, `password`, `idp` |
+| SSO / token | `idp` |
+| mTLS (client certificate) | `x509_private_key`, `x509_cert_chain` |
+
+Rules:
+- **No `default` value** on `login_name`, `password`, `idp`, `x509_private_key`, or `x509_cert_chain`.
+- All credential variables (`login_name`, `password`, `idp`, `x509_private_key`, `x509_cert_chain`) **must** have `sensitive = true`.
+- Declare all auth variables in `variables.tf` for **every** BTP configuration unit.
+- The `provider "btp"` block in `providers.tf` references **only** the variables required by the selected method — do not emit unused auth attributes.
+- Add placeholder entries for all auth variables to `terraform.tfvars.example` (merged with existing entries per the provider-initialization tfvars example rule).
+- Apply the same selection to all BTP configuration units — do not re-prompt per unit.
+
+Example `variables.tf` for username/password:
+```hcl
+variable "globalaccount_subdomain" {
+  type        = string
+  description = "Subdomain of the global account."
+}
+
+variable "login_name" {
+  type        = string
+  description = "BTP login name (email address)."
+  sensitive   = true
+}
+
+variable "password" {
+  type        = string
+  description = "BTP password."
+  sensitive   = true
+}
+```
+
+Example `provider "btp"` block for username/password:
+```hcl
+provider "btp" {
+  globalaccount = var.globalaccount_subdomain
+  username      = var.login_name
+  password      = var.password
+}
+```
+
+Example `provider "btp"` block for SSO/token:
+```hcl
+provider "btp" {
+  globalaccount = var.globalaccount_subdomain
+  idp           = var.idp
+}
+```
+
+Example `provider "btp"` block for mTLS:
+```hcl
+provider "btp" {
+  globalaccount    = var.globalaccount_subdomain
+  x509_private_key = var.x509_private_key
+  x509_cert_chain  = var.x509_cert_chain
+}
+```
+
+### CF Provider Authentication
+
+Ask the user (only when CF resources are present): "How should Cloud Foundry provider authentication be performed?"
+
+| Method | Variables emitted in `variables.tf` |
+|---|---|
+| username/password | `cf_user`, `cf_password` |
+| username/password with custom origin | `cf_user`, `cf_password`, `cf_origin` |
+| SSO / token | `cf_sso_passcode` |
+
+Rules:
+- **No `default` value** on any CF auth variable.
+- All CF credential variables (`cf_user`, `cf_password`, `cf_origin`, `cf_sso_passcode`) **must** have `sensitive = true`.
+- Declare all CF auth variables in `variables.tf` for **every** CF configuration unit.
+- The `provider "cloudfoundry"` block in `providers.tf` references **only** the variables required by the selected method.
+- Add placeholder entries for all CF auth variables to `terraform.tfvars.example`.
+- Apply the same selection to all CF configuration units — do not re-prompt per unit.
+- Skip this prompt entirely when the task set contains no Cloud Foundry resources.
+
+Example `provider "cloudfoundry"` block for username/password:
+```hcl
+provider "cloudfoundry" {
+  api_url  = var.cf_api_url
+  user     = var.cf_user
+  password = var.cf_password
+}
+```
+
+Example `provider "cloudfoundry"` block for SSO/token:
+```hcl
+provider "cloudfoundry" {
+  api_url      = var.cf_api_url
+  sso_passcode = var.cf_sso_passcode
+}
+```
 
 ---
 

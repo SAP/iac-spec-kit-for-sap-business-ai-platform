@@ -181,7 +181,7 @@ For each `btp_subaccount` task selected by the stage filter, the command SHALL r
 - **THEN** the command stops before writing that resource and identifies the invalid task metadata
 
 ### Requirement: resolve latest provider versions at runtime
-The command SHALL look up the current latest version of each required Terraform provider before writing `providers.tf`, and use those versions as `~>` constraints in `required_providers`. The provider set SHALL include, as required by the resolved resource types, each of `SAP/btp`, `cloudfoundry/cloudfoundry`, and `hashicorp/kubernetes`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
+The command SHALL look up the current latest version of each required Terraform provider before writing `providers.tf`, and use those versions as `~>` constraints in `required_providers`. The provider set SHALL include, as required by the resolved resource types, each of `SAP/btp`, `cloudfoundry/cloudfoundry`, `hashicorp/kubernetes`, and `hashicorp/random` (when `btp_subaccount` resources are present). It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 
 #### Scenario: provider version resolved
 - **WHEN** generating `providers.tf`
@@ -190,6 +190,10 @@ The command SHALL look up the current latest version of each required Terraform 
 #### Scenario: kyma provider included
 - **WHEN** the task set contains a Kyma environment
 - **THEN** the resolved provider set includes `hashicorp/kubernetes` at its latest version
+
+#### Scenario: random provider included when subaccounts present
+- **WHEN** the task set contains at least one `btp_subaccount` resource
+- **THEN** the resolved provider set includes `hashicorp/random` at its latest version
 
 ### Requirement: look up provider schema via MCP before writing HCL
 Before writing any HCL block for a resource or data source, the command SHALL query the terraform MCP server for the exact current schema of that resource type. The lookup sequence is: (1) `search_providers` to obtain the `provider_doc_id` for the resource type's provider, (2) `get_provider_details` to read the exact schema including all attributes, types, and required fields. The command SHALL use the returned schema as the authoritative source for attribute names, types, and required/optional classification. If the terraform MCP server is unavailable, the command SHALL fall back to WebFetch against the Terraform registry and note the fallback.
@@ -263,3 +267,104 @@ The command SHALL NOT run `git push` after generating Terraform HCL unless the u
 #### Scenario: user requests push
 - **WHEN** the user explicitly asks to push (e.g. "push", "git push")
 - **THEN** the command may push the changes
+
+### Requirement: append random UUID suffix to btp_subaccount subdomain
+For every generated `btp_subaccount` resource the command SHALL append a `-${random_uuid.<label>.result}` suffix to the base subdomain value read from the subaccount's task metadata `subdomain` field. BTP subdomains are limited to 63 characters; the suffix is 37 characters (hyphen + 36-character UUID), so the base SHALL be truncated to at most 26 characters before appending. The command SHALL use a `locals` block with `substr(<base>, 0, 26)` to enforce this, and set `subdomain` to the local. The command SHALL generate one `random_uuid` resource per `btp_subaccount` resource, keyed by the same resource label, using the `hashicorp/random` provider. The `hashicorp/random` provider SHALL be added to the `required_providers` block whenever at least one `btp_subaccount` resource is generated; its version SHALL be resolved at runtime the same way as other providers — not hardcoded.
+
+#### Scenario: subdomain gets uuid suffix with truncation
+- **WHEN** a `btp_subaccount` task is selected for generation
+- **THEN** the generated resource sets `subdomain` to a local defined as `"${substr("<base>", 0, 26)}-${random_uuid.<label>.result}"`, a corresponding `random_uuid "<label>"` resource is emitted in the same `main.tf`, and the local name follows the pattern `<label>_subdomain`
+
+#### Scenario: base subdomain already short
+- **WHEN** the base subdomain from task metadata is 26 characters or fewer
+- **THEN** `substr` is a no-op and the full base value is used unchanged before the UUID suffix
+
+#### Scenario: random provider included
+- **WHEN** at least one `btp_subaccount` resource is generated
+- **THEN** `providers.tf` includes `hashicorp/random` in `required_providers` with a `~>` version constraint resolved at runtime
+
+#### Scenario: no subaccount — random provider omitted
+- **WHEN** no `btp_subaccount` resources are generated in a configuration unit
+- **THEN** `hashicorp/random` is not added to `required_providers` for that unit
+
+### Requirement: prompt for BTP provider authentication method once per run
+When the stage-filtered task set contains at least one BTP resource, the command SHALL ask the user once how BTP provider authentication should be performed. Both the BTP and CF auth prompts SHALL be asked after the stage-filter question and before writing any file. The answer applies to every BTP configuration unit generated in that run. The supported methods are:
+
+- **username/password** — emits `login_name` and `password` variables; no `idp` variable unless the user also specifies a custom IdP
+- **username/password with custom IdP** — emits `login_name`, `password`, and `idp` variables
+- **SSO / token** — emits only `idp` variable (the user authenticates interactively via a browser-based flow)
+- **mTLS (client certificate)** — emits `x509_private_key` and `x509_cert_chain` variables
+
+The `login_name`, `password`, `idp`, `x509_private_key`, and `x509_cert_chain` variable declarations SHALL have no `default` value and SHALL be declared `sensitive = true`. All auth variables SHALL be declared in `variables.tf` for each BTP configuration unit. The `provider "btp"` block in `providers.tf` SHALL reference only the variables required by the selected method. The `terraform.tfvars.example` SHALL include placeholder entries for every auth variable in the selected method.
+
+#### Scenario: username/password selected
+- **WHEN** the user selects username/password authentication for BTP
+- **THEN** `variables.tf` declares `login_name` and `password` with no default value and `sensitive = true`, and `providers.tf` references both in the `provider "btp"` block
+
+#### Scenario: username/password with custom IdP selected
+- **WHEN** the user selects username/password with custom IdP for BTP
+- **THEN** `variables.tf` declares `login_name`, `password`, and `idp` (no default on any, all `sensitive = true`), and `providers.tf` references all three in the `provider "btp"` block
+
+#### Scenario: SSO/token selected
+- **WHEN** the user selects SSO/token authentication for BTP
+- **THEN** `variables.tf` declares `idp` (no default, `sensitive = true`), and `providers.tf` references `idp` in the `provider "btp"` block; no `login_name` or `password` variable is emitted
+
+#### Scenario: mTLS selected
+- **WHEN** the user selects mTLS authentication for BTP
+- **THEN** `variables.tf` declares `x509_private_key` and `x509_cert_chain` (no default on either, both `sensitive = true`), and `providers.tf` references both in the `provider "btp"` block
+
+#### Scenario: auth variables in tfvars example
+- **WHEN** a `terraform.tfvars.example` is emitted for a BTP configuration unit
+- **THEN** it includes placeholder entries for every variable required by the selected BTP authentication method
+
+#### Scenario: prompt asked once per run
+- **WHEN** a generation run produces multiple BTP configuration units
+- **THEN** the auth method prompt is shown only once; the same selection is applied to all BTP units
+
+#### Scenario: BTP prompt skipped when no BTP resources
+- **WHEN** the task set contains no BTP resources
+- **THEN** the BTP authentication prompt is not shown
+
+### Requirement: prompt for Cloud Foundry provider authentication method once per run
+When the stage-filtered task set contains at least one Cloud Foundry resource, the command SHALL ask the user once, before writing any file, how CF provider authentication should be performed. The answer applies to every CF configuration unit generated in that run. The supported methods are:
+
+- **username/password** — emits `cf_user` and `cf_password` variables; no default on either
+- **username/password with custom origin** — emits `cf_user`, `cf_password`, and `cf_origin` variables; no default on any
+- **SSO / token** — emits only `cf_sso_passcode` variable; no default
+
+All CF auth variables SHALL be declared in `variables.tf` for each CF configuration unit. The `cf_user`, `cf_password`, `cf_origin`, and `cf_sso_passcode` variable declarations SHALL have no `default` value and SHALL be declared `sensitive = true`. The `provider "cloudfoundry"` block in `providers.tf` SHALL reference only the variables required by the selected method. The `terraform.tfvars.example` SHALL include placeholder entries for every auth variable in the selected method.
+
+#### Scenario: CF username/password selected
+- **WHEN** the user selects username/password authentication for CF
+- **THEN** `variables.tf` declares `cf_user` and `cf_password` (no default, both `sensitive = true`), and `providers.tf` references both in the `provider "cloudfoundry"` block
+
+#### Scenario: CF username/password with custom origin selected
+- **WHEN** the user selects username/password with custom origin for CF
+- **THEN** `variables.tf` declares `cf_user`, `cf_password`, and `cf_origin` (no default on any, all `sensitive = true`), and `providers.tf` references all three in the `provider "cloudfoundry"` block
+
+#### Scenario: CF SSO/token selected
+- **WHEN** the user selects SSO/token for CF
+- **THEN** `variables.tf` declares `cf_sso_passcode` (no default, `sensitive = true`), and `providers.tf` references it in the `provider "cloudfoundry"` block
+
+#### Scenario: CF auth variables in tfvars example
+- **WHEN** a `terraform.tfvars.example` is emitted for a CF configuration unit
+- **THEN** it includes placeholder entries for every variable required by the selected CF authentication method
+
+#### Scenario: CF prompt skipped when no CF resources
+- **WHEN** the task set contains no Cloud Foundry resources
+- **THEN** the CF authentication prompt is not shown
+
+#### Scenario: CF prompt asked once per run
+- **WHEN** a generation run produces multiple CF configuration units
+- **THEN** the CF auth method prompt is shown only once; the same selection is applied to all CF units
+
+### Requirement: emit quota attribute for entitlements with quota_required flag
+When a task's metadata contains `quota_required: true` (set by `/btp-iac.tasks` from the plan category recorded by `/btp-iac.services`), every `btp_subaccount_entitlement` resource generated for that task SHALL include `amount = 1`. When the flag is absent the `amount` attribute SHALL be omitted.
+
+#### Scenario: entitlement task has quota_required flag
+- **WHEN** a `btp_subaccount_entitlement` task contains `quota_required: true` in its metadata
+- **THEN** the generated `btp_subaccount_entitlement` resource contains `amount = 1`
+
+#### Scenario: entitlement task without quota_required flag
+- **WHEN** a `btp_subaccount_entitlement` task does not contain `quota_required: true`
+- **THEN** no `amount` attribute is emitted on the `btp_subaccount_entitlement` resource

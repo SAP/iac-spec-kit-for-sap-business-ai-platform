@@ -29,15 +29,15 @@ The command SHALL create a task for every Cloud Foundry environment, Kyma enviro
 - **THEN** `specs/tasks.md` contains the corresponding dependency-ordered tasks with their subaccount, type, and name
 
 ### Requirement: preserve confirmed subaccount classification metadata
-For every subaccount task, the command SHALL copy any confirmed `usage` and `beta_enabled` values from `specs/landscape.md` into structured task metadata. The task metadata is generation input and SHALL NOT alter values downstream. When a legacy landscape omits either value, the command SHALL still create the task without inferring, requesting, or inventing the unavailable metadata.
+For every subaccount task, the command SHALL copy `subdomain`, `region`, and any confirmed `usage` and `beta_enabled` values from `specs/landscape.md` into structured task metadata. The task metadata is generation input and SHALL NOT alter values downstream. When a legacy landscape omits `usage` or `beta_enabled`, the command SHALL still create the task without inferring, requesting, or inventing the unavailable metadata. `subdomain` and `region` are always present for a valid subaccount entry and SHALL always be copied.
 
 #### Scenario: classified subaccount task
 - **WHEN** `specs/landscape.md` defines a subaccount with confirmed `usage` and `beta_enabled` values
-- **THEN** its `btp_subaccount` task contains those values in its task metadata
+- **THEN** its `btp_subaccount` task contains `subdomain`, `region`, `usage`, and `beta_enabled` in its task metadata
 
 #### Scenario: legacy subaccount classification metadata absent
 - **WHEN** a subaccount in `specs/landscape.md` omits `usage`, `beta_enabled`, or both
-- **THEN** the command creates its `btp_subaccount` task without the unavailable metadata and continues
+- **THEN** the command creates its `btp_subaccount` task with `subdomain` and `region` in metadata, omits the unavailable classification fields, and continues
 
 ### Requirement: write tasks file
 The command SHALL write the task list to `specs/tasks.md`.
@@ -68,6 +68,17 @@ The command SHALL read each service entry's `consumption_type` from `specs/servi
 #### Scenario: entitlement-only service
 - **WHEN** a service entry in `specs/services.md` has `consumption_type: entitlement-only`
 - **THEN** the command creates only an entitlement assignment task with `resource_type = btp_subaccount_entitlement` and no instance or subscription task
+
+### Requirement: carry quota_required flag into service task metadata
+When a service entry in `specs/services.md` contains `quota_required: true`, the command SHALL copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the flag is absent the task metadata SHALL NOT contain it.
+
+#### Scenario: quota_required propagated to service task
+- **WHEN** a service entry in `specs/services.md` has `quota_required: true`
+- **THEN** the task created for that service entry in `specs/tasks.md` contains `quota_required: true` in its task metadata, regardless of whether its `resource_type` is `btp_subaccount_service_instance`, `cloudfoundry_service_instance`, `btp_subaccount_subscription`, or `btp_subaccount_entitlement`
+
+#### Scenario: quota_required absent — no field in task
+- **WHEN** a service entry in `specs/services.md` does not have `quota_required: true`
+- **THEN** the task created for that service entry does not contain a `quota_required` field
 
 ### Requirement: include connectivity tasks when connectivity spec exists
 When `specs/connectivity.md` exists, the command SHALL append a dependency-ordered set of destination and certificate tasks to `specs/tasks.md`. Each destination task SHALL depend on the subaccount it is scoped to. Each certificate task SHALL depend on its subaccount and, when service-instance-scoped, on the relevant service instance task.

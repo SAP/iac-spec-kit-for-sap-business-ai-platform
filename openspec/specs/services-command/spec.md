@@ -120,6 +120,29 @@ The command SHALL write `specs/services.md` with the full dependency-ordered ser
 - **WHEN** a service/plan combination is written to `specs/services.md`
 - **THEN** the summary records its derived type as `service instance` or `subscription`
 
+### Requirement: record quota_required flag in services output
+When the resolved entitlement plan `category` for a service is `SERVICE` or `QUOTA_BASED_APPLICATION`, the command SHALL record `quota_required: true` on that service's entry in `specs/services.md`. For all other resolved categories, and when the category cannot be resolved at all (fallback path or plan not found), the flag SHALL be omitted. The flag is derived from the same category lookup used to determine `consumption_type` and requires no additional lookup.
+
+#### Scenario: SERVICE category sets flag
+- **WHEN** the matched plan's `category` is `SERVICE`
+- **THEN** the service entry in `specs/services.md` contains `quota_required: true`
+
+#### Scenario: QUOTA_BASED_APPLICATION category sets flag
+- **WHEN** the matched plan's `category` is `QUOTA_BASED_APPLICATION`
+- **THEN** the service entry in `specs/services.md` contains `quota_required: true`
+
+#### Scenario: other categories omit flag
+- **WHEN** the matched plan's `category` is any value other than `SERVICE` or `QUOTA_BASED_APPLICATION`
+- **THEN** the service entry in `specs/services.md` does not contain a `quota_required` field
+
+#### Scenario: flag absent when category fallback used
+- **WHEN** neither the BTP CLI nor BTP MCP is available and the user manually selects a consumption type
+- **THEN** no `quota_required` flag is recorded (the category is unknown and the flag cannot be derived)
+
+#### Scenario: flag absent when plan not found in entitlement data
+- **WHEN** the plan cannot be matched in the entitlement data and no category is resolved
+- **THEN** no `quota_required` flag is recorded (an unresolved category is not an "other" category and SHALL NOT produce the flag)
+
 ### Requirement: validate resolved entitlements
 Before writing output, the command SHALL validate every resolved entitlement, subscription, service offering, and plan with the shared platform-validation capability scoped to the landscape global account.
 

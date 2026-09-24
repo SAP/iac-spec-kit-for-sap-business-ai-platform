@@ -72,6 +72,8 @@ For each service entry in `specs/services.md`, read its `consumption_type` and m
 - `subscription` → `resource_type = btp_subaccount_subscription`. No `location` or `cf_space` fields apply; subscriptions are always managed via the BTP provider.
 - `entitlement-only` → `resource_type = btp_subaccount_entitlement`. Create only the entitlement assignment task — no service instance or subscription task.
 
+When a service entry in `specs/services.md` has `quota_required: true`, copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the field is absent, do not add it.
+
 For each role collection entry in `specs/trust.md`, apply the Resource Mapping table above:
 
 1. Create a `btp_subaccount_role_collection_base` task for the collection. This task **depends on** the subaccount task it is scoped to. Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = <name>`, `subaccount = <subaccount-name>`, `description = <optional>`.
@@ -91,7 +93,7 @@ Produce a dependency-ordered task list. Each task MUST have:
 - A checkbox `- [ ]` (all tasks start unchecked; `/btp-iac.generate` marks them `- [x]` as it completes them)
 - An indented `Task metadata` block containing the resource type and the values needed to generate that resource
 
-For every `btp_subaccount` task, copy any confirmed `usage` and `beta_enabled` values from the matching entry in `specs/landscape.md` into its `Task metadata` block without changing them. A legacy landscape may omit either value; still create the task, do not infer or request missing values, and omit only the unavailable metadata fields.
+For every `btp_subaccount` task, copy `subdomain` and `region` from the matching entry in `specs/landscape.md` into its `Task metadata` block — these are always present for a valid subaccount and are required by `/btp-iac.generate` for UUID suffix interpolation. Also copy any confirmed `usage` and `beta_enabled` values without changing them. A legacy landscape may omit `usage` or `beta_enabled`; still create the task, do not infer or request those missing values, and omit only the unavailable classification fields.
 
 ### Step 3 — Write `specs/tasks.md`
 
@@ -113,7 +115,7 @@ Write the full task list to `specs/tasks.md` using this structure:
 | T-005 | Assign role to "MyCollection" in subaccount "dev-sa" | all | T-004 | — |
 
 - [ ] T-001 `[dev]` <title>
-  - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
+  - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
 - [ ] T-002 `[dev, test]` <title>
   - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
 - [ ] T-003 `[all]` <title>
