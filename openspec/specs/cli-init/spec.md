@@ -32,6 +32,25 @@ For fresh and adopted infrastructure projects, the CLI SHALL offer an optional g
 - **WHEN** a user leaves the optional input blank
 - **THEN** initialization continues without asking for the subdomain again
 
+### Requirement: For fresh and adopted infrastructure projects, write memory files from embedded binary
+The CLI SHALL write `memory/global-account.md` and `memory/service-params-catalogue.yaml` from the embedded binary during fresh and adopt initialization. It SHALL NOT write or overwrite either file during agent-only initialization. If `memory/service-params-catalogue.yaml` already exists in an adopt scenario, it SHALL be left unchanged.
+
+#### Scenario: Fresh init writes both memory files
+- **WHEN** the user runs `btp-iac init` in fresh mode
+- **THEN** both `memory/global-account.md` and `memory/service-params-catalogue.yaml` exist in the new project directory
+
+#### Scenario: Adopt init writes catalogue when absent
+- **WHEN** the user runs `btp-iac init` in adopt mode and `memory/service-params-catalogue.yaml` does not exist
+- **THEN** `memory/service-params-catalogue.yaml` is written to `memory/`
+
+#### Scenario: Adopt init preserves existing catalogue
+- **WHEN** the user runs `btp-iac init` in adopt mode and `memory/service-params-catalogue.yaml` already exists
+- **THEN** the existing catalogue file is left unchanged
+
+#### Scenario: Agent-only init does not write catalogue
+- **WHEN** the user runs `btp-iac init` in agent-only mode
+- **THEN** `memory/service-params-catalogue.yaml` is not created or modified
+
 ### Requirement: terraform pre-flight check
 The CLI SHALL verify that `terraform` is available on `$PATH` before creating any files or directories.
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
+	"github.com/SAP/btp-iac-spec-kit/internal/catalogue"
 	"github.com/SAP/btp-iac-spec-kit/internal/mcpcheck"
 	"github.com/SAP/btp-iac-spec-kit/internal/platformvalidation"
 	"github.com/SAP/btp-iac-spec-kit/internal/preflight"
@@ -31,6 +32,7 @@ func rootCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 	root.AddCommand(initCmd())
+	root.AddCommand(catalogueCmd())
 	return root
 }
 
@@ -224,4 +226,106 @@ func initCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, codex, cursor, copilot)")
 	return cmd
+}
+
+func catalogueCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "catalogue",
+		Short: "Manage the service parameters catalogue",
+	}
+	cmd.AddCommand(convertCmd())
+	return cmd
+}
+
+func convertCmd() *cobra.Command {
+	var service string
+	var plans string
+	var appendFlag bool
+
+	cmd := &cobra.Command{
+		Use:   "convert <schema.json>",
+		Short: "Convert a JSON Schema file into a catalogue YAML entry",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			schemaBytes, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("read schema: %w", err)
+			}
+			planList := strings.Split(plans, ",")
+			for i, p := range planList {
+				planList[i] = strings.TrimSpace(p)
+			}
+			out, err := catalogue.Convert(schemaBytes, service, planList)
+			if err != nil {
+				return fmt.Errorf("convert: %w", err)
+			}
+			if !appendFlag {
+				_, err = cmd.OutOrStdout().Write(out)
+				return err
+			}
+			// --append: find project root and append to catalogue file.
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("getwd: %w", err)
+			}
+			root, found := findProjectRoot(cwd)
+			if !found {
+				return fmt.Errorf("no btp-iac project found in %s or any parent directory", cwd)
+			}
+			dest := filepath.Join(root, "memory", scaffold.CatalogueFile)
+			if err := appendToCatalogue(dest, out); err != nil {
+				return err
+			}
+			cmd.Printf("Appended entry for %q to %s\n", service, dest)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&service, "service", "", "service_offering_name (required)")
+	cmd.Flags().StringVar(&plans, "plans", "", "comma-separated plan names (required)")
+	cmd.Flags().BoolVar(&appendFlag, "append", false, "append entry to memory/service-params-catalogue.yaml in the nearest project root")
+	_ = cmd.MarkFlagRequired("service")
+	_ = cmd.MarkFlagRequired("plans")
+	return cmd
+}
+
+// findProjectRoot walks up from dir looking for a btp-iac project root.
+func findProjectRoot(dir string) (string, bool) {
+	for {
+		if scaffold.IsProject(dir) {
+			return dir, true
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", false
+		}
+		dir = parent
+	}
+}
+
+// appendToCatalogue appends data to dest, inserting a newline separator when
+// the file is non-empty and does not already end with one.
+func appendToCatalogue(dest string, data []byte) error {
+	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o644)
+	if err != nil {
+		return fmt.Errorf("open catalogue: %w", err)
+	}
+	defer f.Close() //nolint:errcheck
+	if fi, err := f.Stat(); err == nil && fi.Size() > 0 {
+		buf := make([]byte, 1)
+		if _, err := f.ReadAt(buf, fi.Size()-1); err == nil && buf[0] != '\n' {
+			if _, err := f.Seek(0, 2); err != nil {
+				return fmt.Errorf("seek catalogue: %w", err)
+			}
+			if _, err := f.Write([]byte("\n")); err != nil {
+				return fmt.Errorf("write separator: %w", err)
+			}
+		}
+	}
+	if _, err := f.Seek(0, 2); err != nil {
+		return fmt.Errorf("seek catalogue: %w", err)
+	}
+	if _, err := f.Write(data); err != nil {
+		return fmt.Errorf("append to catalogue: %w", err)
+	}
+	return nil
 }

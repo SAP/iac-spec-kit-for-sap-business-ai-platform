@@ -310,6 +310,106 @@ func TestApplyAgentOnly(t *testing.T) {
 	}
 }
 
+func TestWriteCatalogueFile(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := WriteCatalogueFile(dir, skills.Commands); err != nil {
+		t.Fatalf("WriteCatalogueFile: %v", err)
+	}
+	dest := filepath.Join(dir, "memory", CatalogueFile)
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("catalogue file missing after write: %v", err)
+	}
+	if len(data) == 0 {
+		t.Error("catalogue file is empty")
+	}
+
+	// Write a sentinel value; second call must not overwrite it.
+	sentinel := []byte("# user-edited\n")
+	if err := os.WriteFile(dest, sentinel, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := WriteCatalogueFile(dir, skills.Commands); err != nil {
+		t.Fatalf("WriteCatalogueFile(second call): %v", err)
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(sentinel) {
+		t.Errorf("second WriteCatalogueFile overwrote existing file: got %q", got)
+	}
+}
+
+func TestApplyCataloguePresence(t *testing.T) {
+	catalogue := filepath.Join("memory", CatalogueFile)
+
+	t.Run("fresh", func(t *testing.T) {
+		tmp := t.TempDir()
+		orig, _ := os.Getwd()
+		if err := os.Chdir(tmp); err != nil {
+			t.Fatal(err)
+		}
+		defer os.Chdir(orig) //nolint:errcheck
+		if _, err := Scaffold("proj", skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Scaffold: %v", err)
+		}
+		if _, err := os.Stat(filepath.Join("proj", catalogue)); err != nil {
+			t.Errorf("fresh: catalogue file missing")
+		}
+	})
+
+	t.Run("adopt", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, err := Apply(dir, ModeAdopt, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(Adopt): %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(dir, catalogue)); err != nil {
+			t.Errorf("adopt: catalogue file missing")
+		}
+	})
+
+	t.Run("adopt-preserves-existing", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		sentinel := []byte("# user-edited\n")
+		if err := os.WriteFile(filepath.Join(dir, catalogue), sentinel, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Apply(dir, ModeAdopt, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(Adopt): %v", err)
+		}
+		got, err := os.ReadFile(filepath.Join(dir, catalogue))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != string(sentinel) {
+			t.Errorf("adopt overwrote existing catalogue: got %q", got)
+		}
+	})
+
+	t.Run("agent-only", func(t *testing.T) {
+		dir := t.TempDir()
+		for _, d := range []string{"specs", "memory", "terraform"} {
+			if err := os.Mkdir(filepath.Join(dir, d), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := Apply(dir, ModeAgentOnly, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(AgentOnly): %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(dir, catalogue)); err == nil {
+			t.Error("agent-only: catalogue file must not be written")
+		}
+	})
+}
+
 func TestWriteGlobalAccountSubdomain(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {

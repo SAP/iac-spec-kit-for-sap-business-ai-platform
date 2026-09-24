@@ -74,6 +74,8 @@ For each service entry in `specs/services.md`, read its `consumption_type` and m
 
 When a service entry in `specs/services.md` has `quota_required: true`, copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the field is absent, do not add it.
 
+When a service entry in `specs/services.md` has a `parameters:` block (placed there by `/btp-iac.services` after catalogue lookup), copy the entire `parameters:` block verbatim into the task metadata block for the corresponding `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task. When the field is absent, do not add it. This is the only mechanism by which `/btp-iac.generate` receives service instance parameters — `specs/tasks.md` is its sole input.
+
 For each role collection entry in `specs/trust.md`, apply the Resource Mapping table above:
 
 1. Create a `btp_subaccount_role_collection_base` task for the collection. This task **depends on** the subaccount task it is scoped to. Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = <name>`, `subaccount = <subaccount-name>`, `description = <optional>`.
@@ -118,7 +120,7 @@ Write the full task list to `specs/tasks.md` using this structure:
 - [ ] T-001 `[dev]` <title>
   - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
 - [ ] T-002 `[dev, test]` <title>
-  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
+  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`, `parameters = <parameters block when present>`
 - [ ] T-003 `[all]` Create Cloud Foundry environment in subaccount "dev-sa"
   - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`, `name = <cf-org-name>`
 - [ ] T-004 `[all]` Create Kyma environment in subaccount "dev-sa"

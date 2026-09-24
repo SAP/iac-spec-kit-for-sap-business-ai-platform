@@ -109,8 +109,8 @@ The command SHALL validate each service instance plan against governance rules i
 - **THEN** the command stops with the plan, tier, permitted plans, and fix instructions
 - **UNLESS** `- Override: true` is set, in which case a warning is logged and the command continues
 
-### Requirement: write services file
-The command SHALL write `specs/services.md` with the full dependency-ordered service list. Every service entry SHALL record `consumption_type` (`instance`, `subscription`, or `entitlement-only`); every `instance` entry SHALL also record `location` (`btp` or `cf`) and, when `location: cf`, `cf_space`. For each service/plan combination, the summary SHALL record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`).
+### Requirement: Write specs/services.md with full service list
+The command SHALL write `specs/services.md` with the full dependency-ordered service list. Every service entry SHALL record `consumption_type` (`instance`, `subscription`, or `entitlement-only`); every `instance` entry SHALL also record `location` (`btp` or `cf`) and, when `location: cf`, `cf_space`. For each service/plan combination, the summary SHALL record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). When a `parameters:` block has been collected from the catalogue for a service instance task, the entry SHALL include that block with the user-supplied values. When no parameters were collected (either no catalogue entry matched or the user supplied none), the entry SHALL omit the `parameters:` block entirely.
 
 #### Scenario: services file written
 - **WHEN** the command completes successfully
@@ -119,6 +119,14 @@ The command SHALL write `specs/services.md` with the full dependency-ordered ser
 #### Scenario: derived type recorded per service/plan
 - **WHEN** a service/plan combination is written to `specs/services.md`
 - **THEN** the summary records its derived type as `service instance` or `subscription`
+
+#### Scenario: Service instance with collected parameters written to services.md
+- **WHEN** a service instance task matched a catalogue entry and the user supplied parameter values
+- **THEN** `specs/services.md` contains a `parameters:` block on that entry with the collected values
+
+#### Scenario: Service instance without catalogue match written without parameters block
+- **WHEN** a service instance task did not match any catalogue entry
+- **THEN** `specs/services.md` contains no `parameters:` block on that entry
 
 ### Requirement: record quota_required flag in services output
 When the resolved entitlement plan `category` for a service is `SERVICE` or `QUOTA_BASED_APPLICATION`, the command SHALL record `quota_required: true` on that service's entry in `specs/services.md`. For all other resolved categories, and when the category cannot be resolved at all (fallback path or plan not found), the flag SHALL be omitted. The flag is derived from the same category lookup used to determine `consumption_type` and requires no additional lookup.

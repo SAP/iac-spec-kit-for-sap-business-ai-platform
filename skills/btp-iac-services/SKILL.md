@@ -25,7 +25,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and inspect `btp --format json list accounts/entitlement`. If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
+Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and then `btp list accounts/entitlement` (with `--format json` for machine-readable output: `btp --format json list accounts/entitlement`). If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
 If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
 
@@ -123,7 +123,7 @@ Record `location` for every service instance, plus `cf_space` when `location: cf
 
 ## Workflow
 
-Read `specs/scenario.md` and `specs/landscape.md` to understand the application requirements and the account topology. Run Service Type Classification before resolving dependencies.
+Read `memory/service-params-catalogue.yaml` first. Then read `specs/scenario.md` and `specs/landscape.md` to understand the application requirements and the account topology. Run Service Type Classification before resolving dependencies.
 
 For each subaccount, resolve:
 - Required entitlements (service + plan) — includes `entitlement-only` services
@@ -131,7 +131,27 @@ For each subaccount, resolve:
 - Service instances (`consumption_type: instance`) with configuration parameters, `location`, and `cf_space` when CF-located
 - Dependencies between services (ordered)
 
-Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. This file is the direct input to `/btp-iac.tasks`.
+### Service instance parameters
+
+After the user confirms `consumption_type: instance` for a service, check whether `memory/service-params-catalogue.yaml` contains an entry matching **both** the `service_offering_name` and the plan name. The match is case-sensitive on both fields.
+
+**If a matching entry exists:**
+
+1. For each key in `parameters.required` (in order), prompt the user:
+   > "`<key>`: `<description>` (example: `<example>`)"
+   Accept the user's input as the value. Do not skip required keys.
+
+2. For each key in `parameters.optional` (in order), offer:
+   > "Add optional parameter `<key>`? (`<description>`, example: `<example>`) [y/N]"
+   Include the key only if the user confirms.
+
+3. For dotted optional keys (e.g. `data.storage`): when the user opts in, merge the value into the parent key's object. For example, if `data` is a required block containing `{memory: 32, edition: cloud}` and the user adds `data.storage: 120`, the final `data` block becomes `{memory: 32, edition: cloud, storage: 120}`.
+
+4. Write the collected key-value pairs as a `parameters:` block on the service entry in `specs/services.md`. The block carries final user-supplied values, not placeholders.
+
+**If no matching entry exists:** proceed silently — write no `parameters:` block for that service entry.
+
+Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. This file is the direct input to `/btp-iac.tasks`.
 
 When the resolved plan `category` is `SERVICE` or `QUOTA_BASED_APPLICATION`, add `quota_required: true` to that service entry. Omit the field for all other categories. When the category was not available (fallback path — neither CLI nor MCP, or plan not found), do not record the field.
 

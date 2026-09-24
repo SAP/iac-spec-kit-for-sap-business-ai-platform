@@ -219,6 +219,21 @@ When generating a `btp_subaccount_service_instance` resource, the command SHALL 
 - **THEN** the generated resource contains `service_offering_name` and `service_plan_name` attributes
 - **AND** no `data "cloudfoundry_service_plan"` block is generated for that service instance
 
+### Requirement: Render parameters block on service instance resources
+When a `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task's entry in `specs/services.md` contains a `parameters:` block, the command SHALL emit a `parameters = jsonencode({...})` attribute on the generated resource, using the key-value pairs from the `parameters:` block. When the `parameters:` block is absent, the command SHALL omit the `parameters` attribute entirely.
+
+#### Scenario: parameters block present produces jsonencode attribute
+- **WHEN** a `btp_subaccount_service_instance` task entry in `specs/services.md` contains a `parameters:` block with collected values
+- **THEN** the generated resource includes `parameters = jsonencode({ <key> = <value> ... })`
+
+#### Scenario: parameters block absent produces no parameters attribute
+- **WHEN** a `btp_subaccount_service_instance` task entry in `specs/services.md` has no `parameters:` block
+- **THEN** the generated resource does not include a `parameters` attribute
+
+#### Scenario: nested parameters rendered correctly
+- **WHEN** the `parameters:` block contains a nested object value
+- **THEN** `jsonencode(...)` receives the correctly nested structure
+
 ### Requirement: run terraform init before fmt and validate
 The command SHALL run `terraform init` on each generated directory before `terraform fmt` and `terraform validate` for that directory.
 

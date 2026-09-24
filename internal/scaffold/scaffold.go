@@ -102,6 +102,9 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 				return "", fmt.Errorf("create directory %s: %w", d, err)
 			}
 		}
+		if err := WriteCatalogueFile(dir, commands); err != nil {
+			return "", err
+		}
 	}
 
 	for _, agent := range agents {
@@ -136,6 +139,29 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 	}
 
 	return "", nil
+}
+
+// CatalogueFile is the name of the service parameters catalogue written to memory/.
+const CatalogueFile = "service-params-catalogue.yaml"
+
+// WriteCatalogueFile copies the embedded service-params-catalogue.yaml to
+// <dir>/memory/service-params-catalogue.yaml. It is a no-op when the file
+// already exists, preserving any user edits on re-init.
+func WriteCatalogueFile(dir string, commands embed.FS) error {
+	dest := filepath.Join(dir, "memory", CatalogueFile)
+	if _, err := os.Stat(dest); err == nil {
+		return nil
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("stat catalogue file: %w", err)
+	}
+	data, err := commands.ReadFile("btp-iac-services/" + CatalogueFile)
+	if err != nil {
+		return fmt.Errorf("read embedded catalogue: %w", err)
+	}
+	if err := os.WriteFile(dest, data, 0o644); err != nil {
+		return fmt.Errorf("write catalogue file: %w", err)
+	}
+	return nil
 }
 
 // WriteGlobalAccountSubdomain stores the optional global-account subdomain
