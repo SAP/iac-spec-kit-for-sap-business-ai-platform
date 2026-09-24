@@ -368,3 +368,56 @@ When a task's metadata contains `quota_required: true` (set by `/btp-iac.tasks` 
 #### Scenario: entitlement task without quota_required flag
 - **WHEN** a `btp_subaccount_entitlement` task does not contain `quota_required: true`
 - **THEN** no `amount` attribute is emitted on the `btp_subaccount_entitlement` resource
+
+### Requirement: resolve CF landscape label via data source and terraform_data
+For every generated `btp_subaccount_environment_instance` resource whose task metadata contains `environment_type = cloudfoundry`, the command SHALL emit the following two blocks **before** the resource block in the same `main.tf`. This requirement does NOT apply to tasks whose `environment_type` is `kyma` or any other value.
+
+1. A `btp_subaccount_environments` data source scoped to the same subaccount as the environment instance. The `subaccount_id` SHALL reference the same expression used in the `btp_subaccount_environment_instance` resource (e.g. `btp_subaccount.<label>.id`), never a hardcoded string.
+2. A `terraform_data` resource whose `input` filters the data source's `values` list to the entry where `service_name == "cloudfoundry"`, `environment_type == "cloudfoundry"`, and `availability_level == "ACTIVE"`, and reads its `landscape_label` field via `[0].landscape_label`.
+
+The `landscape_label` attribute on the `btp_subaccount_environment_instance` resource SHALL be set to `terraform_data.<env_label>.output`.
+
+The naming convention for the three resources SHALL follow the environment instance's resource label (e.g. for label `cloudfoundry_dev`: data source `btp_subaccount_environments "env_info_cloudfoundry_dev"`, `terraform_data "active_env_label_cloudfoundry_dev"`, resource `btp_subaccount_environment_instance "cloudfoundry_dev"`).
+
+Because `terraform_data` requires Terraform 1.4 or later, whenever at least one CF environment instance is generated the `terraform {}` block in `providers.tf` SHALL include `required_version = ">= 1.4"`. When no CF environment instance is present this constraint SHALL be omitted.
+
+The emitted pattern SHALL be:
+```hcl
+data "btp_subaccount_environments" "env_info_<label>" {
+  subaccount_id = <subaccount_id_reference>
+}
+
+resource "terraform_data" "active_env_label_<label>" {
+  input = [for env in data.btp_subaccount_environments.env_info_<label>.values : env if env.service_name == "cloudfoundry" && env.environment_type == "cloudfoundry" && env.availability_level == "ACTIVE"][0].landscape_label
+}
+
+resource "btp_subaccount_environment_instance" "<label>" {
+  subaccount_id    = <subaccount_id_reference>
+  landscape_label  = terraform_data.active_env_label_<label>.output
+  # ... other attributes
+}
+```
+
+#### Scenario: landscape label resolved for CF environment at apply time
+- **WHEN** the command generates a `btp_subaccount_environment_instance` resource with `environment_type = "cloudfoundry"`
+- **THEN** a `btp_subaccount_environments` data source and a `terraform_data` resource are emitted before the environment instance block in the same `main.tf`, and the instance's `landscape_label` attribute references `terraform_data.<env_label>.output`
+
+#### Scenario: landscape label pattern not applied to Kyma
+- **WHEN** the command generates a `btp_subaccount_environment_instance` resource with `environment_type = "kyma"`
+- **THEN** no `btp_subaccount_environments` data source or `terraform_data` resource is emitted for that instance, and no `landscape_label` attribute is set on it
+
+#### Scenario: subaccount_id is a reference not a literal
+- **WHEN** the subaccount ID is available as a resource reference (e.g. `btp_subaccount.dev.id`)
+- **THEN** both the `btp_subaccount_environments` data source and the `btp_subaccount_environment_instance` resource use that same reference expression for `subaccount_id`
+
+#### Scenario: naming follows resource label
+- **WHEN** the environment instance resource label is `cloudfoundry_dev`
+- **THEN** the data source is named `env_info_cloudfoundry_dev`, the `terraform_data` resource is named `active_env_label_cloudfoundry_dev`, and the environment instance label remains `cloudfoundry_dev`
+
+#### Scenario: required_version constraint emitted when CF environment present
+- **WHEN** at least one CF environment instance is generated in a configuration unit
+- **THEN** `providers.tf` includes `required_version = ">= 1.4"` in its `terraform {}` block
+
+#### Scenario: required_version constraint omitted when no CF environment present
+- **WHEN** no CF environment instance is generated in a configuration unit
+- **THEN** `providers.tf` does not include a `required_version` constraint

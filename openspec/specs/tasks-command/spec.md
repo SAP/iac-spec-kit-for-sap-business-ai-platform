@@ -22,11 +22,19 @@ The command SHALL read `specs/landscape.md`, `specs/services.md`, and `specs/tru
 - **THEN** the command produces a dependency-ordered task list that also includes destination and certificate tasks derived from `specs/connectivity.md`
 
 ### Requirement: preserve account environments as tasks
-The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Environment tasks SHALL depend on their subaccount, and Cloud Foundry space tasks SHALL depend on their Cloud Foundry environment.
+The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Environment tasks SHALL depend on their subaccount, and Cloud Foundry space tasks SHALL depend on their Cloud Foundry environment. Every `btp_subaccount_environment_instance` task SHALL carry `environment_type` in its task metadata, set to `cloudfoundry` for Cloud Foundry environments and `kyma` for Kyma environments.
 
 #### Scenario: landscape contains account environments
 - **WHEN** `specs/landscape.md` defines Cloud Foundry or Kyma environments and Cloud Foundry spaces
 - **THEN** `specs/tasks.md` contains the corresponding dependency-ordered tasks with their subaccount, type, and name
+
+#### Scenario: CF environment task carries environment_type
+- **WHEN** `specs/landscape.md` defines a Cloud Foundry environment for a subaccount
+- **THEN** its `btp_subaccount_environment_instance` task metadata contains `environment_type = cloudfoundry`
+
+#### Scenario: Kyma environment task carries environment_type
+- **WHEN** `specs/landscape.md` defines a Kyma environment for a subaccount
+- **THEN** its `btp_subaccount_environment_instance` task metadata contains `environment_type = kyma`
 
 ### Requirement: preserve confirmed subaccount classification metadata
 For every subaccount task, the command SHALL copy `subdomain`, `region`, and any confirmed `usage` and `beta_enabled` values from `specs/landscape.md` into structured task metadata. The task metadata is generation input and SHALL NOT alter values downstream. When a legacy landscape omits `usage` or `beta_enabled`, the command SHALL still create the task without inferring, requesting, or inventing the unavailable metadata. `subdomain` and `region` are always present for a valid subaccount entry and SHALL always be copied.

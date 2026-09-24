@@ -97,6 +97,43 @@ For every `btp_subaccount` resource generated, append a random UUID suffix to th
 
 ---
 
+## CF Environment Landscape Label
+
+For every generated `btp_subaccount_environment_instance` resource where the task metadata field `environment_type` equals `cloudfoundry`, emit the following two blocks **before** the resource block in the same `main.tf`. **Do not apply this pattern to tasks where `environment_type` is `kyma` or any other value.** The `environment_type` field in task metadata is the sole discriminator — never infer it from the resource label or any other heuristic.
+
+### Pattern
+
+```hcl
+data "btp_subaccount_environments" "env_info_<label>" {
+  subaccount_id = <subaccount_id_reference>
+}
+
+resource "terraform_data" "active_env_label_<label>" {
+  input = [for env in data.btp_subaccount_environments.env_info_<label>.values : env if env.service_name == "cloudfoundry" && env.environment_type == "cloudfoundry" && env.availability_level == "ACTIVE"][0].landscape_label
+}
+
+resource "btp_subaccount_environment_instance" "<label>" {
+  subaccount_id    = <subaccount_id_reference>
+  landscape_label  = terraform_data.active_env_label_<label>.output
+  # ... other attributes
+}
+```
+
+### Rules
+
+1. **CF only, keyed on task metadata** — apply this pattern only when the task's `environment_type` metadata field equals `cloudfoundry`. For tasks where `environment_type = kyma`, emit `btp_subaccount_environment_instance` directly with no data source or `terraform_data` block and no `landscape_label` attribute. The `environment_type` field is written by `/btp-iac.tasks` and is the authoritative discriminator; do not infer it from the resource label or any other source.
+2. **`subaccount_id` is always a reference** — use the same expression (e.g. `btp_subaccount.dev.id`) in both the data source and the environment instance resource. Never hardcode the subaccount ID as a string literal.
+3. **Naming convention** — all three blocks share the environment instance's resource label:
+   - Data source: `btp_subaccount_environments "env_info_<label>"`
+   - `terraform_data`: `terraform_data "active_env_label_<label>"`
+   - Resource: `btp_subaccount_environment_instance "<label>"` (unchanged)
+4. **`landscape_label` attribute** — always set to `terraform_data.active_env_label_<label>.output`; never hardcode the label string.
+5. **Filter criteria** — the `for` expression filters on `service_name == "cloudfoundry"`, `environment_type == "cloudfoundry"`, and `availability_level == "ACTIVE"`. Do not alter these conditions.
+6. **Block ordering** — data source first, then `terraform_data`, then the resource. All three go in the same `main.tf`.
+7. **`required_version`** — `terraform_data` requires Terraform 1.4+. Whenever at least one CF environment instance is generated in a configuration unit, add `required_version = ">= 1.4"` to the `terraform {}` block in `providers.tf`. Omit it when no CF environment instance is present.
+
+---
+
 ## Provider Version
 
 **Before writing `providers.tf`**, look up the latest version of each required Terraform provider. The provider set spans `SAP/btp`, `cloudfoundry/cloudfoundry`, `hashicorp/kubernetes` (Kyma), and `hashicorp/random` (when `btp_subaccount` resources are present) as required by the resolved resource types. Before using `WebFetch` to look up provider versions, check if the `terraform` MCP server is available. If yes, use it. If not, fall back to `WebFetch` against the Terraform registry.

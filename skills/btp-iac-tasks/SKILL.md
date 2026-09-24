@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Tasks
 
-Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs, structured task metadata, and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment.
+Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs, structured task metadata, and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment. Every `btp_subaccount_environment_instance` task MUST carry `environment_type` in its metadata: `cloudfoundry` for Cloud Foundry environments, `kyma` for Kyma environments. This field is the sole discriminator used by `/btp-iac.generate` to decide whether to emit the CF landscape-label lookup pattern.
 
 If `specs/connectivity.md` exists, also read it and append destination and certificate tasks (see **Connectivity tasks** below).
 
@@ -110,19 +110,22 @@ Write the full task list to `specs/tasks.md` using this structure:
 |---|---|---|---|---|
 | T-001 | <title> | dev | — | ✦ |
 | T-002 | <title> | dev, test | T-001 | — |
-| T-003 | <title> | all | T-001 | ✦ |
-| T-004 | Create role collection "MyCollection" in subaccount "dev-sa" | all | T-001 | ✦ |
-| T-005 | Assign role to "MyCollection" in subaccount "dev-sa" | all | T-004 | — |
+| T-003 | Create Cloud Foundry environment in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-004 | Create Kyma environment in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-005 | Create role collection "MyCollection" in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-006 | Assign role to "MyCollection" in subaccount "dev-sa" | all | T-005 | — |
 
 - [ ] T-001 `[dev]` <title>
   - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
 - [ ] T-002 `[dev, test]` <title>
   - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
-- [ ] T-003 `[all]` <title>
-  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`
-- [ ] T-004 `[all]` Create role collection "MyCollection" in subaccount "dev-sa"
+- [ ] T-003 `[all]` Create Cloud Foundry environment in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`, `name = <cf-org-name>`
+- [ ] T-004 `[all]` Create Kyma environment in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = kyma`, `subaccount = dev-sa`, `name = <kyma-env-name>`
+- [ ] T-005 `[all]` Create role collection "MyCollection" in subaccount "dev-sa"
   - Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = MyCollection`, `subaccount = dev-sa`, `description = <optional>`
-- [ ] T-005 `[all]` Assign role to "MyCollection" in subaccount "dev-sa"
+- [ ] T-006 `[all]` Assign role to "MyCollection" in subaccount "dev-sa"
   - Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = MyCollection`, `subaccount = dev-sa`, `role_name = <role-name>`, `role_template_name = <template-name>`, `role_template_app_id = <app-id>`
 ```
 
