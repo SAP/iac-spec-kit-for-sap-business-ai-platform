@@ -4,7 +4,7 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.3"
+  version: "1.4"
 ---
 
 # BTP IaC — Generate
@@ -156,6 +156,26 @@ When `/btp-iac.design` defined a BTP directory-per-stage layer, emit that config
 ### Manual tfvars handover
 
 Separate directories are independent Terraform roots on the local backend, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
+
+### Provider-initialization tfvars example
+
+For every configuration unit that contains a `provider "btp"` block, emit a `terraform.tfvars.example` in that unit's directory listing each variable referenced by the `provider "btp"` block as a placeholder entry. Always use the file name `terraform.tfvars.example` — never `terraform.tfvars` — so Terraform does not load it automatically.
+
+**Pre-fill from memory**: Before writing the file, check whether `<project-root>/memory/global-account.md` exists. Look for a line matching `- Subdomain: <value>` (the canonical format written by `btp-iac init`). If the value after `- Subdomain:` is non-empty, use it as the value for `globalaccount_subdomain`. If the file is absent or the `- Subdomain:` line is blank, use the sentinel `<your-globalaccount-subdomain>`.
+
+**Merged file when both rules apply**: If a configuration unit qualifies for both this rule and the manual tfvars handover rule (e.g. a BTP configuration consuming a directory `parent_id`), emit **one** `terraform.tfvars.example` containing the union of all handover variables and all provider-initialization variables. Never write the file twice.
+
+Example output (`terraform.tfvars.example` in the BTP configuration unit directory):
+```hcl
+# Copy this file to terraform.tfvars and fill in the values before running terraform apply.
+globalaccount_subdomain = "<your-globalaccount-subdomain>"
+```
+
+When pre-filled from memory:
+```hcl
+# Copy this file to terraform.tfvars and fill in the values before running terraform apply.
+globalaccount_subdomain = "my-actual-subdomain"
+```
 
 ---
 

@@ -4,7 +4,7 @@ description: Translates the task list into a concrete Terraform folder structure
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.2"
+  version: "1.3"
 ---
 
 # BTP IaC — Design
@@ -43,7 +43,7 @@ Per-stage-directory mode, CF present:
 ```
 terraform/
   dev/
-    btp/     { main.tf variables.tf outputs.tf providers.tf backend.tf }
+    btp/     { main.tf variables.tf outputs.tf providers.tf backend.tf terraform.tfvars.example }
     cf/      { main.tf variables.tf outputs.tf providers.tf backend.tf terraform.tfvars.example }
   prod/
     btp/ …
@@ -54,11 +54,11 @@ Single-configuration mode, CF present:
 
 ```
 terraform/
-  btp/   { main.tf variables.tf outputs.tf providers.tf backend.tf <stage>.tfvars }
+  btp/   { main.tf variables.tf outputs.tf providers.tf backend.tf <stage>.tfvars terraform.tfvars.example }
   cf/    { main.tf variables.tf outputs.tf providers.tf backend.tf <stage>.tfvars terraform.tfvars.example }
 ```
 
-BTP-only (no CF/Kyma): the standard five files directly in the unit directory, no `btp/`/`cf/`/`kyma/` split.
+BTP-only (no CF/Kyma): the standard five files plus `terraform.tfvars.example` directly in the unit directory, no `btp/`/`cf/`/`kyma/` split.
 
 The `btp/` `outputs.tf` carries the connection details the downstream provider needs (CF API URL, Kyma kubeconfig URL); the consuming `cf/`/`kyma/` directory receives them by manual tfvars handover (`/btp-iac.generate` emits a `terraform.tfvars.example` there). Directories are independent Terraform roots on the local backend — do not couple them with `terraform_remote_state`.
 

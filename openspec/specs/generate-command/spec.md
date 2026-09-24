@@ -142,6 +142,25 @@ Because separate directories are independent Terraform roots on a local backend,
 - **THEN** the command emits the producing directory's `outputs.tf` and a `terraform.tfvars.example` in the consuming directory naming the variables to copy
 - **AND** the command does not generate a `terraform_remote_state` data source
 
+### Requirement: emit provider-initialization tfvars example
+For each configuration unit that contains a `provider "btp"` block, the command SHALL emit a `terraform.tfvars.example` file listing the variables referenced by the `provider "btp"` block in that unit as placeholder entries. The file SHALL be named `terraform.tfvars.example` (never `terraform.tfvars`) so Terraform does not load it automatically. If `memory/global-account.md` exists in the project root and contains a non-empty `- Subdomain: <value>` line, the command SHALL use that value as the pre-filled entry for `globalaccount_subdomain`; a blank `- Subdomain:` record or an absent file SHALL produce the sentinel `<your-globalaccount-subdomain>`. When both this requirement and the handover requirement apply to the same directory (e.g. a BTP configuration unit that also consumes a directory ID), the command SHALL emit a single `terraform.tfvars.example` containing the union of all entries from both requirements.
+
+#### Scenario: tfvars example emitted with sentinel placeholder
+- **WHEN** a BTP configuration unit is generated and `memory/global-account.md` is absent or its `- Subdomain:` line is blank
+- **THEN** the command writes `terraform.tfvars.example` in that unit's directory with one entry per provider-initialization variable, each set to a descriptive sentinel (e.g. `globalaccount_subdomain = "<your-globalaccount-subdomain>"`)
+
+#### Scenario: tfvars example pre-filled from memory
+- **WHEN** a BTP configuration unit is generated and `memory/global-account.md` contains a non-empty `- Subdomain: <value>` line
+- **THEN** the command writes `terraform.tfvars.example` in that unit's directory with `globalaccount_subdomain` set to that value
+
+#### Scenario: file is never named terraform.tfvars
+- **WHEN** any provider-initialization example file is written
+- **THEN** the file is named `terraform.tfvars.example`, not `terraform.tfvars`
+
+#### Scenario: merged file when both handover and provider-init apply
+- **WHEN** a directory qualifies for both the handover placeholder (it consumes cross-directory outputs such as a `parent_id`) and the provider-initialization example
+- **THEN** the command writes exactly one `terraform.tfvars.example` containing the union of all handover variables and all provider-initialization variables
+
 ### Requirement: emit available subaccount classification attributes
 For each `btp_subaccount` task selected by the stage filter, the command SHALL read `usage` and `beta_enabled` from task metadata and emit every present, valid value on the generated `btp_subaccount` resource. It SHALL NOT infer defaults or substitute governance values. Missing values are supported for legacy tasks and SHALL NOT stop generation; invalid values that are present SHALL stop before writing that resource.
 
