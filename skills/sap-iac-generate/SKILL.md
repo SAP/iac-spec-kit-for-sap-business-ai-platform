@@ -260,7 +260,7 @@ Write each configuration unit using the standard layout defined by `/sap-iac.des
 
 When a unit is split into `btp/` + `cf/`|`kyma/`, emit in the `btp/` `outputs.tf` the connection details the downstream provider needs, derived from the environment instance `labels`:
 
-- Cloud Foundry — the API endpoint via `provider::btp::extract_cf_api_url(<environment-instance>.labels)`.
+- Cloud Foundry — the API endpoint via `provider::btp::extract_cf_api_url(<environment-instance>.labels)` **and** the CF Org ID via `provider::btp::extract_cf_org_id(<environment-instance>.labels)`. Both outputs are mandatory whenever a CF environment instance is generated.
 - Kyma — the kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(<environment-instance>.labels)`. Expose **only the URL**; do not generate the kubeconfig download or parsing, and do not emit provider configuration (kubeconfig) for the kubernetes provider.
 
 ### Directory-ID output
@@ -270,6 +270,8 @@ When `/sap-iac.design` defined a BTP directory-per-stage layer, emit that config
 ### Manual tfvars handover
 
 Separate directories are independent Terraform roots on the local backend, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
+
+When the producing BTP directory contains a Cloud Foundry environment, the consuming directory's `terraform.tfvars.example` **must list both `cf_api_url` and `cf_org_id`** as handover variables — never one without the other.
 
 ### Provider-initialization tfvars example
 

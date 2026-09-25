@@ -116,11 +116,15 @@ Kyma-provider resources SHALL use the `hashicorp/kubernetes` provider. The `requ
 - **THEN** those resources use the `hashicorp/kubernetes` provider
 
 ### Requirement: emit BTP outputs for CF and Kyma provider wiring
-When a configuration unit is split for a Cloud Foundry or Kyma environment, the command SHALL emit in the BTP directory's `outputs.tf` the connection values the downstream provider needs, derived from the environment instance labels: the Cloud Foundry API endpoint via `provider::btp::extract_cf_api_url(...)` and the Kyma kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(...)`. For Kyma the command SHALL expose only the kubeconfig URL; it SHALL NOT generate the download or parsing of the kubeconfig for the `hashicorp/kubernetes` provider.
+When a configuration unit is split for a Cloud Foundry or Kyma environment, the command SHALL emit in the BTP directory's `outputs.tf` the connection values the downstream provider needs, derived from the environment instance labels: the Cloud Foundry API endpoint via `provider::btp::extract_cf_api_url(...)`, the CF Org ID via `provider::btp::extract_cf_org_id(...)`, and the Kyma kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(...)`. For Kyma the command SHALL expose only the kubeconfig URL; it SHALL NOT generate the download or parsing of the kubeconfig for the `hashicorp/kubernetes` provider.
 
 #### Scenario: cf api url output
 - **WHEN** a unit contains a Cloud Foundry environment
 - **THEN** the BTP `outputs.tf` exposes the CF API endpoint using `provider::btp::extract_cf_api_url` against the environment instance labels
+
+#### Scenario: cf org id output
+- **WHEN** a unit contains a Cloud Foundry environment
+- **THEN** the BTP `outputs.tf` exposes the CF Org ID using `provider::btp::extract_cf_org_id` against the environment instance labels
 
 #### Scenario: kyma kubeconfig url output
 - **WHEN** a unit contains a Kyma environment
@@ -135,12 +139,16 @@ When `/sap-iac.design` defined a BTP directory-per-stage layer, the command SHAL
 - **THEN** its `outputs.tf` exposes the directory ID
 
 ### Requirement: emit tfvars handover placeholder between directories
-Because separate directories are independent Terraform roots on a local backend, the command SHALL move cross-directory values by manual tfvars handover rather than `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), the command SHALL emit the declaring directory's `outputs.tf` together with a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The command SHALL NOT generate `terraform_remote_state` coupling.
+Because separate directories are independent Terraform roots on a local backend, the command SHALL move cross-directory values by manual tfvars handover rather than `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), the command SHALL emit the declaring directory's `outputs.tf` together with a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The command SHALL NOT generate `terraform_remote_state` coupling. When the producing BTP directory contains a Cloud Foundry environment, both `cf_api_url` and `cf_org_id` SHALL appear in the consuming directory's `terraform.tfvars.example`.
 
 #### Scenario: handover scaffolding emitted
 - **WHEN** a consuming directory depends on values produced by another directory
 - **THEN** the command emits the producing directory's `outputs.tf` and a `terraform.tfvars.example` in the consuming directory naming the variables to copy
 - **AND** the command does not generate a `terraform_remote_state` data source
+
+#### Scenario: cf handover includes org id
+- **WHEN** the producing BTP directory contains a Cloud Foundry environment
+- **THEN** the consuming directory's `terraform.tfvars.example` lists both `cf_api_url` and `cf_org_id` as handover variables
 
 ### Requirement: emit provider-initialization tfvars example
 For each configuration unit that contains a `provider "btp"` block, the command SHALL emit a `terraform.tfvars.example` file listing the variables referenced by the `provider "btp"` block in that unit as placeholder entries. The file SHALL be named `terraform.tfvars.example` (never `terraform.tfvars`) so Terraform does not load it automatically. If `memory/global-account.md` exists in the project root and contains a non-empty `- Subdomain: <value>` line, the command SHALL use that value as the pre-filled entry for `globalaccount_subdomain`; a blank `- Subdomain:` record or an absent file SHALL produce the sentinel `<your-globalaccount-subdomain>`. When both this requirement and the handover requirement apply to the same directory (e.g. a BTP configuration unit that also consumes a directory ID), the command SHALL emit a single `terraform.tfvars.example` containing the union of all entries from both requirements.
