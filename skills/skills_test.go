@@ -134,6 +134,35 @@ func TestGreenfieldSkillsHaveSingleNextStepFooter(t *testing.T) {
 	}
 }
 
+func TestAllSkillsContainPlatformNameNormalization(t *testing.T) {
+	err := fs.WalkDir(Commands, ".", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() || !strings.HasSuffix(path, "/SKILL.md") {
+			return nil
+		}
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		content := string(data)
+		for _, alias := range []string{
+			"## Platform Name Normalization",
+			"SAP Business AI Platform",
+			"SAP BAIP",
+		} {
+			if !strings.Contains(content, alias) {
+				t.Errorf("%s is missing platform name normalization content %q", path, alias)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestTasksSkillHasNoDuplicateNextStepInstruction(t *testing.T) {
 	data, err := Commands.ReadFile("sap-iac-tasks/SKILL.md")
 	if err != nil {

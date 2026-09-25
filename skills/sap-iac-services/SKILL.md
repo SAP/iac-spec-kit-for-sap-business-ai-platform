@@ -13,6 +13,16 @@ Resolves the infrastructure requirements from `specs/scenario.md` into a depende
 
 Reads `specs/scenario.md` and `specs/landscape.md`. Produces `specs/services.md` for the team to review and adjust before any code is generated.
 
+## Platform Name Normalization
+
+The following names all refer to the same platform and are semantically equivalent for all natural-language interpretation in this skill:
+- **SAP Business Technology Platform** (and "Business Technology Platform")
+- **SAP BTP** (and "BTP" used as a product name in prose)
+- **SAP Business AI Platform** (and "Business AI Platform")
+- **SAP BAIP** (and "BAIP")
+
+Treat any of these aliases as identical when interpreting user intent. This normalization applies only to natural-language prose. Technical identifiers remain untouched: BTP CLI command tokens (`btp list`, `btp target`), Terraform provider names (`btp`, `hashicorp/btp`), resource type prefixes (`btp_subaccount`, `btp_service_instance`), region codes, and API paths.
+
 ## Tool preferences
 
 Before using `WebFetch` to look up SAP documentation, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`). If yes, use it. If not, fall back to `WebFetch`.

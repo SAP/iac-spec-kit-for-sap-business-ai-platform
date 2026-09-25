@@ -11,6 +11,16 @@ metadata:
 
 Inspects the local project state and recommends the next command in the BTP IaC greenfield flow. Does not invoke any BTP CLI command or BTP MCP tool — all decisions are based solely on local file existence.
 
+## Platform Name Normalization
+
+The following names all refer to the same platform and are semantically equivalent for all natural-language interpretation in this skill:
+- **SAP Business Technology Platform** (and "Business Technology Platform")
+- **SAP BTP** (and "BTP" used as a product name in prose)
+- **SAP Business AI Platform** (and "Business AI Platform")
+- **SAP BAIP** (and "BAIP")
+
+Treat any of these aliases as identical when interpreting user intent. This normalization applies only to natural-language prose. Technical identifiers remain untouched: BTP CLI command tokens (`btp list`, `btp target`), Terraform provider names (`btp`, `hashicorp/btp`), resource type prefixes (`btp_subaccount`, `btp_service_instance`), region codes, and API paths.
+
 ## Flow overview
 
 The greenfield flow in dependency order:

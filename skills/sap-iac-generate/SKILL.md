@@ -13,6 +13,16 @@ Generates the complete, validated Terraform HCL by executing each task in depend
 
 Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` (default local backend) — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
 
+## Platform Name Normalization
+
+The following names all refer to the same platform and are semantically equivalent for all natural-language interpretation in this skill:
+- **SAP Business Technology Platform** (and "Business Technology Platform")
+- **SAP BTP** (and "BTP" used as a product name in prose)
+- **SAP Business AI Platform** (and "Business AI Platform")
+- **SAP BAIP** (and "BAIP")
+
+Treat any of these aliases as identical when interpreting user intent. This normalization applies only to natural-language prose. Technical identifiers remain untouched: BTP CLI command tokens (`btp list`, `btp target`), Terraform provider names (`btp`, `hashicorp/btp`), resource type prefixes (`btp_subaccount`, `btp_service_instance`), region codes, and API paths.
+
 ## BTP platform validation
 
 ### BTP operation safety boundary

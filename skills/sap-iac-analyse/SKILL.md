@@ -11,6 +11,16 @@ metadata:
 
 Analyses code to extract concrete infrastructure signals and enriches `specs/scenario.md` in place. Findings are recorded as **observed facts with evidence and a confidence level** — not as approved desired state. Downstream skills consume reviewed requirements, so never present a raw implementation detail as intent.
 
+## Platform Name Normalization
+
+The following names all refer to the same platform and are semantically equivalent for all natural-language interpretation in this skill:
+- **SAP Business Technology Platform** (and "Business Technology Platform")
+- **SAP BTP** (and "BTP" used as a product name in prose)
+- **SAP Business AI Platform** (and "Business AI Platform")
+- **SAP BAIP** (and "BAIP")
+
+Treat any of these aliases as identical when interpreting user intent. This normalization applies only to natural-language prose. Technical identifiers remain untouched: BTP CLI command tokens (`btp list`, `btp target`), Terraform provider names (`btp`, `hashicorp/btp`), resource type prefixes (`btp_subaccount`, `btp_service_instance`), region codes, and API paths.
+
 ## Preconditions
 
 Before analysing, check these and report (do not silently proceed) if any hold:
