@@ -110,4 +110,4 @@ Do **not** write role collections using free-form "role template assignments" pr
 
 ## Next step
 
-Next: `/sap-iac.connectivity` (optional) — define destinations and certificates, or `/sap-iac.tasks` to skip.
+Next: `/sap-iac.connectivity` — define destinations and certificates.

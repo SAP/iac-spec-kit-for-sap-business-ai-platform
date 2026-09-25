@@ -39,7 +39,7 @@ The command SHALL determine the current position in the greenfield flow by check
 
 #### Scenario: services and trust present, connectivity and tasks absent
 - **WHEN** `specs/services.md` and `specs/trust.md` exist, and neither `specs/connectivity.md` nor `specs/tasks.md` exists
-- **THEN** the command recommends `/sap-iac.connectivity` (optional) or `/sap-iac.tasks` as a two-option line
+- **THEN** the command recommends `/sap-iac.connectivity` as the next step
 
 #### Scenario: connectivity present, tasks absent
 - **WHEN** `specs/connectivity.md` exists and `specs/tasks.md` does not
@@ -61,15 +61,15 @@ When invoked directly as `/sap-iac.next`, the command SHALL print the current st
 - **THEN** the output lists which spec files exist, states the current position in the flow, and gives the next command with a one-line description of what it does
 
 ### Requirement: footer reference from greenfield-flow skills
-Each skill in the linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, `sap-iac.connectivity`, `sap-iac.tasks`, `sap-iac.design`, and `sap-iac.generate`) SHALL end with a `## Next step` section containing a hardcoded one-liner naming its direct successor. The connectivity branch at the `security` step SHALL present both options on one line. The optional `sap-iac.analyse` utility and standalone `sap-iac.next` command are excluded.
+Each skill in the linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, `sap-iac.connectivity`, `sap-iac.tasks`, `sap-iac.design`, and `sap-iac.generate`) SHALL end with a `## Next step` section containing a hardcoded one-liner naming its direct successor. The `sap-iac.analyse` utility and standalone `sap-iac.next` command are excluded.
 
 #### Scenario: linear successor footer
-- **WHEN** a non-branching, non-terminal skill in that linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.connectivity`, `sap-iac.tasks`, or `sap-iac.design`) completes
+- **WHEN** a non-terminal skill in that linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, `sap-iac.connectivity`, `sap-iac.tasks`, or `sap-iac.design`) completes
 - **THEN** its output ends with a single line of the form: `Next: /<successor> — <one-line description>`
 
 #### Scenario: branching footer at security
 - **WHEN** `sap-iac.security` completes
-- **THEN** its output ends with: `Next: /sap-iac.connectivity (optional) — define destinations and certificates, or /sap-iac.tasks to skip`
+- **THEN** its output ends with: `Next: /sap-iac.connectivity — define destinations and certificates`
 
 #### Scenario: terminal footer at generate
 - **WHEN** `sap-iac.generate` completes

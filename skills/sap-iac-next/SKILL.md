@@ -27,11 +27,9 @@ The greenfield flow in dependency order:
 
 ```
 /sap-iac.govern → /sap-iac.scenario → /sap-iac.accounts → /sap-iac.services
-  → /sap-iac.security → [/sap-iac.connectivity] → /sap-iac.tasks
+  → /sap-iac.security → /sap-iac.connectivity → /sap-iac.tasks
   → /sap-iac.design → /sap-iac.generate
 ```
-
-`/sap-iac.connectivity` is optional. All other steps are required.
 
 ## Workflow
 
@@ -52,7 +50,7 @@ Check for the existence of each of the following, in order:
 | 3 | `specs/landscape.md` | `/sap-iac.accounts` |
 | 4 | `specs/services.md` | `/sap-iac.services` |
 | 5 | `specs/trust.md` | `/sap-iac.security` |
-| 6 | `specs/connectivity.md` | `/sap-iac.connectivity` (optional) |
+| 6 | `specs/connectivity.md` | `/sap-iac.connectivity` |
 | 7 | `specs/tasks.md` | `/sap-iac.tasks` |
 | 8 | `terraform/**/*.tf` (any file) | `/sap-iac.generate` |
 
@@ -67,7 +65,7 @@ Apply the following decision table (first matching rule wins):
 | `specs/landscape.md` missing | **Run `/sap-iac.accounts`** — map your scenario to BTP directories and subaccounts. |
 | `specs/services.md` missing | **Run `/sap-iac.services`** — resolve which BTP services each subaccount needs. |
 | `specs/trust.md` missing | **Run `/sap-iac.security`** — set up IdP trust, roles, and role collection assignments. |
-| `specs/tasks.md` missing and `specs/connectivity.md` missing | **Run `/sap-iac.connectivity`** (optional) — define destinations and certificates, or **`/sap-iac.tasks`** to skip connectivity. |
+| `specs/tasks.md` missing and `specs/connectivity.md` missing | **Run `/sap-iac.connectivity`** — define destinations and certificates. |
 | `specs/tasks.md` missing and `specs/connectivity.md` exists | **Run `/sap-iac.tasks`** — build a dependency-ordered execution plan. |
 | `terraform/**/*.tf` missing | **Run `/sap-iac.design`** — plan the Terraform file and module layout, then `/sap-iac.generate`. |
 | `terraform/**/*.tf` exists | **Done** — Terraform code is in `terraform/`. Review, commit, and apply. |

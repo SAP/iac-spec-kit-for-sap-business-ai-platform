@@ -90,7 +90,7 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 		{"3)", "sap-iac.accounts", "Map your scenario to BTP directories and subaccounts."},
 		{"4)", "sap-iac.services", "Resolve which BTP services each subaccount needs."},
 		{"5)", "sap-iac.security", "Set up IdP trust, roles, role collections and role collection assignments."},
-		{"6)", "sap-iac.connectivity", "Define destinations and certificates (optional)."},
+		{"6)", "sap-iac.connectivity", "Define destinations and certificates."},
 	})
 
 	section(&body, "Generate Terraform", []stepRow{
