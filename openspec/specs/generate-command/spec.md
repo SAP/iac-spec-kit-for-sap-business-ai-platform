@@ -479,6 +479,23 @@ For each task with `resource_type = cloudfoundry_space`, the command SHALL emit 
 - **WHEN** a configuration unit contains at least one `cloudfoundry_space` or `cloudfoundry_space_role` task
 - **THEN** `providers.tf` includes `cloudfoundry/cloudfoundry` in `required_providers`
 
+### Requirement: emit Terraform dependencies for CF space role barriers
+For every generated Cloud Foundry-provider resource that is scoped to a newly created CF space, other than `cloudfoundry_space_role`, `/sap-iac.generate` SHALL emit an explicit Terraform `depends_on` containing every generated `cloudfoundry_space_role` resource for that same space. The resource's existing reference to `cloudfoundry_space` SHALL remain intact. This SHALL enforce `cloudfoundry_space -> cloudfoundry_space_role(s) -> other space-scoped resource` in Terraform's apply graph.
+
+The command SHALL derive the dependency set from the task dependencies for that resource, and SHALL not add role-based dependencies to organization-scoped resources, BTP-provider resources, or resources scoped to a different CF space.
+
+#### Scenario: service instance waits for all roles in its space
+- **WHEN** a `cloudfoundry_service_instance` task is scoped to a newly created space and depends on two role tasks for that space
+- **THEN** its generated resource retains its space reference and contains a `depends_on` with references to both corresponding `cloudfoundry_space_role` resources
+
+#### Scenario: no cross-space role dependency
+- **WHEN** generated resources target two different CF spaces with separate role assignments
+- **THEN** each resource's `depends_on` contains only role resources for its own space
+
+#### Scenario: non-space resource is unaffected
+- **WHEN** a generated resource is BTP-provider-managed or Cloud Foundry organization-scoped
+- **THEN** the command does not emit a CF space-role `depends_on` for it
+
 ### Requirement: lift placeholder values into variables
 Before writing each generated `.tf` file, the command SHALL scan every string literal that is about to be emitted. Any value that is a placeholder — matching the `<something>` angle-bracket pattern, a bare keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`), or a string starting with `my-` / `my_` when no concrete value was supplied in the task metadata — SHALL NOT be written as a literal string. Instead the command SHALL:
 

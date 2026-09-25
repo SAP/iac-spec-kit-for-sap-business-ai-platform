@@ -4,7 +4,7 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.5"
+  version: "1.6"
 ---
 
 # BTP IaC — Generate
@@ -327,6 +327,24 @@ Rules:
 - `origin` is the `origin` from task metadata (either the derived custom-IdP origin or `sap.ids`).
 - This resource uses the `cloudfoundry/cloudfoundry` provider. Add `cloudfoundry/cloudfoundry` to `required_providers` in any configuration unit that contains at least one `cloudfoundry_space_role` resource (it is already present when CF service instances or space resources exist in the same unit).
 - Each `cloudfoundry_space_role` resource depends on its `cloudfoundry_space` resource; the reference expression creates this dependency implicitly — no `depends_on` is needed.
+
+### CF space role barrier for subsequent resources
+
+For every non-role Cloud Foundry-provider task scoped to a newly created space, inspect its task dependencies. Retain its existing reference to the matching `cloudfoundry_space` resource and emit an explicit `depends_on` listing every dependent `cloudfoundry_space_role` resource for that same space. Resolve role-resource labels from the dependent task IDs and list them in stable task-ID order. For example:
+
+```hcl
+resource "cloudfoundry_service_instance" "orders" {
+  space = cloudfoundry_space.dev_apps.id
+  # ... resource-specific attributes
+
+  depends_on = [
+    cloudfoundry_space_role.dev_apps_developer,
+    cloudfoundry_space_role.dev_apps_manager,
+  ]
+}
+```
+
+This enforces `cloudfoundry_space -> all cloudfoundry_space_role resources for that space -> other same-space resource` in Terraform's apply graph. Do not infer roles from names or apply a barrier merely because resources share a CF configuration unit: derive it exclusively from the task dependencies. Do not emit these role-based `depends_on` entries for `cloudfoundry_space_role`, BTP-provider resources, CF organization-scoped resources, or resources for a different space.
 
 ---
 

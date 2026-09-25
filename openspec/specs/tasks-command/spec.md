@@ -161,3 +161,24 @@ For each CF space role assignment entry in `specs/trust.md`, the command SHALL c
 #### Scenario: no CF space assignments in trust file
 - **WHEN** no CF space user assignments block is present in specs/trust.md
 - **THEN** no cloudfoundry_space_role tasks are created
+
+### Requirement: gate space-scoped tasks on CF space-role assignments
+When a task set creates a Cloud Foundry space and contains one or more other Cloud Foundry-provider tasks scoped to that same space, `/sap-iac.tasks` SHALL place every `cloudfoundry_space_role` task for that space between the space task and each other space-scoped task. A task is space-scoped when its metadata identifies that Cloud Foundry space (currently `cf_space` for `cloudfoundry_service_instance` tasks); `cloudfoundry_space_role` itself is not an other space-scoped task. Each such task SHALL depend on the space task and on every role task for that space.
+
+If a created space has another space-scoped task but `specs/trust.md` contains no CF space-role assignment for it, the command SHALL stop without writing a dependency-incomplete task list and instruct the user to record the needed assignments with `/sap-iac.security`. BTP-provider, organization-scoped, and resources not scoped to a created space SHALL retain their existing dependencies.
+
+#### Scenario: CF service instance waits for all role assignments
+- **WHEN** a created CF space has two `cloudfoundry_space_role` tasks and a `cloudfoundry_service_instance` task scoped to that space
+- **THEN** the service-instance task depends on the space task and both role tasks, producing the order `space -> roles -> service instance`
+
+#### Scenario: another space-scoped resource waits for its own space roles
+- **WHEN** a created CF space has one or more role tasks and a generated Cloud Foundry-provider task whose metadata scopes it to that space
+- **THEN** that task depends on every role task for that same space and does not depend on role tasks for another space
+
+#### Scenario: required space roles are absent
+- **WHEN** a created CF space has another space-scoped task but no CF space-role assignment in `specs/trust.md`
+- **THEN** the command stops and directs the user to `/sap-iac.security` before writing `specs/tasks.md`
+
+#### Scenario: organization-scoped and BTP resources are unchanged
+- **WHEN** tasks are organization-scoped, BTP-provider-managed, or not scoped to a created CF space
+- **THEN** the command does not add CF space-role dependencies to those tasks

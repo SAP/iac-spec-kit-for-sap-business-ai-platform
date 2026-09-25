@@ -23,7 +23,7 @@ After `sap-iac.tasks`, and before `sap-iac.generate`.
 - When a unit contains a Cloud Foundry or Kyma environment, splits it into a `btp/` subdirectory (all BTP-provider resources) plus a sibling `cf/` or `kyma/` subdirectory. In per-stage-directory mode the split sits inside each stage directory. A BTP-only unit is not split.
 - Keeps BTP-provider and Cloud Foundry/Kyma-provider resources apart by each task's `location`, so generation can use the correct provider per directory.
 - Only when governance/tasks indicate BTP **directories** model stages, defines a directory-per-stage layer whose `outputs.tf` exposes the directory ID, fed into the BTP configuration's `parent_id`.
-- Annotates each task with its target directory and file path, which `generate` then follows.
+- Annotates each task with its target directory and file path, preserving all metadata and dependencies. A CF space, its role assignments, and subsequent resources scoped to that space share the CF `main.tf`, retaining the `space -> roles -> resource` barrier without coupling separate spaces.
 - Performs no BTP mutations for its core function — it only reads and rewrites `specs/tasks.md`, plus `memory/governance.md` for the stage-mode choice.
 
 ## Example

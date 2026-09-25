@@ -1,0 +1,35 @@
+{
+  "skill_name": "sap-iac-generate",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cf-service-instance-depends-on-all-same-space-roles",
+      "description": "Generation maps role-task dependencies to explicit Terraform dependencies.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create space dev-apps\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = dev-apps`\n- [ ] T-002 `[dev]` Assign developer in dev-apps\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = dev-apps`, `username = alice@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-003 `[dev]` Assign manager in dev-apps\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = dev-apps`, `username = bob@example.com`, `role_type = space_manager`, `origin = sap.ids`\n- [ ] T-004 `[dev]` Create orders service\n  - Depends on: T-001, T-002, T-003\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_service_instance`, `cf_space = dev-apps`, `service_offering_name = xsuaa`, `service_plan_name = application`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "1.1", "text": "The generated cloudfoundry_service_instance retains a reference to the dev-apps cloudfoundry_space resource"},
+        {"id": "1.2", "text": "The service resource has an explicit depends_on containing both dev-apps cloudfoundry_space_role resources"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cf-role-dependencies-never-cross-space-or-provider-boundaries",
+      "description": "Only dependencies declared for the target CF space are emitted.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create space apps\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = apps`\n- [ ] T-002 `[dev]` Assign apps developer\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = apps`, `username = alice@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-003 `[dev]` Create space data\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = data`\n- [ ] T-004 `[dev]` Assign data developer\n  - Depends on: T-003\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = data`, `username = bob@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-005 `[dev]` Create data service\n  - Depends on: T-003, T-004\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_service_instance`, `cf_space = data`, `service_offering_name = xsuaa`, `service_plan_name = application`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "2.1", "text": "The data service depends on the data role resource and not on the apps role resource"},
+        {"id": "2.2", "text": "No CF space-role depends_on is added to the cloudfoundry_space or cloudfoundry_space_role resources themselves"}
+      ]
+    }
+  ]
+}

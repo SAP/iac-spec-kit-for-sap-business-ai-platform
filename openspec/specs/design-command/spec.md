@@ -37,12 +37,23 @@ The command SHALL place BTP-provider and Cloud Foundry-provider resources in sep
 - **THEN** the unit is not split into `btp/` and `cf/`|`kyma/` subdirectories
 
 ### Requirement: annotate tasks with directory and file paths
-The command SHALL annotate each task in `specs/tasks.md` with the directory and file path it will be written to under the selected structure and preserve all existing Task metadata unchanged.
+The command SHALL annotate each task in `specs/tasks.md` with the directory and file path it will be written to under the selected structure and preserve all existing Task metadata and dependencies unchanged.
 
 #### Scenario: tasks annotated
 - **WHEN** the folder structure is defined
 - **THEN** every task in `specs/tasks.md` has a path annotation indicating which directory and Terraform file will contain it
 - **AND** every task retains its existing Task metadata
+
+### Requirement: preserve CF space role barriers in design annotations
+When `specs/tasks.md` contains a CF space role barrier, `/sap-iac.design` SHALL preserve every existing dependency and annotate the space task, its `cloudfoundry_space_role` tasks, and each subsequent task scoped to that space into the same Cloud Foundry configuration unit and `main.tf`. It SHALL not reorder, remove, or weaken the role-task dependencies while assigning paths.
+
+#### Scenario: CF dependency chain is co-located
+- **WHEN** a CF space task, its role tasks, and a service-instance task scoped to that space are present in `specs/tasks.md`
+- **THEN** their annotations target the same CF configuration unit and `main.tf`, and the service-instance task retains dependencies on all of that space's role tasks
+
+#### Scenario: other spaces remain isolated
+- **WHEN** tasks target two different CF spaces
+- **THEN** design preserves each task's own space-role dependencies and does not add dependencies between the two spaces
 
 ### Requirement: select stage-modelling mode from governance or user
 The command SHALL determine how stages are modelled by reading `memory/governance.md`. When governance records a stage-modelling choice, the command SHALL use it. When governance is absent or records no choice, the command SHALL prompt the user to choose. The two modes are: (a) **per-stage directories** — one directory per stage, named after the stage, each containing the standard layout; and (b) **single configuration** — one directory whose configuration handles all stages via stage-specific variables in `variables.tf`, with values supplied through per-stage tfvars files named after the stage (e.g. `<stage>.tfvars`).

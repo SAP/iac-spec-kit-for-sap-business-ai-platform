@@ -4,7 +4,7 @@ description: Consolidates landscape, services, trust, and (optionally) connectiv
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.2"
+  version: "1.3"
 ---
 
 # BTP IaC — Tasks
@@ -81,7 +81,7 @@ Read all three input files: `specs/landscape.md`, `specs/services.md`, `specs/tr
 
 For each service entry in `specs/services.md`, read its `consumption_type` and map it to `resource_type` in the task metadata as follows:
 
-- `instance` → `resource_type = btp_subaccount_service_instance` (or `cloudfoundry_service_instance` when `location: cf`). Preserve `location` (`btp` or `cf`) on the task so `/sap-iac.design` and `/sap-iac.generate` select the correct provider. A `cf` instance also carries `cf_space`; its task **depends on** that specific Cloud Foundry space task.
+- `instance` → `resource_type = btp_subaccount_service_instance` (or `cloudfoundry_service_instance` when `location: cf`). Preserve `location` (`btp` or `cf`) on the task so `/sap-iac.design` and `/sap-iac.generate` select the correct provider. A `cf` instance also carries `cf_space`; its task **depends on** that specific Cloud Foundry space task and, when the space is created by this task list, every role-assignment task for that space (see **CF space role barrier** below).
 - `subscription` → `resource_type = btp_subaccount_subscription`. No `location` or `cf_space` fields apply; subscriptions are always managed via the BTP provider.
 - `entitlement-only` → `resource_type = btp_subaccount_entitlement`. Create only the entitlement assignment task — no service instance or subscription task.
 
@@ -100,6 +100,22 @@ For each Cloud Foundry space in `specs/landscape.md`, create one `cloudfoundry_s
 For each role collection assignment entry in the `### Role collection assignments` block of `specs/trust.md`, create one `btp_subaccount_role_collection_assignment` task. This task **depends on** the corresponding `btp_subaccount_role_collection_base` task. Task metadata: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount = <subaccount-name>`, `role_collection_name = <collection-name>`, and either `user_name = <username>` (for user assignments) or `group_name = <group-name>` (for group assignments). When an `origin` field is present in the trust entry, include `origin = <origin>` in the metadata.
 
 For each CF space role assignment entry in the `### CF space user assignments` block of `specs/trust.md`, create one `cloudfoundry_space_role` task per entry (each entry already represents one `(space_name, username, role)` combination). This task **depends on** the Cloud Foundry space task for the named space. Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = <space-name>`, `username = <username>`, `role_type = <role>`, `origin = <origin>`.
+
+#### CF space role barrier
+
+After creating the space and CF space-role tasks, resolve each other Cloud Foundry-provider task that is scoped to a created space. A task is scoped to a space when its metadata identifies the target space; currently this is `cf_space` on `cloudfoundry_service_instance`. Do not treat `cloudfoundry_space_role` itself as an other space-scoped task.
+
+For each scoped task, retain its dependency on the matching `cloudfoundry_space` task and add a dependency on **every** `cloudfoundry_space_role` task whose `space_name` matches its target space. List the dependencies in stable task-ID order. The resulting graph is:
+
+```text
+cloudfoundry_space -> all cloudfoundry_space_role tasks for that space -> other same-space CF task
+```
+
+If a created space has an other space-scoped task but no matching CF space-role assignment in `specs/trust.md`, **STOP without writing `specs/tasks.md`** and instruct the user:
+
+> "Cloud Foundry space `<space-name>` has space-scoped resources but no CF space role assignments. Re-run `/sap-iac.security` and record the users and roles required for that space before re-running `/sap-iac.tasks`."
+
+Apply this barrier only to resources scoped to a created CF space. Do not add CF space-role dependencies to BTP-provider resources, Cloud Foundry organization-scoped resources, or tasks for another space. Future Cloud Foundry-provider task types that identify a created target space follow this same rule.
 
 ### Step 2 — Build task list
 

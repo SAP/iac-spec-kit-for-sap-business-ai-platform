@@ -4,7 +4,7 @@ description: Translates the task list into a concrete Terraform folder structure
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.3"
+  version: "1.4"
 ---
 
 # BTP IaC — Design
@@ -78,7 +78,9 @@ Only when governance or tasks indicate BTP **directories** are used to model sta
 
 ## Task annotations
 
-Annotate every task in `specs/tasks.md` with the directory and file path it will be written to under the selected structure, while preserving its existing Task metadata unchanged.
+Annotate every task in `specs/tasks.md` with the directory and file path it will be written to under the selected structure, while preserving its existing Task metadata and dependencies unchanged.
+
+When a created CF space has `cloudfoundry_space_role` tasks and other tasks scoped to that space, annotate the space, all of its role tasks, and those same-space tasks into the same CF configuration unit and `main.tf`. Do not reorder, remove, or weaken the per-space role barrier (`space -> roles -> scoped resource`). Keep role barriers for different spaces independent; do not introduce cross-space dependencies.
 
 ## BTP platform validation
 
