@@ -12,8 +12,7 @@ fix:
 	go fix -v ./...
 
 install: build
-	go install -v ./...
-
+	go install -v -ldflags "-X main.version=dev-$(shell date +%Y%m%d-%H%M%S)" ./...
 lint:
 	golangci-lint run
 

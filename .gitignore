@@ -34,6 +34,9 @@ go.work.sum
 # Docs build output (Zensical / MkDocs)
 site/
 
+# GoReleaser build output
+dist/
+
 # Editor/IDE
 # .idea/
 # .vscode/

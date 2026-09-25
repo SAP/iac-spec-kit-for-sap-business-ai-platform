@@ -19,6 +19,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// version is injected at build time via -ldflags "-X main.version=<value>".
+var version = "dev"
+
 func main() {
 	if err := rootCmd().Execute(); err != nil {
 		os.Exit(1)
@@ -33,7 +36,19 @@ func rootCmd() *cobra.Command {
 	}
 	root.AddCommand(initCmd())
 	root.AddCommand(catalogueCmd())
+	root.AddCommand(versionCmd())
 	return root
+}
+
+func versionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print the binary version",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, _ []string) {
+			fmt.Fprintln(cmd.OutOrStdout(), version)
+		},
+	}
 }
 
 // initIntent holds the resolved decision before any scaffold work runs.
