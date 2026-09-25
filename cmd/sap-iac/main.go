@@ -1,4 +1,4 @@
-// Command btp-iac is the spec-driven Terraform toolkit for SAP BTP.
+// Command sap-iac is the Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform.
 package main
 
 import (
@@ -27,8 +27,8 @@ func main() {
 
 func rootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:          "btp-iac",
-		Short:        "Spec-Driven Terraform Toolkit for SAP BTP",
+		Use:          "sap-iac",
+		Short:        "Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform",
 		SilenceUsage: true,
 	}
 	root.AddCommand(initCmd())
@@ -79,7 +79,7 @@ func resolveIntent(name string) (initIntent, error) {
 			return initIntent{}, err
 		}
 		if _, err := os.Stat(name); err == nil {
-			// Existing btp-iac projects receive agent-only updates; bare repos
+			// Existing sap-iac projects receive agent-only updates; bare repos
 			// are adopted as infrastructure projects.
 			return existingDirIntent(name), nil
 		}
@@ -136,7 +136,7 @@ func initCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init [name]",
-		Short: "Bootstrap or update a SAP BTP IaC project",
+		Short: "Bootstrap or update a project",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if w := preflight.Warn("terraform"); w != "" {
@@ -270,7 +270,7 @@ func convertCmd() *cobra.Command {
 			}
 			root, found := findProjectRoot(cwd)
 			if !found {
-				return fmt.Errorf("no btp-iac project found in %s or any parent directory", cwd)
+				return fmt.Errorf("no sap-iac project found in %s or any parent directory", cwd)
 			}
 			dest := filepath.Join(root, "memory", scaffold.CatalogueFile)
 			if err := appendToCatalogue(dest, out); err != nil {
@@ -288,7 +288,7 @@ func convertCmd() *cobra.Command {
 	return cmd
 }
 
-// findProjectRoot walks up from dir looking for a btp-iac project root.
+// findProjectRoot walks up from dir looking for a sap-iac project root.
 func findProjectRoot(dir string) (string, bool) {
 	for {
 		if scaffold.IsProject(dir) {

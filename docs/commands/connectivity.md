@@ -1,19 +1,19 @@
-# `btp-iac.connectivity`
+# `sap-iac.connectivity`
 
 !!! abstract "Summary"
-    **Role:** Optional. · **Reads:** `specs/scenario.md` (if present), `.btp-iac/platform-validation.md` · **Writes:** `specs/connectivity.md`
+    **Role:** Optional. · **Reads:** `specs/scenario.md` (if present), `.sap-iac/platform-validation.md` · **Writes:** `specs/connectivity.md`
 
 Elicits and structures BTP destination and destination-certificate requirements. Run it when your scenario needs to reach external or on-premise systems — an internet API, an on-premise backend through Cloud Connector, an RFC/ABAP system, LDAP, mail, or a raw TCP host.
 
 ## When to run it
 
-After `btp-iac.security` and before `btp-iac.tasks`. It is optional: skip it for a self-contained application that talks to no external systems.
+After `sap-iac.security` and before `sap-iac.tasks`. It is optional: skip it for a self-contained application that talks to no external systems.
 
 ## Inputs and outputs
 
 | | |
 |---|---|
-| **Reads** | `specs/scenario.md` if present, reusing any destinations the scenario already captured. It also reads `.btp-iac/platform-validation.md` for a live BTP route when one is available. |
+| **Reads** | `specs/scenario.md` if present, reusing any destinations the scenario already captured. It also reads `.sap-iac/platform-validation.md` for a live BTP route when one is available. |
 | **Writes** | `specs/connectivity.md` — a Destinations section (one entry per destination) and an optional Certificates section. |
 | **Asks** | How many destinations are needed and, for each, which connection pattern fits; whether any destination certificates are needed; and the scope (subaccount- or service-instance-level) of each. |
 
@@ -30,7 +30,7 @@ After `btp-iac.security` and before `btp-iac.tasks`. It is optional: skip it for
 ## Example
 
 ```
-/btp-iac.connectivity
+/sap-iac.connectivity
 ```
 
 For an order-sync service reaching an on-premise S/4HANA backend and an external shipping API, `connectivity` records two destinations in `specs/connectivity.md`:
@@ -64,6 +64,6 @@ For an order-sync service reaching an on-premise S/4HANA backend and an external
 
 ## Related
 
-- Runs after [`btp-iac.security`](security.md).
-- Feeds [`btp-iac.tasks`](tasks.md) when present.
-- Informs [`btp-iac.generate`](generate.md), which produces the `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` resources.
+- Runs after [`sap-iac.security`](security.md).
+- Feeds [`sap-iac.tasks`](tasks.md) when present.
+- Informs [`sap-iac.generate`](generate.md), which produces the `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` resources.

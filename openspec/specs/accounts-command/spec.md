@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.accounts`: defining the BTP account topology with governance validation, producing `specs/landscape.md`.
+Defines the behaviour of `/sap-iac.accounts`: defining the BTP account topology with governance validation, producing `specs/landscape.md`.
 
 ## Requirements
 
@@ -69,7 +69,7 @@ The command SHALL write `specs/landscape.md` as the authoritative account struct
 
 #### Scenario: landscape file written
 - **WHEN** the command completes successfully
-- **THEN** `specs/landscape.md` exists and is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`
+- **THEN** `specs/landscape.md` exists and is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`
 
 ### Requirement: validate platform availability when values are supplied
 The command SHALL apply the shared platform-validation capability to topology regions and any named service offering, subscription, or plan pair. CLI checks SHALL target the resolved global-account subdomain and ignore NEO regions.

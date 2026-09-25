@@ -17,7 +17,7 @@ After every change (code, config, tooling, workflow), check whether anything doc
 
 ## Project
 
-- **Purpose**: Spec-Driven Development Toolkit for Terraform on SAP BTP
+- **Purpose**: Spec-Driven Development Toolkit for Terraform on SAP Business AI Platform
 - **Module path**: `github.com/SAP/btp-iac-spec-kit`
 - **Kind**: CLI tool (Go)
 - **Go version**: pinned in `go.mod` (respect what's there; don't bump silently)

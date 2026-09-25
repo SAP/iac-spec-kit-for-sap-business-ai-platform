@@ -283,7 +283,7 @@ func transcriptText(messages []Message) string {
 }
 
 func fixture(c Case) (dir, root string, err error) {
-	root, err = os.MkdirTemp("", "btp-iac-eval-")
+	root, err = os.MkdirTemp("", "sap-iac-eval-")
 	if err != nil {
 		return "", "", err
 	}
@@ -367,7 +367,7 @@ func score(ctx context.Context, judge Agent, assertions []Assertion, result Case
 		Artifacts        map[string]string   `json:"artifacts"`
 	}{assertions, result.Transcript, judgeArtifacts(result.InitialArtifacts), judgeTurnArtifacts(result.TurnArtifacts), artifacts})
 	prompt := "You are an impartial software-eval judge. Judge each assertion only from its literal current text and the evidence below; never substitute an earlier or stricter version. If an assertion explicitly names an artifact, decide it from that artifact only, not the assistant's prose. For temporal assertions, use turn_artifacts, where element N is the filesystem after assistant turn N. For an assertion naming initial_artifacts and artifacts, compare those two supplied values directly. Do not impose exact wording, a single question mark, or a single sentence unless the assertion explicitly requires it. Return JSON only: {\"verdicts\":[{\"id\":string,\"passed\":boolean,\"reason\":string}]}.\nEvidence:\n" + string(b)
-	judgeDir, err := os.MkdirTemp("", "btp-iac-eval-judge-")
+	judgeDir, err := os.MkdirTemp("", "sap-iac-eval-judge-")
 	if err != nil {
 		return nil, err
 	}
@@ -466,7 +466,7 @@ func (Codex) Turn(ctx context.Context, dir, session, prompt string) (string, str
 	if _, err := exec.LookPath("codex"); err != nil {
 		return "", "", err
 	}
-	outFile, err := os.CreateTemp("", "btp-iac-eval-codex-message-")
+	outFile, err := os.CreateTemp("", "sap-iac-eval-codex-message-")
 	if err != nil {
 		return "", session, err
 	}

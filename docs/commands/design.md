@@ -1,4 +1,4 @@
-# `btp-iac.design`
+# `sap-iac.design`
 
 !!! abstract "Summary"
     **Role:** Required. · **Reads:** `specs/tasks.md` · **Writes:** `specs/tasks.md` (in place)
@@ -7,7 +7,7 @@ Translates the task list into a concrete Terraform folder structure and annotate
 
 ## When to run it
 
-After `btp-iac.tasks`, and before `btp-iac.generate`.
+After `sap-iac.tasks`, and before `sap-iac.generate`.
 
 ## Inputs and outputs
 
@@ -29,7 +29,7 @@ After `btp-iac.tasks`, and before `btp-iac.generate`.
 ## Example
 
 ```
-/btp-iac.design
+/sap-iac.design
 ```
 
 `design` picks the stage-modelling mode (from governance or by prompting) and annotates each task in `specs/tasks.md` with its target directory and file. For a per-stage-directory layout with a Cloud Foundry environment:
@@ -45,5 +45,5 @@ Each directory carries the standard `main.tf` / `variables.tf` / `outputs.tf` / 
 
 ## Related
 
-- Requires [`btp-iac.tasks`](tasks.md).
-- Feeds [`btp-iac.generate`](generate.md).
+- Requires [`sap-iac.tasks`](tasks.md).
+- Feeds [`sap-iac.generate`](generate.md).

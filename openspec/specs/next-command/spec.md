@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.next`: inspecting local project state to recommend the next command in the greenfield BTP IaC flow, both as a standalone slash command and as a footer reference from greenfield-flow skills.
+Defines the behaviour of `/sap-iac.next`: inspecting local project state to recommend the next command in the greenfield BTP IaC flow, both as a standalone slash command and as a footer reference from greenfield-flow skills.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Before inspecting project state, the command SHALL walk upward from the current 
 
 #### Scenario: project root not found
 - **WHEN** neither the current working directory nor any ancestor contains all of `specs/`, `memory/`, and `terraform/`
-- **THEN** it reports: ``Could not locate a btp-iac project root. Run this command from within a project created by `btp-iac init`.``
+- **THEN** it reports: ``Could not locate a sap-iac project root. Run this command from within a project created by `sap-iac init`.``
 - **AND** it stops without printing a state summary or recommendation
 
 ### Requirement: inspect project state
@@ -23,56 +23,56 @@ The command SHALL determine the current position in the greenfield flow by check
 
 #### Scenario: no files exist
 - **WHEN** none of the inspected files exist
-- **THEN** the command recommends `/btp-iac.govern` as the first step
+- **THEN** the command recommends `/sap-iac.govern` as the first step
 
 #### Scenario: governance present, scenario missing
 - **WHEN** `memory/governance.md` exists and `specs/scenario.md` does not
-- **THEN** the command recommends `/btp-iac.scenario`
+- **THEN** the command recommends `/sap-iac.scenario`
 
 #### Scenario: scenario present, landscape missing
 - **WHEN** `specs/scenario.md` exists and `specs/landscape.md` does not
-- **THEN** the command recommends `/btp-iac.accounts`
+- **THEN** the command recommends `/sap-iac.accounts`
 
 #### Scenario: landscape present, services or trust missing
 - **WHEN** `specs/landscape.md` exists and either `specs/services.md` or `specs/trust.md` is absent
-- **THEN** the command recommends the missing step(s) in order: `/btp-iac.services` before `/btp-iac.security`
+- **THEN** the command recommends the missing step(s) in order: `/sap-iac.services` before `/sap-iac.security`
 
 #### Scenario: services and trust present, connectivity and tasks absent
 - **WHEN** `specs/services.md` and `specs/trust.md` exist, and neither `specs/connectivity.md` nor `specs/tasks.md` exists
-- **THEN** the command recommends `/btp-iac.connectivity` (optional) or `/btp-iac.tasks` as a two-option line
+- **THEN** the command recommends `/sap-iac.connectivity` (optional) or `/sap-iac.tasks` as a two-option line
 
 #### Scenario: connectivity present, tasks absent
 - **WHEN** `specs/connectivity.md` exists and `specs/tasks.md` does not
-- **THEN** the command recommends `/btp-iac.tasks`
+- **THEN** the command recommends `/sap-iac.tasks`
 
 #### Scenario: tasks present, no terraform files
 - **WHEN** `specs/tasks.md` exists and no `terraform/**/*.tf` files exist
-- **THEN** the command recommends `/btp-iac.design`
+- **THEN** the command recommends `/sap-iac.design`
 
 #### Scenario: terraform files present
 - **WHEN** at least one `terraform/**/*.tf` file exists
 - **THEN** the command outputs a completion message indicating Terraform code is ready to review and apply
 
 ### Requirement: standalone output format
-When invoked directly as `/btp-iac.next`, the command SHALL print the current state (which files were found) followed by the recommendation.
+When invoked directly as `/sap-iac.next`, the command SHALL print the current state (which files were found) followed by the recommendation.
 
 #### Scenario: standalone invocation
-- **WHEN** the user runs `/btp-iac.next` directly
+- **WHEN** the user runs `/sap-iac.next` directly
 - **THEN** the output lists which spec files exist, states the current position in the flow, and gives the next command with a one-line description of what it does
 
 ### Requirement: footer reference from greenfield-flow skills
-Each skill in the linear greenfield flow (`btp-iac.govern`, `btp-iac.scenario`, `btp-iac.accounts`, `btp-iac.services`, `btp-iac.security`, `btp-iac.connectivity`, `btp-iac.tasks`, `btp-iac.design`, and `btp-iac.generate`) SHALL end with a `## Next step` section containing a hardcoded one-liner naming its direct successor. The connectivity branch at the `security` step SHALL present both options on one line. The optional `btp-iac.analyse` utility and standalone `btp-iac.next` command are excluded.
+Each skill in the linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, `sap-iac.connectivity`, `sap-iac.tasks`, `sap-iac.design`, and `sap-iac.generate`) SHALL end with a `## Next step` section containing a hardcoded one-liner naming its direct successor. The connectivity branch at the `security` step SHALL present both options on one line. The optional `sap-iac.analyse` utility and standalone `sap-iac.next` command are excluded.
 
 #### Scenario: linear successor footer
-- **WHEN** a non-branching, non-terminal skill in that linear greenfield flow (`btp-iac.govern`, `btp-iac.scenario`, `btp-iac.accounts`, `btp-iac.services`, `btp-iac.connectivity`, `btp-iac.tasks`, or `btp-iac.design`) completes
+- **WHEN** a non-branching, non-terminal skill in that linear greenfield flow (`sap-iac.govern`, `sap-iac.scenario`, `sap-iac.accounts`, `sap-iac.services`, `sap-iac.connectivity`, `sap-iac.tasks`, or `sap-iac.design`) completes
 - **THEN** its output ends with a single line of the form: `Next: /<successor> — <one-line description>`
 
 #### Scenario: branching footer at security
-- **WHEN** `btp-iac.security` completes
-- **THEN** its output ends with: `Next: /btp-iac.connectivity (optional) — define destinations and certificates, or /btp-iac.tasks to skip`
+- **WHEN** `sap-iac.security` completes
+- **THEN** its output ends with: `Next: /sap-iac.connectivity (optional) — define destinations and certificates, or /sap-iac.tasks to skip`
 
 #### Scenario: terminal footer at generate
-- **WHEN** `btp-iac.generate` completes
+- **WHEN** `sap-iac.generate` completes
 - **THEN** its output ends with a completion message indicating the Terraform code is in `terraform/` and ready to review, commit, and apply
 
 ### Requirement: no BTP operations

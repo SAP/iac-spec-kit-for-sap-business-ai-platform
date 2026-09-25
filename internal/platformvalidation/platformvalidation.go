@@ -1,5 +1,5 @@
 // Package platformvalidation records optional BTP platform validation routes
-// selected during btp-iac initialization.
+// selected during sap-iac initialization.
 package platformvalidation
 
 import (
@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Directory = ".btp-iac"
+	Directory = ".sap-iac"
 	Filename  = "platform-validation.md"
 )
 
@@ -69,7 +69,7 @@ func (c Capabilities) Write(projectDir string) error {
 	}
 	content := fmt.Sprintf(`# BTP Platform Validation
 
-This local file records optional validation capabilities detected by btp-iac init. It contains no credentials.
+This local file records optional validation capabilities detected by sap-iac init. It contains no credentials.
 
 - BTP CLI: %s
 - BTP MCP agents: %s

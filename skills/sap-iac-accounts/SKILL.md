@@ -1,5 +1,5 @@
 ---
-name: btp-iac-accounts
+name: sap-iac-accounts
 description: Defines the BTP account topology — subaccounts, regions, and directory groupings.
 license: Apache-2.0
 metadata:
@@ -25,7 +25,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Read `<project-root>/.btp-iac/platform-validation.md`, `<project-root>/memory/global-account.md`, and `<project-root>/memory/governance.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. When `memory/global-account.md` contains a subdomain, target it using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, use returned region provider metadata to check it. Map only unambiguous provider labels to the governed values and never infer a provider from a region code; report a mismatch as a warning, and report unavailable or unmappable provider metadata as advisory only. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`.
+Read `<project-root>/.sap-iac/platform-validation.md`, `<project-root>/memory/global-account.md`, and `<project-root>/memory/governance.md` after locating the project root. For regions and any explicitly named service offering, subscription, or service-plan pair in the topology inputs, use the recorded BTP CLI first or this agent's recorded BTP MCP route second. When `memory/global-account.md` contains a subdomain, target it using `btp target --global-account <subdomain>` before CLI checks. Use `btp list accounts/entitlement` for entitlement/subscription checks and `btp list accounts/available-region` for regions; ignore all `NEO` region entries. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, use returned region provider metadata to check it. Map only unambiguous provider labels to the governed values and never infer a provider from a region code; report a mismatch as a warning, and report unavailable or unmappable provider metadata as advisory only. Do not write provider preferences or response-field metadata to `.sap-iac/platform-validation.md`.
 
 If no recorded live route exists, retain user input without blocking. If a live route cannot authenticate, target, or complete a lookup, ask the user to resolve it. A completed unavailable result requires a replacement before output is written. With no live region route, consult the SAP Help Cloud Foundry region list as advisory only and retain user input.
 
@@ -33,7 +33,7 @@ If no recorded live route exists, retain user input without blocking. If a live 
 
 ## Governance Check
 
-**Before defining any account topology**, locate the btp-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
+**Before defining any account topology**, locate the sap-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
 
 **If it does not exist:** proceed without constraints and note: "No governance rules found — proceeding without enforcement."
 
@@ -138,8 +138,8 @@ Define the account topology:
 - For each selected Cloud Foundry environment, collect its organization name. Ask whether Cloud Foundry spaces should be created; if yes, collect their concrete names and validate them against governance when a space pattern exists.
 - For each selected Kyma environment, collect its environment name.
 
-Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. This file is the authoritative input for `/btp-iac.services`, `/btp-iac.security`, and `/btp-iac.generate`.
+Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
 
 ## Next step
 
-Next: `/btp-iac.services` — resolve which BTP services each subaccount needs.
+Next: `/sap-iac.services` — resolve which BTP services each subaccount needs.

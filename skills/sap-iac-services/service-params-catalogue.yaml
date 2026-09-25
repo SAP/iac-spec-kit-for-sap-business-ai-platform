@@ -1,8 +1,8 @@
 # Service Parameters Catalogue
 #
 # Contains parameter definitions for BTP service instances that require
-# configuration. Used by /btp-iac.services to prompt for values and by
-# /btp-iac.generate to emit jsonencode({...}) blocks.
+# configuration. Used by /sap-iac.services to prompt for values and by
+# /sap-iac.generate to emit jsonencode({...}) blocks.
 #
 # Match key: (service, plan). Add entries for any service+plan combination
 # that requires parameters. Entries with source: user-defined are treated

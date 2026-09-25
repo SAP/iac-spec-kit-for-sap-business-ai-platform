@@ -1,4 +1,4 @@
-// Package catalogue converts JSON Schema documents into btp-iac service
+// Package catalogue converts JSON Schema documents into sap-iac service
 // parameter catalogue YAML entries.
 package catalogue
 

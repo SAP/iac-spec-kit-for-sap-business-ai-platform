@@ -2,27 +2,27 @@
 
 ## Purpose
 
-Defines the format and lifecycle of `memory/service-params-catalogue.yaml`, the per-service parameter catalogue shipped with every btp-iac project, including its YAML entry shape, source attribution, and the rules governing how the `/btp-iac.services` skill reads and applies it to produce a `parameters:` block in `specs/services.md`.
+Defines the format and lifecycle of `memory/service-params-catalogue.yaml`, the per-service parameter catalogue shipped with every sap-iac project, including its YAML entry shape, source attribution, and the rules governing how the `/sap-iac.services` skill reads and applies it to produce a `parameters:` block in `specs/services.md`.
 
 ## Requirements
 
 ### Requirement: Catalogue file written on init
-The `btp-iac init` command SHALL write `memory/service-params-catalogue.yaml` from the embedded binary during fresh and adopt initialization. It SHALL NOT write or overwrite the file during agent-only initialization. If the file already exists in an adopt scenario, it SHALL be left unchanged.
+The `sap-iac init` command SHALL write `memory/service-params-catalogue.yaml` from the embedded binary during fresh and adopt initialization. It SHALL NOT write or overwrite the file during agent-only initialization. If the file already exists in an adopt scenario, it SHALL be left unchanged.
 
 #### Scenario: Fresh init writes catalogue
-- **WHEN** the user runs `btp-iac init` in fresh mode
+- **WHEN** the user runs `sap-iac init` in fresh mode
 - **THEN** `memory/service-params-catalogue.yaml` exists in the new project directory with the builtin entries from the embedded binary
 
 #### Scenario: Adopt init writes catalogue when absent
-- **WHEN** the user runs `btp-iac init` in adopt mode and no catalogue file exists
+- **WHEN** the user runs `sap-iac init` in adopt mode and no catalogue file exists
 - **THEN** `memory/service-params-catalogue.yaml` is written to `memory/`
 
 #### Scenario: Adopt init preserves existing catalogue
-- **WHEN** the user runs `btp-iac init` in adopt mode and `memory/service-params-catalogue.yaml` already exists
+- **WHEN** the user runs `sap-iac init` in adopt mode and `memory/service-params-catalogue.yaml` already exists
 - **THEN** the existing file is left unchanged
 
 #### Scenario: Agent-only init does not touch catalogue
-- **WHEN** the user runs `btp-iac init` in agent-only mode
+- **WHEN** the user runs `sap-iac init` in agent-only mode
 - **THEN** `memory/service-params-catalogue.yaml` is not created or modified
 
 ### Requirement: Catalogue YAML entry shape
@@ -58,14 +58,14 @@ Each entry in `memory/service-params-catalogue.yaml` SHALL conform to the follow
 - **THEN** separate catalogue entries with different `plans` lists are used to represent them
 
 ### Requirement: User-defined entries treated identically to builtin
-The `/btp-iac.services` skill SHALL treat entries with `source: user-defined` identically to entries with `source: builtin` when matching and prompting. The `source` field is informational only and SHALL NOT affect lookup or prompting behaviour.
+The `/sap-iac.services` skill SHALL treat entries with `source: user-defined` identically to entries with `source: builtin` when matching and prompting. The `source` field is informational only and SHALL NOT affect lookup or prompting behaviour.
 
 #### Scenario: User-defined entry matched
 - **WHEN** a service instance task matches a `user-defined` catalogue entry
 - **THEN** the skill prompts for parameters exactly as it would for a `builtin` entry
 
 ### Requirement: Catalogue lookup in /services
-Before prompting about consumption type, the `/btp-iac.services` skill SHALL read `memory/service-params-catalogue.yaml` from the btp-iac project root. For each service instance task:
+Before prompting about consumption type, the `/sap-iac.services` skill SHALL read `memory/service-params-catalogue.yaml` from the sap-iac project root. For each service instance task:
 - If the task's `service_offering_name` and plan name match a catalogue entry, the skill SHALL prompt the user for each required parameter value (one key at a time), present the description and example, then offer optional parameters one at a time ("add this optional parameter?"). The collected values SHALL be written to the task's entry in `specs/services.md` as a `parameters:` block.
 - If no catalogue entry matches, the skill SHALL proceed silently with no `parameters:` block for that task.
 
@@ -82,7 +82,7 @@ Before prompting about consumption type, the `/btp-iac.services` skill SHALL rea
 - **THEN** that key is omitted from the `parameters:` block in `specs/services.md`
 
 ### Requirement: Parameters block written to services.md
-When at least one parameter value has been collected for a service instance task, the `/btp-iac.services` skill SHALL write a `parameters:` block on that task's entry in `specs/services.md` containing the user-supplied key-value pairs. The block SHALL carry final user-supplied values, not the catalogue scaffold or placeholders.
+When at least one parameter value has been collected for a service instance task, the `/sap-iac.services` skill SHALL write a `parameters:` block on that task's entry in `specs/services.md` containing the user-supplied key-value pairs. The block SHALL carry final user-supplied values, not the catalogue scaffold or placeholders.
 
 #### Scenario: Parameters block present for matched service
 - **WHEN** the user supplies values for all required parameters of a matched service

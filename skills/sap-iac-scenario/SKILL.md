@@ -1,5 +1,5 @@
 ---
-name: btp-iac-scenario
+name: sap-iac-scenario
 description: Translates a plain-language setup description into structured BTP infrastructure requirements.
 license: Apache-2.0
 metadata:
@@ -30,9 +30,9 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Locate the project root and read `.btp-iac/platform-validation.md`, `memory/global-account.md`, and, when it exists, `memory/governance.md`. When scenario input names regions, service offerings, subscriptions, or service-plan pairs, apply the same platform-validation contract as `/btp-iac.govern`: use the recorded CLI first, otherwise this agent's recorded BTP MCP route, and accept user input without blocking when no route is recorded. Use only the subdomain configured at initialization in `memory/global-account.md`; if it is absent or blank, retain user input without a targeted live check and do not ask for a subdomain.
+Locate the project root and read `.sap-iac/platform-validation.md`, `memory/global-account.md`, and, when it exists, `memory/governance.md`. When scenario input names regions, service offerings, subscriptions, or service-plan pairs, apply the same platform-validation contract as `/sap-iac.govern`: use the recorded CLI first, otherwise this agent's recorded BTP MCP route, and accept user input without blocking when no route is recorded. Use only the subdomain configured at initialization in `memory/global-account.md`; if it is absent or blank, retain user input without a targeted live check and do not ask for a subdomain.
 
-Target the subdomain with `btp target --global-account <subdomain>` before CLI entitlement or region commands. Check named offerings, subscriptions, and plan pairs with `btp list accounts/entitlement`; check regions with `btp list accounts/available-region` and ignore `NEO` entries. Read `## Regions → Preferred infrastructure provider` from `memory/governance.md`; when it is not `none`, compare it with unambiguous provider metadata returned for each named region. Never infer a provider from a region code. Log a warning for a known mismatch, and treat missing or unmappable provider metadata as advisory only. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`. Use equivalent scoped BTP MCP operations when CLI is unavailable. A completed negative result requires a user-selected replacement; an authentication, targeting, or lookup failure requires the user to resolve setup. If no live region route exists, use the SAP Help region list as advisory only and retain user input.
+Target the subdomain with `btp target --global-account <subdomain>` before CLI entitlement or region commands. Check named offerings, subscriptions, and plan pairs with `btp list accounts/entitlement`; check regions with `btp list accounts/available-region` and ignore `NEO` entries. Read `## Regions → Preferred infrastructure provider` from `memory/governance.md`; when it is not `none`, compare it with unambiguous provider metadata returned for each named region. Never infer a provider from a region code. Log a warning for a known mismatch, and treat missing or unmappable provider metadata as advisory only. Do not write provider preferences or response-field metadata to `.sap-iac/platform-validation.md`. Use equivalent scoped BTP MCP operations when CLI is unavailable. A completed negative result requires a user-selected replacement; an authentication, targeting, or lookup failure requires the user to resolve setup. If no live region route exists, use the SAP Help region list as advisory only and retain user input.
 
 ## Governance-aware follow-ups
 
@@ -54,4 +54,4 @@ For destinations and setup structure, skip a question only when the scenario inp
 
 ## Next step
 
-Next: `/btp-iac.accounts` — map your scenario to BTP directories and subaccounts.
+Next: `/sap-iac.accounts` — map your scenario to BTP directories and subaccounts.

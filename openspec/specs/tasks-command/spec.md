@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.tasks`: consolidating landscape, services, and trust specs into a single dependency-ordered task list with IDs and parallel execution markers.
+Defines the behaviour of `/sap-iac.tasks`: consolidating landscape, services, and trust specs into a single dependency-ordered task list with IDs and parallel execution markers.
 
 ## Requirements
 
@@ -52,7 +52,7 @@ The command SHALL write the task list to `specs/tasks.md`.
 
 #### Scenario: tasks file written
 - **WHEN** the command completes
-- **THEN** `specs/tasks.md` exists and is the direct input to `/btp-iac.design` and `/btp-iac.generate`
+- **THEN** `specs/tasks.md` exists and is the direct input to `/sap-iac.design` and `/sap-iac.generate`
 
 ### Requirement: map service consumption type to resource type and preserve provider metadata
 The command SHALL read each service entry's `consumption_type` from `specs/services.md` and record the corresponding `resource_type` in that entry's task metadata:
@@ -115,14 +115,14 @@ When the task list is extensive the command SHALL display a short summary in the
 - **THEN** the full list is printed in the terminal
 
 ### Requirement: track completion state
-The command SHALL write all tasks with an unchecked checkbox (`- [ ]`). The `/btp-iac.generate` command is responsible for marking tasks complete (`- [x]`) as it generates each one.
+The command SHALL write all tasks with an unchecked checkbox (`- [ ]`). The `/sap-iac.generate` command is responsible for marking tasks complete (`- [x]`) as it generates each one.
 
 #### Scenario: tasks written with unchecked checkboxes
 - **WHEN** `specs/tasks.md` is written
 - **THEN** every task entry uses `- [ ]` markdown checkbox syntax
 
 ### Requirement: stage annotation
-Each task SHALL be annotated with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`), derived from the input specs. All tasks are always written to `specs/tasks.md` regardless of stage; the stage annotation is consumed by `/btp-iac.generate` to filter which tasks are transferred into code.
+Each task SHALL be annotated with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`), derived from the input specs. All tasks are always written to `specs/tasks.md` regardless of stage; the stage annotation is consumed by `/sap-iac.generate` to filter which tasks are transferred into code.
 
 #### Scenario: tasks annotated with stages
 - **WHEN** `specs/tasks.md` is written

@@ -13,10 +13,10 @@ func TestPrintSuccessContainsCommands(t *testing.T) {
 	output := buf.String()
 
 	for _, cmd := range []string{
-		"btp-iac.scenario", "btp-iac.accounts", "btp-iac.services",
-		"btp-iac.security", "btp-iac.connectivity", "btp-iac.tasks",
-		"btp-iac.design", "btp-iac.generate", "btp-iac.govern", "btp-iac.analyse",
-		"btp-iac.next",
+		"sap-iac.scenario", "sap-iac.accounts", "sap-iac.services",
+		"sap-iac.security", "sap-iac.connectivity", "sap-iac.tasks",
+		"sap-iac.design", "sap-iac.generate", "sap-iac.govern", "sap-iac.analyse",
+		"sap-iac.next",
 	} {
 		if !strings.Contains(output, cmd) {
 			t.Errorf("output missing command %q", cmd)
@@ -29,7 +29,7 @@ func TestPrintSuccessAlignsUtilityCommand(t *testing.T) {
 	printSuccess(&buf, "my-project", []string{"claude"}, scaffold.ModeFresh, true)
 
 	commandColumn := func(command string) int {
-		for _, line := range strings.Split(buf.String(), "\n") {
+		for line := range strings.SplitSeq(buf.String(), "\n") {
 			if column := strings.Index(line, command); column >= 0 {
 				return column
 			}
@@ -38,8 +38,8 @@ func TestPrintSuccessAlignsUtilityCommand(t *testing.T) {
 		return 0
 	}
 
-	if got, want := commandColumn("btp-iac.next"), commandColumn("btp-iac.scenario"); got != want {
-		t.Errorf("btp-iac.next begins in column %d, want %d", got, want)
+	if got, want := commandColumn("sap-iac.next"), commandColumn("sap-iac.scenario"); got != want {
+		t.Errorf("sap-iac.next begins in column %d, want %d", got, want)
 	}
 }
 

@@ -2,23 +2,23 @@
 
 ## Purpose
 
-Defines the behaviour of `btp-iac catalogue convert`: converting a JSON Schema file into a catalogue YAML entry suitable for appending to `memory/service-params-catalogue.yaml`, with full specification of argument handling, conversion rules, and project-root discovery for the `--append` flag.
+Defines the behaviour of `sap-iac catalogue convert`: converting a JSON Schema file into a catalogue YAML entry suitable for appending to `memory/service-params-catalogue.yaml`, with full specification of argument handling, conversion rules, and project-root discovery for the `--append` flag.
 
 ## Requirements
 
 ### Requirement: Command accepts schema file, service, and plans
-`btp-iac catalogue convert <schema.json>` SHALL accept a single positional argument (path to a JSON Schema file) and two required flags: `--service` (the `service_offering_name`) and `--plans` (comma-separated plan names). All three SHALL be required; the command SHALL fail with a usage error if any are missing.
+`sap-iac catalogue convert <schema.json>` SHALL accept a single positional argument (path to a JSON Schema file) and two required flags: `--service` (the `service_offering_name`) and `--plans` (comma-separated plan names). All three SHALL be required; the command SHALL fail with a usage error if any are missing.
 
 #### Scenario: All arguments provided
-- **WHEN** the user runs `btp-iac catalogue convert schema.json --service xsuaa --plans application,broker`
+- **WHEN** the user runs `sap-iac catalogue convert schema.json --service xsuaa --plans application,broker`
 - **THEN** the command reads `schema.json`, converts it, and outputs a catalogue entry
 
 #### Scenario: Missing --service flag
-- **WHEN** the user runs `btp-iac catalogue convert schema.json --plans application`
+- **WHEN** the user runs `sap-iac catalogue convert schema.json --plans application`
 - **THEN** the command exits with a usage error indicating `--service` is required
 
 #### Scenario: Missing schema file argument
-- **WHEN** the user runs `btp-iac catalogue convert --service xsuaa --plans application`
+- **WHEN** the user runs `sap-iac catalogue convert --service xsuaa --plans application`
 - **THEN** the command exits with a usage error indicating the schema file argument is required
 
 ### Requirement: JSON Schema properties mapped to required/optional catalogue keys
@@ -70,22 +70,22 @@ The command SHALL resolve `$ref` references that point within the same document 
 - **THEN** the command emits `example: "<unresolved $ref>"` with a comment and does not fail
 
 ### Requirement: Output to stdout by default, --append writes to catalogue
-Without `--append`, the command SHALL print the generated YAML entry to stdout. With `--append`, the command SHALL locate the nearest btp-iac project root by walking up from the current working directory and append the entry to `memory/service-params-catalogue.yaml` in that root. If no project root is found, the command SHALL fail with an error.
+Without `--append`, the command SHALL print the generated YAML entry to stdout. With `--append`, the command SHALL locate the nearest sap-iac project root by walking up from the current working directory and append the entry to `memory/service-params-catalogue.yaml` in that root. If no project root is found, the command SHALL fail with an error.
 
 #### Scenario: Default output to stdout
-- **WHEN** the user runs `btp-iac catalogue convert` without `--append`
+- **WHEN** the user runs `sap-iac catalogue convert` without `--append`
 - **THEN** the YAML entry is printed to stdout and no file is written
 
 #### Scenario: --append writes to catalogue
-- **WHEN** the user runs `btp-iac catalogue convert` with `--append` inside a btp-iac project
+- **WHEN** the user runs `sap-iac catalogue convert` with `--append` inside a sap-iac project
 - **THEN** the entry is appended to `memory/service-params-catalogue.yaml`
 
 #### Scenario: --append outside project root fails
-- **WHEN** the user runs `btp-iac catalogue convert` with `--append` outside any btp-iac project
+- **WHEN** the user runs `sap-iac catalogue convert` with `--append` outside any sap-iac project
 - **THEN** the command exits with an error indicating no project root was found
 
 ### Requirement: Generated entry carries source: user-defined
-Entries produced by `btp-iac catalogue convert` SHALL be emitted with `source: user-defined`.
+Entries produced by `sap-iac catalogue convert` SHALL be emitted with `source: user-defined`.
 
 #### Scenario: Converted entry has correct source
 - **WHEN** the command converts a JSON Schema and outputs a catalogue entry

@@ -1,5 +1,5 @@
 ---
-name: btp-iac-generate
+name: sap-iac-generate
 description: Generates complete, validated Terraform HCL by executing each task in dependency order.
 license: Apache-2.0
 metadata:
@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Generate
 
-Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the directory and file paths defined by `/btp-iac.design`.
+Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the directory and file paths defined by `/sap-iac.design`.
 
 Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` (default local backend) — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
 
@@ -21,13 +21,13 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-If a live BTP availability check is required while generating, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, target the governed global account and use `btp list accounts/available-region` (or the equivalent MCP lookup), ignoring `NEO` entries, to obtain provider metadata for every generated subaccount region. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`.
+If a live BTP availability check is required while generating, read `<project-root>/.sap-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data. Read the preferred infrastructure provider from `memory/governance.md`; when it is not `none`, target the governed global account and use `btp list accounts/available-region` (or the equivalent MCP lookup), ignoring `NEO` entries, to obtain provider metadata for every generated subaccount region. Do not write provider preferences or response-field metadata to `.sap-iac/platform-validation.md`.
 
 ---
 
 ## Governance Check
 
-**Before writing any Terraform HCL**, locate the btp-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
+**Before writing any Terraform HCL**, locate the sap-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
 
 **If it does not exist:** proceed without constraints and note: "No governance rules found — proceeding without enforcement."
 
@@ -78,7 +78,7 @@ For each metered service resource:
 For every `btp_subaccount` resource generated, append a random UUID suffix to the subdomain to guarantee uniqueness:
 
 1. Emit one `random_uuid` resource per `btp_subaccount`, using the same resource label (e.g. `random_uuid "subaccount_dev"`), in the same `main.tf`.
-2. Read the base subdomain from the task's `subdomain` metadata field (written there by `/btp-iac.tasks` from `specs/landscape.md`). BTP subdomains are limited to 63 characters. The suffix `-<uuid>` is 37 characters (1 hyphen + 36 UUID chars), so the base **must be truncated to at most 26 characters** before appending. Use a `locals` block with `substr` to enforce this; set the `subdomain` attribute to the local:
+2. Read the base subdomain from the task's `subdomain` metadata field (written there by `/sap-iac.tasks` from `specs/landscape.md`). BTP subdomains are limited to 63 characters. The suffix `-<uuid>` is 37 characters (1 hyphen + 36 UUID chars), so the base **must be truncated to at most 26 characters** before appending. Use a `locals` block with `substr` to enforce this; set the `subdomain` attribute to the local:
    ```hcl
    resource "random_uuid" "subaccount_dev" {}
 
@@ -121,7 +121,7 @@ resource "btp_subaccount_environment_instance" "<label>" {
 
 ### Rules
 
-1. **CF only, keyed on task metadata** — apply this pattern only when the task's `environment_type` metadata field equals `cloudfoundry`. For tasks where `environment_type = kyma`, emit `btp_subaccount_environment_instance` directly with no data source or `terraform_data` block and no `landscape_label` attribute. The `environment_type` field is written by `/btp-iac.tasks` and is the authoritative discriminator; do not infer it from the resource label or any other source.
+1. **CF only, keyed on task metadata** — apply this pattern only when the task's `environment_type` metadata field equals `cloudfoundry`. For tasks where `environment_type = kyma`, emit `btp_subaccount_environment_instance` directly with no data source or `terraform_data` block and no `landscape_label` attribute. The `environment_type` field is written by `/sap-iac.tasks` and is the authoritative discriminator; do not infer it from the resource label or any other source.
 2. **`subaccount_id` is always a reference** — use the same expression (e.g. `btp_subaccount.dev.id`) in both the data source and the environment instance resource. Never hardcode the subaccount ID as a string literal.
 3. **Naming convention** — all three blocks share the environment instance's resource label:
    - Data source: `btp_subaccount_environments "env_info_<label>"`
@@ -160,7 +160,7 @@ Perform this lookup once per **distinct resource type** encountered during a gen
 
 ## Service instance, subscription, and entitlement provider selection
 
-Each service task carries a `resource_type` set by `/btp-iac.tasks` from the service's `consumption_type`:
+Each service task carries a `resource_type` set by `/sap-iac.tasks` from the service's `consumption_type`:
 
 - `btp_subaccount_service_instance` — generate with the BTP provider (`btp_subaccount_service_instance`). Use the `service_offering_name` and `service_plan_name` attributes directly on the resource. Do **not** generate a `btp_subaccount_service_plan` data source or any other data source to resolve a technical plan ID. Pair with `btp_subaccount_entitlement` as needed.
 - `cloudfoundry_service_instance` — generate with the Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task. Use the `service_offering_name` and `service_plan_name` attributes directly on the resource. Do **not** generate a `cloudfoundry_service_plan` data source or any other data source to resolve the plan. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
@@ -201,7 +201,7 @@ resource "btp_subaccount_service_instance" "alert_notification" {
 
 ### Entitlement quota — quota_required flag
 
-When a task's metadata contains `quota_required: true` (set by `/btp-iac.tasks` from the plan category recorded by `/btp-iac.services`), add `amount = 1` to every `btp_subaccount_entitlement` resource generated for that task. When the flag is absent, omit the `amount` attribute.
+When a task's metadata contains `quota_required: true` (set by `/sap-iac.tasks` from the plan category recorded by `/sap-iac.services`), add `amount = 1` to every `btp_subaccount_entitlement` resource generated for that task. When the flag is absent, omit the `amount` attribute.
 
 ```hcl
 resource "btp_subaccount_entitlement" "my_service" {
@@ -244,7 +244,7 @@ The `name` attribute MUST reference the corresponding `btp_subaccount_role_colle
 
 ## File layout and cross-directory wiring
 
-Write each configuration unit using the standard layout defined by `/btp-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.
+Write each configuration unit using the standard layout defined by `/sap-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.
 
 ### BTP outputs for CF / Kyma
 
@@ -255,7 +255,7 @@ When a unit is split into `btp/` + `cf/`|`kyma/`, emit in the `btp/` `outputs.tf
 
 ### Directory-ID output
 
-When `/btp-iac.design` defined a BTP directory-per-stage layer, emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
+When `/sap-iac.design` defined a BTP directory-per-stage layer, emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
 
 ### Manual tfvars handover
 
@@ -265,7 +265,7 @@ Separate directories are independent Terraform roots on the local backend, so cr
 
 For every configuration unit that contains a `provider "btp"` block, emit a `terraform.tfvars.example` in that unit's directory listing each variable referenced by the `provider "btp"` block as a placeholder entry. Always use the file name `terraform.tfvars.example` — never `terraform.tfvars` — so Terraform does not load it automatically.
 
-**Pre-fill from memory**: Before writing the file, check whether `<project-root>/memory/global-account.md` exists. Look for a line matching `- Subdomain: <value>` (the canonical format written by `btp-iac init`). If the value after `- Subdomain:` is non-empty, use it as the value for `globalaccount_subdomain`. If the file is absent or the `- Subdomain:` line is blank, use the sentinel `<your-globalaccount-subdomain>`.
+**Pre-fill from memory**: Before writing the file, check whether `<project-root>/memory/global-account.md` exists. Look for a line matching `- Subdomain: <value>` (the canonical format written by `sap-iac init`). If the value after `- Subdomain:` is non-empty, use it as the value for `globalaccount_subdomain`. If the file is absent or the `- Subdomain:` line is blank, use the sentinel `<your-globalaccount-subdomain>`.
 
 **Merged file when both rules apply**: If a configuration unit qualifies for both this rule and the manual tfvars handover rule (e.g. a BTP configuration consuming a directory `parent_id`), emit **one** `terraform.tfvars.example` containing the union of all handover variables and all provider-initialization variables. Never write the file twice.
 
@@ -285,7 +285,7 @@ globalaccount_subdomain = "my-actual-subdomain"
 
 ## Resource Prohibitions
 
-The following Terraform resource or data source types MUST NEVER appear in any generated file. The positive mapping from intent to resource type is owned by `/btp-iac.tasks`.
+The following Terraform resource or data source types MUST NEVER appear in any generated file. The positive mapping from intent to resource type is owned by `/sap-iac.tasks`.
 
 | Prohibited resource | Use instead |
 |---|---|
@@ -295,7 +295,7 @@ The following Terraform resource or data source types MUST NEVER appear in any g
 | `data "cloudfoundry_service_plan"` | `service_offering_name` + `service_plan_name` attributes on `cloudfoundry_service_instance` directly |
 
 **Guard**: Before generating HCL for any task, check its `resource_type`. If it is `btp_subaccount_destination` or `btp_subaccount_role_collection`, **STOP** and report:
-> "Task <ID> carries a prohibited resource type `<type>`. Re-run `/btp-iac.tasks` to correct the mapping before generating."
+> "Task <ID> carries a prohibited resource type `<type>`. Re-run `/sap-iac.tasks` to correct the mapping before generating."
 
 Before generating any data source block, check whether it appears in the prohibited table above. If it does, **STOP** and report:
 > "Data source `<type>` is prohibited. Use the direct attribute approach shown in the table."
@@ -411,7 +411,7 @@ provider "cloudfoundry" {
 
 ## Workflow
 
-Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/btp-iac.design`.
+Read `specs/tasks.md` to get the dependency-ordered task list with file path annotations from `/sap-iac.design`.
 
 **Stage filter**: Ask the user: "Which stage(s) should be generated? (e.g. dev, test, prod — or 'all')" Only process tasks whose stage annotation matches the answer. Tasks outside the requested stages are skipped — they remain in `specs/tasks.md` as spec-only and are not generated.
 
@@ -419,7 +419,7 @@ For each selected `btp_subaccount` task, read `usage` and `beta_enabled` from it
 
 For each task in dependency order:
 1. Generate the Terraform HCL resource(s) for that task
-2. Write to the file path annotated by `/btp-iac.design`
+2. Write to the file path annotated by `/sap-iac.design`
 3. Mark the task as complete in `specs/tasks.md` by changing its checkbox from `- [ ]` to `- [x]`
 4. Continue to the next task
 

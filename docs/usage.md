@@ -1,14 +1,14 @@
 # Usage
 
-The CLI exposes a single command, `btp-iac init`, which scaffolds a new project. All subsequent work happens inside your AI agent through the generated `btp-iac.*` commands.
+The CLI exposes a single command, `sap-iac init`, which scaffolds a new project. All subsequent work happens inside your AI agent through the generated `sap-iac.*` commands.
 
-## `btp-iac init`
+## `sap-iac init`
 
 ```
-btp-iac init [name] [--agent claude,codex,cursor,copilot]
+sap-iac init [name] [--agent claude,codex,cursor,copilot]
 ```
 
-Bootstraps a new BTP IaC project in a directory named `[name]`.
+Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a directory named `[name]`.
 
 ### Argument
 
@@ -26,42 +26,42 @@ Bootstraps a new BTP IaC project in a directory named `[name]`.
 
 ```sh
 # Interactive: prompts for agents (and for the name if omitted)
-btp-iac init my-btp-project
+sap-iac init my-iac-project
 
 # Configure for Claude Code
-btp-iac init my-btp-project --agent claude
+sap-iac init my-iac-project --agent claude
 
 # Configure for multiple agents
-btp-iac init my-btp-project --agent claude,cursor
+sap-iac init my-iac-project --agent claude,cursor
 
 # Non-interactive (CI): name and --agent are both required
-btp-iac init my-btp-project --agent claude,codex
+sap-iac init my-iac-project --agent claude,codex
 ```
 
 ## What `init` creates
 
 ```
-my-btp-project/
+my-iac-project/
 ├── .gitignore            # ignores .terraform/, *.tfstate, *.tfstate.backup,
-│                         # .terraform.lock.hcl, .btp-iac/platform-validation.md,
+│                         # .terraform.lock.hcl, .sap-iac/platform-validation.md,
 │                         # and memory/global-account.md
 ├── specs/                # (empty) requirement specs the agent commands write
 ├── memory/               # global-account.md is written at init; governance.md
-│                         # is authored later by btp-iac.govern
+│                         # is authored later by sap-iac.govern
 │   └── global-account.md # the global-account subdomain entered at init (optional)
 ├── terraform/            # (empty) generated Terraform HCL lands here
-├── .btp-iac/             # internal state (platform-validation.md)
+├── .sap-iac/             # internal state (platform-validation.md)
 └── <agent command dir>/  # one per selected agent (see below)
 ```
 
 During a fresh init (and when adopting an existing directory), `init` also prompts for an optional **global-account subdomain** and records it in `memory/global-account.md`. When `git` is available, `init` runs `git init` in the new directory.
 
 !!! warning "Existing projects are updated, not overwritten"
-    Running `init` against an existing directory does not error. If the directory is already a btp-iac project (it has `specs/` or `memory/`), `init` only adds or updates the selected agents' command files, leaving your specs and memory untouched. If it is some other existing directory, `init` adopts it — scaffolding the project structure in place.
+    Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` only adds or updates the selected agents' command files, leaving your specs and memory untouched. If it is some other existing directory, `init` adopts it — scaffolding the project structure in place.
 
 ### Agent command directories
 
-Each selected agent receives a directory of `btp-iac.<skill>` command files — one per skill: `govern`, `scenario`, `analyse`, `accounts`, `services`, `security`, `connectivity`, `tasks`, `design`, `generate`, and the `next` utility.
+Each selected agent receives a directory of `sap-iac.<skill>` command files — one per skill: `govern`, `scenario`, `analyse`, `accounts`, `services`, `security`, `connectivity`, `tasks`, `design`, `generate`, and the `next` utility.
 
 | Agent | Directory | File extension |
 |---|---|---|
@@ -70,7 +70,7 @@ Each selected agent receives a directory of `btp-iac.<skill>` command files — 
 | `cursor` | `.cursor/rules/` | `.mdc` |
 | `copilot` | `.github/instructions/` | `.instructions.md` |
 
-For example, `--agent claude` produces `.claude/commands/btp-iac.scenario.md`, `.claude/commands/btp-iac.generate.md`, and so on.
+For example, `--agent claude` produces `.claude/commands/sap-iac.scenario.md`, `.claude/commands/sap-iac.generate.md`, and so on.
 
 ## MCP and platform-validation checks
 
@@ -86,7 +86,7 @@ Terraform operations in your AI agent may not work.
 ```
 
 !!! info "Advisory only"
-    These checks never stop `init`. Configuring the servers is what lets the agent actually run Terraform and validate against your BTP account; setting them up is your responsibility.
+    These checks never stop `init`. Configuring the servers is what lets the agent actually run Terraform and validate against your account; setting them up is your responsibility.
 
 ## The agent workflow
 
@@ -94,20 +94,20 @@ After `init`, open the project in your AI agent and run the commands in order:
 
 ```mermaid
 flowchart TD
-    init([btp-iac init]) --> govern
+    init([sap-iac init]) --> govern
 
-    govern["btp-iac.govern<br/><i>optional</i>"] --> scenario[btp-iac.scenario]
-    scenario --> analyse["btp-iac.analyse<br/><i>optional</i>"]
-    analyse --> accounts[btp-iac.accounts]
-    accounts --> services[btp-iac.services]
-    services --> security[btp-iac.security]
-    security --> connectivity["btp-iac.connectivity<br/><i>optional</i>"]
-    connectivity --> tasks[btp-iac.tasks]
-    tasks --> design[btp-iac.design]
-    design --> generate[btp-iac.generate]
+    govern["sap-iac.govern<br/><i>optional</i>"] --> scenario[sap-iac.scenario]
+    scenario --> analyse["sap-iac.analyse<br/><i>optional</i>"]
+    analyse --> accounts[sap-iac.accounts]
+    accounts --> services[sap-iac.services]
+    services --> security[sap-iac.security]
+    security --> connectivity["sap-iac.connectivity<br/><i>optional</i>"]
+    connectivity --> tasks[sap-iac.tasks]
+    tasks --> design[sap-iac.design]
+    design --> generate[sap-iac.generate]
     generate --> tf([terraform/ HCL])
 
-    next["btp-iac.next<br/><i>utility — run any time</i>"] -.-> scenario
+    next["sap-iac.next<br/><i>utility — run any time</i>"] -.-> scenario
 
     classDef optional fill:#f5f5f5,stroke:#999,stroke-dasharray:4 3;
     classDef util fill:#eef,stroke:#88a,stroke-dasharray:4 3;
@@ -117,16 +117,16 @@ flowchart TD
 
 | Step | Command | Purpose |
 |---|---|---|
-| ○ | `btp-iac.govern` | *Optional.* Set guardrails — regions, naming, cost policies. Skip to use defaults. |
-| 1 | `btp-iac.scenario` | Describe your application. |
-| 2 | `btp-iac.analyse` | *Optional.* Scan source or Terraform code to extract service dependencies. |
-| 3 | `btp-iac.accounts` | Map your application to BTP directories and subaccounts. |
-| 4 | `btp-iac.services` | Resolve which BTP services each subaccount needs. |
-| 5 | `btp-iac.security` | Set up IdP trust, role collections, and role-collection assignments. |
-| 6 | `btp-iac.connectivity` | *Optional.* Define destinations and certificates for external/on-premise systems. |
-| 7 | `btp-iac.tasks` | Build a dependency-ordered execution plan. |
-| 8 | `btp-iac.design` | Plan the Terraform file and module layout. |
-| 9 | `btp-iac.generate` | Write and validate all Terraform HCL. |
-| — | `btp-iac.next` | *Utility.* Show the current project state and recommend the next command. Run any time. |
+| ○ | `sap-iac.govern` | *Optional.* Set guardrails — regions, naming, cost policies. Skip to use defaults. |
+| 1 | `sap-iac.scenario` | Describe your application. |
+| 2 | `sap-iac.analyse` | *Optional.* Scan source or Terraform code to extract service dependencies. |
+| 3 | `sap-iac.accounts` | Map your application to BTP directories and subaccounts. |
+| 4 | `sap-iac.services` | Resolve which BTP services each subaccount needs. |
+| 5 | `sap-iac.security` | Set up IdP trust, role collections, and role-collection assignments. |
+| 6 | `sap-iac.connectivity` | *Optional.* Define destinations and certificates for external/on-premise systems. |
+| 7 | `sap-iac.tasks` | Build a dependency-ordered execution plan. |
+| 8 | `sap-iac.design` | Plan the Terraform file and module layout. |
+| 9 | `sap-iac.generate` | Write and validate all Terraform HCL. |
+| — | `sap-iac.next` | *Utility.* Show the current project state and recommend the next command. Run any time. |
 
 Each command reads and writes files under `specs/`, `memory/`, and `terraform/`. For a detailed description of every command — its inputs, outputs, and governance behaviour — see the [command reference](commands/index.md). For a concrete run-through, see the [usage walkthrough](walkthrough.md).

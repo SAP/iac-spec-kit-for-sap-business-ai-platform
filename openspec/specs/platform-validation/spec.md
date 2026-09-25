@@ -7,7 +7,7 @@ Defines the optional live SAP BTP validation route recorded at initialization an
 ## Requirements
 
 ### Requirement: initialize local capabilities
-`btp-iac init` SHALL detect the `btp` CLI and BTP MCP availability per selected agent, then write an untracked `.btp-iac/platform-validation.md` record. The CLI is preferred when both routes are available. Missing routes SHALL warn but SHALL NOT block initialization.
+`sap-iac init` SHALL detect the `btp` CLI and BTP MCP availability per selected agent, then write an untracked `.sap-iac/platform-validation.md` record. The CLI is preferred when both routes are available. Missing routes SHALL warn but SHALL NOT block initialization.
 
 #### Scenario: CLI available
 - **WHEN** `btp` is on PATH during initialization

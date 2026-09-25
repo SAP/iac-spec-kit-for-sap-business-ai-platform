@@ -1,5 +1,5 @@
 ---
-name: btp-iac-govern
+name: sap-iac-govern
 description: Establishes governance guardrails — infrastructure, regions, naming, runtime environments, service plans, security, and cost controls.
 license: Apache-2.0
 metadata:
@@ -21,7 +21,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Read `<project-root>/.btp-iac/platform-validation.md` after locating the project root. For any platform availability check, use the recorded BTP CLI route first; otherwise, only when this agent is listed under BTP MCP agents, discover BTP MCP tools and use an equivalent operation. If the record is missing or has no route, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete a lookup, pause and ask the user to resolve it. If a completed lookup shows a requested value is unavailable, ask the user for a valid replacement before writing output.
+Read `<project-root>/.sap-iac/platform-validation.md` after locating the project root. For any platform availability check, use the recorded BTP CLI route first; otherwise, only when this agent is listed under BTP MCP agents, discover BTP MCP tools and use an equivalent operation. If the record is missing or has no route, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete a lookup, pause and ask the user to resolve it. If a completed lookup shows a requested value is unavailable, ask the user for a valid replacement before writing output.
 
 For CLI validation, read the subdomain from `<project-root>/memory/global-account.md` and, when it is configured, target it with `btp target --global-account <subdomain>` before issuing account commands. For an MCP route, scope the equivalent lookup to that subdomain. Do not ask for a subdomain.
 
@@ -29,7 +29,7 @@ For CLI validation, read the subdomain from `<project-root>/memory/global-accoun
 
 Before writing governance, validate every explicitly named service offering, subscription, and service-plan pair with the targeted `btp list accounts/entitlement` result (or an equivalent BTP MCP entitlement/subscription lookup). Do not infer an offering from a standalone plan name. If `memory/global-account.md` has no configured subdomain, do not target the CLI; retain user input without live validation.
 
-Validate each requested region with `btp list accounts/available-region` against the targeted global account, ignoring every entry labelled `NEO`. If the preferred infrastructure provider selected for `memory/governance.md` is not `none`, compare it with the provider metadata returned for that region (or an equivalent MCP result). Map only unambiguous provider labels to `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, or `Alibaba Cloud`; never infer a provider from a region code. A known mismatch produces a warning naming the region, selected preference, and returned provider, but does not prevent the governance file from being written. If provider metadata is absent or unmappable, report that provider validation was unavailable and retain the region. Do not write provider preferences or response-field metadata to `.btp-iac/platform-validation.md`. If no live region route is available, consult SAP Help's [Regions and API Endpoints Available for the Cloud Foundry Environment](https://help.sap.com/docs/btp/sap-business-technology-platform/regions-and-api-endpoints-available-for-cloud-foundry-environment?locale=en-US&version=LATEST), exclude NEO entries, and present the result as advisory only.
+Validate each requested region with `btp list accounts/available-region` against the targeted global account, ignoring every entry labelled `NEO`. If the preferred infrastructure provider selected for `memory/governance.md` is not `none`, compare it with the provider metadata returned for that region (or an equivalent MCP result). Map only unambiguous provider labels to `AWS`, `Microsoft Azure`, `Google Cloud`, `SAP Cloud Infrastructure`, or `Alibaba Cloud`; never infer a provider from a region code. A known mismatch produces a warning naming the region, selected preference, and returned provider, but does not prevent the governance file from being written. If provider metadata is absent or unmappable, report that provider validation was unavailable and retain the region. Do not write provider preferences or response-field metadata to `.sap-iac/platform-validation.md`. If no live region route is available, consult SAP Help's [Regions and API Endpoints Available for the Cloud Foundry Environment](https://help.sap.com/docs/btp/sap-business-technology-platform/regions-and-api-endpoints-available-for-cloud-foundry-environment?locale=en-US&version=LATEST), exclude NEO entries, and present the result as advisory only.
 
 ---
 
@@ -40,7 +40,7 @@ Validate each requested region with `btp list accounts/available-region` against
 Walk up from the current working directory, checking each ancestor for the presence of `specs/`, `memory/`, and `terraform/` subdirectories. The first matching directory is the project root. All file reads and writes in this command are anchored to that root.
 
 **If no project root is found:**
-> "Could not locate a btp-iac project root from the current directory. Run this command from within a project created by `btp-iac init`."
+> "Could not locate a sap-iac project root from the current directory. Run this command from within a project created by `sap-iac init`."
 Stop. Do not create or modify any files.
 
 ---
@@ -82,7 +82,7 @@ Keep each question to a single short prompt. The details to gather for each ques
 
 - **Preferred Infrastructure** — one of AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none.
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
-- **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `btp-iac init` and is read from `memory/global-account.md`; never ask for it here.
+- **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
@@ -175,8 +175,8 @@ The following rules are now in effect:
   Security:       <summary>
   Cost Controls:  <summary>
 
-All subsequent commands (/btp-iac.accounts, /btp-iac.services,
-/btp-iac.security, /btp-iac.generate) will validate their output
+All subsequent commands (/sap-iac.accounts, /sap-iac.services,
+/sap-iac.security, /sap-iac.generate) will validate their output
 against these rules and stop on any violation.
 
 To bypass enforcement, add "- Override: true" to memory/governance.md.
@@ -184,4 +184,4 @@ To bypass enforcement, add "- Override: true" to memory/governance.md.
 
 ## Next step
 
-Next: `/btp-iac.scenario` — describe your application.
+Next: `/sap-iac.scenario` — describe your application.

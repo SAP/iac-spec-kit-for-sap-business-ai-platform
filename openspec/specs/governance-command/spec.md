@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Defines the behaviour of the `/btp-iac.govern` agent command: project root detection, existing file handling, category completeness evaluation, and writing the governance file.
+Defines the behaviour of the `/sap-iac.govern` agent command: project root detection, existing file handling, category completeness evaluation, and writing the governance file.
 
 ## Requirements
 
 ### Requirement: locate project root
-The command SHALL identify the btp-iac project root by walking up from the current working directory until it finds a directory containing `specs/`, `memory/`, and `terraform/` subdirectories.
+The command SHALL identify the sap-iac project root by walking up from the current working directory until it finds a directory containing `specs/`, `memory/`, and `terraform/` subdirectories.
 
 #### Scenario: project root found
 - **WHEN** a directory in the ancestor chain contains `specs/`, `memory/`, and `terraform/`
@@ -15,7 +15,7 @@ The command SHALL identify the btp-iac project root by walking up from the curre
 
 #### Scenario: project root not found
 - **WHEN** no ancestor directory contains the required subdirectories
-- **THEN** the command stops with: "Could not locate a btp-iac project root from the current directory. Run this command from within a project created by `btp-iac init`."
+- **THEN** the command stops with: "Could not locate a sap-iac project root from the current directory. Run this command from within a project created by `sap-iac init`."
 - **THEN** no files are created or modified
 
 ### Requirement: detect existing governance file

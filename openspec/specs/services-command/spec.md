@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.services`: classifying each service by consumption type, resolving BTP service dependencies with governance validation, and producing `specs/services.md`.
+Defines the behaviour of `/sap-iac.services`: classifying each service by consumption type, resolving BTP service dependencies with governance validation, and producing `specs/services.md`.
 
 ## Requirements
 
@@ -84,7 +84,7 @@ For each service with `consumption_type: instance`, the command SHALL determine 
 
 #### Scenario: cf location with no space defined
 - **WHEN** the user chooses CF but the subaccount's Cloud Foundry environment has no space defined in `specs/landscape.md`
-- **THEN** the command stops and instructs the user to add a Cloud Foundry space via `/btp-iac.accounts`, without inventing a space name
+- **THEN** the command stops and instructs the user to add a Cloud Foundry space via `/sap-iac.accounts`, without inventing a space name
 
 #### Scenario: location recorded in services file
 - **WHEN** a service instance is written to `specs/services.md`
@@ -114,7 +114,7 @@ The command SHALL write `specs/services.md` with the full dependency-ordered ser
 
 #### Scenario: services file written
 - **WHEN** the command completes successfully
-- **THEN** `specs/services.md` exists, each entry carries `consumption_type`, each `instance` entry carries `location` (and `cf_space` when `cf`), and the file is the direct input to `/btp-iac.tasks`
+- **THEN** `specs/services.md` exists, each entry carries `consumption_type`, each `instance` entry carries `location` (and `cf_space` when `cf`), and the file is the direct input to `/sap-iac.tasks`
 
 #### Scenario: derived type recorded per service/plan
 - **WHEN** a service/plan combination is written to `specs/services.md`

@@ -1,4 +1,4 @@
-# `btp-iac.accounts`
+# `sap-iac.accounts`
 
 !!! abstract "Summary"
     **Role:** Required. · **Reads:** `specs/scenario.md` (+ governance) · **Writes:** `specs/landscape.md`
@@ -7,7 +7,7 @@ Defines the BTP account topology — the subaccounts, regions, and directory gro
 
 ## When to run it
 
-After `btp-iac.scenario` (and optional `btp-iac.analyse`), once the requirements are captured.
+After `sap-iac.scenario` (and optional `sap-iac.analyse`), once the requirements are captured.
 
 ## Inputs and outputs
 
@@ -38,7 +38,7 @@ Using only read/list BTP CLI commands and BTP MCP lookups, `accounts` validates 
 ## Example
 
 ```
-/btp-iac.accounts
+/sap-iac.accounts
 ```
 
 For the single-environment HR leave-request scenario, `accounts` writes one subaccount into `specs/landscape.md`:
@@ -59,5 +59,5 @@ Had governance restricted regions to `eu10`/`eu20`, a scenario asking for `us10`
 
 ## Related
 
-- Requires [`btp-iac.scenario`](scenario.md).
-- Feeds [`btp-iac.services`](services.md), [`btp-iac.security`](security.md), and [`btp-iac.generate`](generate.md).
+- Requires [`sap-iac.scenario`](scenario.md).
+- Feeds [`sap-iac.services`](services.md), [`sap-iac.security`](security.md), and [`sap-iac.generate`](generate.md).

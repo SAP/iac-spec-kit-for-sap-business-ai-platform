@@ -1,4 +1,4 @@
-# `btp-iac.tasks`
+# `sap-iac.tasks`
 
 !!! abstract "Summary"
     **Role:** Required. · **Reads:** `specs/landscape.md`, `specs/services.md`, `specs/trust.md` (+ `specs/connectivity.md`) · **Writes:** `specs/tasks.md`
@@ -7,7 +7,7 @@ Consolidates the landscape, services, and trust specifications — and, when pre
 
 ## When to run it
 
-After `btp-iac.accounts`, `btp-iac.services`, and `btp-iac.security` have all produced their specs (and after the optional `btp-iac.connectivity`, if you ran it).
+After `sap-iac.accounts`, `sap-iac.services`, and `sap-iac.security` have all produced their specs (and after the optional `sap-iac.connectivity`, if you ran it).
 
 ## Inputs and outputs
 
@@ -22,15 +22,15 @@ After `btp-iac.accounts`, `btp-iac.services`, and `btp-iac.security` have all pr
 - Assigns task IDs and adds parallel-execution markers.
 - Creates a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space in the landscape; each Cloud Foundry space task depends on its Cloud Foundry environment.
 - Preserves each service instance's `location`; a CF-located instance also retains its `cf_space` and depends on that specific Cloud Foundry space task.
-- Annotates each task with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`). All tasks are written regardless of stage; the annotation is consumed by [`btp-iac.generate`](generate.md) to filter which tasks are generated.
-- Writes every task unchecked (`- [ ]`); [`btp-iac.generate`](generate.md) marks tasks `- [x]` as it completes them.
+- Annotates each task with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`). All tasks are written regardless of stage; the annotation is consumed by [`sap-iac.generate`](generate.md) to filter which tasks are generated.
+- Writes every task unchecked (`- [ ]`); [`sap-iac.generate`](generate.md) marks tasks `- [x]` as it completes them.
 - When `specs/connectivity.md` exists, appends one task per destination and certificate, ordered after the landscape, service, and trust tasks they depend on.
 - Adds no new requirements — it only sequences what the earlier commands resolved.
 
 ## Example
 
 ```
-/btp-iac.tasks
+/sap-iac.tasks
 ```
 
 `tasks` combines the subaccount, services, and trust specs for the HR leave-request project into `specs/tasks.md`. Each group becomes its own section with a dependency/parallel table followed by a checkbox list:
@@ -57,5 +57,5 @@ After `btp-iac.accounts`, `btp-iac.services`, and `btp-iac.security` have all pr
 
 ## Related
 
-- Requires [`btp-iac.accounts`](accounts.md), [`btp-iac.services`](services.md), and [`btp-iac.security`](security.md); optionally reads [`btp-iac.connectivity`](connectivity.md).
-- Feeds [`btp-iac.design`](design.md) and [`btp-iac.generate`](generate.md).
+- Requires [`sap-iac.accounts`](accounts.md), [`sap-iac.services`](services.md), and [`sap-iac.security`](security.md); optionally reads [`sap-iac.connectivity`](connectivity.md).
+- Feeds [`sap-iac.design`](design.md) and [`sap-iac.generate`](generate.md).

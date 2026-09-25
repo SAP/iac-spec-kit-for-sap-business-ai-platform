@@ -1,4 +1,4 @@
-# `btp-iac.generate`
+# `sap-iac.generate`
 
 !!! abstract "Summary"
     **Role:** Required — the final step. · **Reads:** `specs/tasks.md` (+ governance) · **Writes:** `terraform/`
@@ -7,7 +7,7 @@ Generates complete, validated Terraform HCL by executing each task in dependency
 
 ## When to run it
 
-Last, after `btp-iac.design` has annotated every task with its target file path.
+Last, after `sap-iac.design` has annotated every task with its target file path.
 
 ## Inputs and outputs
 
@@ -40,7 +40,7 @@ At the start of the run, `generate` asks which stage(s) to generate — `Which s
 ## Example
 
 ```
-/btp-iac.generate
+/sap-iac.generate
 ```
 
 `generate` validates against governance, then writes the HCL for the HR leave-request project into `terraform/` using the standard per-unit layout — `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, and `backend.tf` (default local backend) — and runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory. The provider version constraints in `providers.tf` are resolved at runtime (via the `terraform` MCP server, falling back to a `WebFetch` against the Terraform registry) and written as `~>` constraints — never hardcoded. Security resources are emitted as `btp_subaccount_role_collection_base` and `btp_subaccount_role_collection_role` blocks. When a `specs/connectivity.md` was produced, it also emits `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` resources. When it finishes you can review and apply the result yourself:
@@ -53,5 +53,5 @@ terraform plan
 
 ## Related
 
-- Requires [`btp-iac.design`](design.md).
+- Requires [`sap-iac.design`](design.md).
 - For applying the output, see the [usage walkthrough](../walkthrough.md).

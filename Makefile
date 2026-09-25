@@ -27,6 +27,6 @@ test:
 	go test -v -cover -tags=all -timeout=900s -parallel=4 ./...
 
 eval:
-	go run ./cmd/btp-iac-eval -live -provider all -judge codex -timeout 30m
+	go run ./cmd/sap-iac-eval -live -provider all -judge codex -timeout 30m
 
 .PHONY: build fix install lint generate fmt test eval

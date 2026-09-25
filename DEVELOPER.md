@@ -1,6 +1,6 @@
 # Development Setup
 
-If you want to contribute to the IaC Spec Kit for SAP BTP, be aware of the [contribution guidelines](CONTRIBUTING.md) available in this repository.
+If you want to contribute to the Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform be aware of the [contribution guidelines](CONTRIBUTING.md) available in this repository.
 
 First, you need to set up your development environment. The following sections describe the options you have.
 
@@ -65,7 +65,7 @@ The [Makefile](Makefile) wraps the common tasks:
 | Target | Action |
 |---|---|
 | `make build` | `go build -v ./...` |
-| `make install` | Build and `go install -v ./...` (installs `btp-iac` to `$(go env GOPATH)/bin`) |
+| `make install` | Build and `go install -v ./...` (installs `sap-iac` to `$(go env GOPATH)/bin`) |
 | `make test` | Run the test suite (`go test -v -cover -tags=all ./...`) |
 | `make lint` | Run `golangci-lint` |
 | `make fmt` | Format the code with `gofmt` |
@@ -78,14 +78,14 @@ make install
 
 ## Verify the Setup
 
-Confirm the `btp-iac` binary is on your `PATH` and runs:
+Confirm the `sap-iac` binary is on your `PATH` and runs:
 
 ```bash
-btp-iac --help
-btp-iac init --help
+sap-iac --help
+sap-iac init --help
 ```
 
-You should see the `init` command and its `--agent` flag. If `btp-iac` is not found, make sure `$(go env GOPATH)/bin` is on your `PATH`.
+You should see the `init` command and its `--agent` flag. If `sap-iac` is not found, make sure `$(go env GOPATH)/bin` is on your `PATH`.
 
 If you are still stuck, feel free to ask for support by raising a [question](https://github.com/SAP/btp-iac-spec-kit/discussions/) in the [GitHub Discussions](https://github.com/SAP/btp-iac-spec-kit/discussions/) of this repository.
 

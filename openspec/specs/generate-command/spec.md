@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
+Defines the behaviour of `/sap-iac.generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ The command SHALL apply cost controls governance during the pre-generation pass.
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: generate Terraform HCL in dependency order
-The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the directory and file paths annotated by `/btp-iac.design`, using the standard file layout per configuration unit: resources in `main.tf`, input variables in `variables.tf`, output values in `outputs.tf`, provider configuration and `required_providers` in `providers.tf`, and a `backend.tf` defaulting to a local backend.
+The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the directory and file paths annotated by `/sap-iac.design`, using the standard file layout per configuration unit: resources in `main.tf`, input variables in `variables.tf`, output values in `outputs.tf`, provider configuration and `required_providers` in `providers.tf`, and a `backend.tf` defaulting to a local backend.
 
 #### Scenario: resources generated
 - **WHEN** the pre-generation pass passes
@@ -128,7 +128,7 @@ When a configuration unit is split for a Cloud Foundry or Kyma environment, the 
 - **AND** the command does not generate kubeconfig download or parsing for the kubernetes provider
 
 ### Requirement: emit directory ID output when a directory-per-stage layer exists
-When `/btp-iac.design` defined a BTP directory-per-stage layer, the command SHALL emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
+When `/sap-iac.design` defined a BTP directory-per-stage layer, the command SHALL emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
 
 #### Scenario: directory id output
 - **WHEN** a directory-per-stage layer was defined
@@ -374,7 +374,7 @@ All CF auth variables SHALL be declared in `variables.tf` for each CF configurat
 - **THEN** the CF auth method prompt is shown only once; the same selection is applied to all CF units
 
 ### Requirement: emit quota attribute for entitlements with quota_required flag
-When a task's metadata contains `quota_required: true` (set by `/btp-iac.tasks` from the plan category recorded by `/btp-iac.services`), every `btp_subaccount_entitlement` resource generated for that task SHALL include `amount = 1`. When the flag is absent the `amount` attribute SHALL be omitted.
+When a task's metadata contains `quota_required: true` (set by `/sap-iac.tasks` from the plan category recorded by `/sap-iac.services`), every `btp_subaccount_entitlement` resource generated for that task SHALL include `amount = 1`. When the flag is absent the `amount` attribute SHALL be omitted.
 
 #### Scenario: entitlement task has quota_required flag
 - **WHEN** a `btp_subaccount_entitlement` task contains `quota_required: true` in its metadata

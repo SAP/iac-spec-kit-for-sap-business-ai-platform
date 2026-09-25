@@ -11,7 +11,7 @@ const btpReadOnlyBoundary = "When invoking the BTP CLI or any BTP MCP tool, perf
 
 // noBTPBoundary lists skills that perform no BTP operations and are exempt from BTP boundary assertions.
 var noBTPBoundary = map[string]bool{
-	"btp-iac-next/SKILL.md": true,
+	"sap-iac-next/SKILL.md": true,
 }
 
 func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAllSkillsContainPlatformValidationContract(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		if !strings.Contains(string(data), ".btp-iac/platform-validation.md") {
+		if !strings.Contains(string(data), ".sap-iac/platform-validation.md") {
 			t.Errorf("%s is missing platform validation guidance", path)
 		}
 		return nil
@@ -82,11 +82,11 @@ func TestAllSkillsEnforceBTPReadOnlyBoundary(t *testing.T) {
 
 func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 	checks := map[string][]string{
-		"btp-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider"},
-		"btp-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
-		"btp-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
-		"btp-iac-generate/SKILL.md": {"available-region", "NEO", "Preferred infrastructure provider"},
-		"btp-iac-services/SKILL.md": {"btp list accounts/entitlement"},
+		"sap-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider"},
+		"sap-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
+		"sap-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
+		"sap-iac-generate/SKILL.md": {"available-region", "NEO", "Preferred infrastructure provider"},
+		"sap-iac-services/SKILL.md": {"btp list accounts/entitlement"},
 	}
 	for path, wants := range checks {
 		data, err := Commands.ReadFile(path)
@@ -103,15 +103,15 @@ func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 
 func TestGreenfieldSkillsHaveSingleNextStepFooter(t *testing.T) {
 	linearFlowSkills := []string{
-		"btp-iac-govern/SKILL.md",
-		"btp-iac-scenario/SKILL.md",
-		"btp-iac-accounts/SKILL.md",
-		"btp-iac-services/SKILL.md",
-		"btp-iac-security/SKILL.md",
-		"btp-iac-connectivity/SKILL.md",
-		"btp-iac-tasks/SKILL.md",
-		"btp-iac-design/SKILL.md",
-		"btp-iac-generate/SKILL.md",
+		"sap-iac-govern/SKILL.md",
+		"sap-iac-scenario/SKILL.md",
+		"sap-iac-accounts/SKILL.md",
+		"sap-iac-services/SKILL.md",
+		"sap-iac-security/SKILL.md",
+		"sap-iac-connectivity/SKILL.md",
+		"sap-iac-tasks/SKILL.md",
+		"sap-iac-design/SKILL.md",
+		"sap-iac-generate/SKILL.md",
 	}
 	for _, path := range linearFlowSkills {
 		data, err := Commands.ReadFile(path)
@@ -123,7 +123,7 @@ func TestGreenfieldSkillsHaveSingleNextStepFooter(t *testing.T) {
 		}
 	}
 
-	for _, path := range []string{"btp-iac-analyse/SKILL.md", "btp-iac-next/SKILL.md"} {
+	for _, path := range []string{"sap-iac-analyse/SKILL.md", "sap-iac-next/SKILL.md"} {
 		data, err := Commands.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
@@ -135,11 +135,11 @@ func TestGreenfieldSkillsHaveSingleNextStepFooter(t *testing.T) {
 }
 
 func TestTasksSkillHasNoDuplicateNextStepInstruction(t *testing.T) {
-	data, err := Commands.ReadFile("btp-iac-tasks/SKILL.md")
+	data, err := Commands.ReadFile("sap-iac-tasks/SKILL.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(data), "Next step: /btp-iac.design") {
+	if strings.Contains(string(data), "Next step: /sap-iac.design") {
 		t.Error("tasks skill has a duplicate next-step instruction in its output template")
 	}
 }

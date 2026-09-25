@@ -1,4 +1,4 @@
-# `btp-iac.scenario`
+# `sap-iac.scenario`
 
 !!! abstract "Summary"
     **Role:** Required — the starting point. · **Reads:** your description · **Writes:** `specs/scenario.md`
@@ -7,13 +7,13 @@ Translates a plain-language description of your application into a structured se
 
 ## When to run it
 
-First (after the optional [`btp-iac.govern`](govern.md)). You need only a short description of what you are building.
+First (after the optional [`sap-iac.govern`](govern.md)). You need only a short description of what you are building.
 
 ## Inputs and outputs
 
 | | |
 |---|---|
-| **Reads** | Your plain-language description. It also reads `.btp-iac/platform-validation.md` and `memory/global-account.md`, and `memory/governance.md` when it exists, to ground and constrain its follow-up questions — but no `specs/` files are required. |
+| **Reads** | Your plain-language description. It also reads `.sap-iac/platform-validation.md` and `memory/global-account.md`, and `memory/governance.md` when it exists, to ground and constrain its follow-up questions — but no `specs/` files are required. |
 | **Writes** | `specs/scenario.md`. |
 | **Asks** | Up to three clarifying questions — typically about unresolved runtime and Cloud Foundry sizing, destinations, and setup structure. |
 
@@ -29,7 +29,7 @@ First (after the optional [`btp-iac.govern`](govern.md)). You need only a short 
 Describe the application in one paragraph:
 
 ```
-/btp-iac.scenario An internal HR leave-request app built with CAP (Node.js) on
+/sap-iac.scenario An internal HR leave-request app built with CAP (Node.js) on
 Cloud Foundry. It stores leave requests in SAP HANA Cloud and authenticates
 employees via XSUAA. Single environment, one subaccount, region eu10.
 ```
@@ -41,5 +41,5 @@ After answering any follow-up questions, `specs/scenario.md` captures the struct
 
 ## Related
 
-- Optional enrichment next: [`btp-iac.analyse`](analyse.md).
-- Otherwise, continue to [`btp-iac.accounts`](accounts.md).
+- Optional enrichment next: [`sap-iac.analyse`](analyse.md).
+- Otherwise, continue to [`sap-iac.accounts`](accounts.md).

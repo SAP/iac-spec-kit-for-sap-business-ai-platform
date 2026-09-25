@@ -1,5 +1,5 @@
 ---
-name: btp-iac-connectivity
+name: sap-iac-connectivity
 description: Elicits BTP destination and destination-certificate requirements and writes specs/connectivity.md.
 license: Apache-2.0
 metadata:
@@ -11,7 +11,7 @@ metadata:
 
 Elicits and structures BTP destination and destination-certificate requirements for a project.
 
-Optionally reads `specs/scenario.md` when it exists (reusing any destinations already captured there). Produces `specs/connectivity.md`, which is an optional input to `/btp-iac.tasks`.
+Optionally reads `specs/scenario.md` when it exists (reusing any destinations already captured there). Produces `specs/connectivity.md`, which is an optional input to `/sap-iac.tasks`.
 
 ## Tool preferences
 
@@ -25,7 +25,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-If this workflow needs a live BTP availability check, read `<project-root>/.btp-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
+If this workflow needs a live BTP availability check, read `<project-root>/.sap-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
 
 ---
 
@@ -33,7 +33,7 @@ If this workflow needs a live BTP availability check, read `<project-root>/.btp-
 
 ### Step 1 — Check for existing destinations in scenario.md
 
-Locate the btp-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found.
+Locate the sap-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found.
 
 If `specs/scenario.md` exists, read it and look for any destinations already described (the scenario command captures these in its follow-up question). If destinations are found:
 
@@ -223,8 +223,8 @@ Write the collected requirements to `<project-root>/specs/connectivity.md` using
 <!-- repeat for each certificate; omit this section if no certificates -->
 ```
 
-This file is the direct input to `/btp-iac.tasks` (read when it exists) and informs `/btp-iac.generate` which produces `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` Terraform resources.
+This file is the direct input to `/sap-iac.tasks` (read when it exists) and informs `/sap-iac.generate` which produces `btp_subaccount_destination_generic` and `btp_subaccount_destination_certificate` Terraform resources.
 
 ## Next step
 
-Next: `/btp-iac.tasks` — build a dependency-ordered execution plan.
+Next: `/sap-iac.tasks` — build a dependency-ordered execution plan.

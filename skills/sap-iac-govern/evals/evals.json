@@ -1,12 +1,12 @@
 {
-  "skill_name": "btp-iac-govern",
+  "skill_name": "sap-iac-govern",
   "evals": [
     {
       "id": 1,
       "name": "full-policy-direct-write",
       "description": "A complete governance policy is written directly without unnecessary questions.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In a btp-iac project, establish governance: prefer AWS infrastructure, allow eu10 and eu20, forbid us10, keep customer data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and both Cloud Foundry and Kyma are allowed. Subaccounts, CF orgs, and Kyma environments use {org}-{env}-{app}; CF spaces use {org}-{env}-{space}; org is the organisation short code, env is dev/test/prod, app is the application identifier, and space is the space purpose; use a hierarchical directory structure and a maximum name length of 60. In dev, permit free and standard, forbid none, and default to free. In test, permit standard, forbid none, and default to standard. In prod, permit standard, forbid free because it has no SLA, and default to standard. Require a SAML 2.0 custom IdP; assign BTP_OPERATOR to platform-admins and BTP_VIEWER to developers at both scopes. Enable warnings for hana-cloud and ai-core, require the cost_center tag.",
+      "prompt": "In a sap-iac project, establish governance: prefer AWS infrastructure, allow eu10 and eu20, forbid us10, keep customer data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and both Cloud Foundry and Kyma are allowed. Subaccounts, CF orgs, and Kyma environments use {org}-{env}-{app}; CF spaces use {org}-{env}-{space}; org is the organisation short code, env is dev/test/prod, app is the application identifier, and space is the space purpose; use a hierarchical directory structure and a maximum name length of 60. In dev, permit free and standard, forbid none, and default to free. In test, permit standard, forbid none, and default to standard. In prod, permit standard, forbid free because it has no SLA, and default to standard. Require a SAML 2.0 custom IdP; assign BTP_OPERATOR to platform-admins and BTP_VIEWER to developers at both scopes. Enable warnings for hana-cloud and ai-core, require the cost_center tag.",
       "trap": "The prompt deliberately provides all six categories. The skill must not ask redundant follow-up questions, invent an Override flag, or omit required fields that happen to have a value such as 'none'.",
       "assertions": [
         {"id": "1.1", "text": "Does not ask any follow-up governance questions before writing the file"},
@@ -24,7 +24,7 @@
       "description": "Only uncovered governance categories receive one targeted question.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "turns": [
-        {"role": "user", "content": "In this btp-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use no directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
+        {"role": "user", "content": "In this sap-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use no directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
         {"role": "user", "content": "For service plans, dev may use free (default free), test may use standard (default standard), and prod may use standard (default standard); free is forbidden in prod because it has no SLA. Enable metered-service warnings for hana-cloud and ai-core. The cost centre tag is required and its Terraform key is cost_center."}
       ],
       "trap": "Region, Naming, Environments, and Security are complete. Asking about any of those again violates the command contract; the file must not be written until service-plan and cost-control information has been collected.",
@@ -42,7 +42,7 @@
       "name": "empty-policy-provider-first",
       "description": "A bare invocation initiates complete governance discovery without writing a partial policy.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Set up governance for this btp-iac project.",
+      "prompt": "Set up governance for this sap-iac project.",
       "trap": "No governance details were supplied. The skill must ask one question at a time in the fixed order Preferred Infrastructure, Region, Environments, Naming, Service Plans, Security, Cost Control; it must not batch questions or manufacture defaults.",
       "assertions": [
         {"id": "3.0", "text": "Its first question asks for the preferred infrastructure provider and presents AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, and none"},
@@ -59,12 +59,12 @@
     {
       "id": 4,
       "name": "no-project-root-safe-failure",
-      "description": "The skill safely refuses to operate when no btp-iac project root is an ancestor.",
+      "description": "The skill safely refuses to operate when no sap-iac project root is an ancestor.",
       "environment": {"working_directory": "isolated-no-project-root", "forbid_ancestor_project_root": true},
       "prompt": "From a directory with no ancestor containing specs/, memory/, and terraform/, establish governance allowing eu10 only.",
       "trap": "The requested rule is intentionally sufficient to tempt a write, but no valid project root exists.",
       "assertions": [
-        {"id": "4.1", "text": "Stops and communicates that no btp-iac project root was found, and that the command must run within a project created by btp-iac init"},
+        {"id": "4.1", "text": "Stops and communicates that no sap-iac project root was found, and that the command must run within a project created by sap-iac init"},
         {"id": "4.2", "text": "Does not create, modify, or propose creating any governance file or directory"},
         {"id": "4.3", "text": "Does not continue by asking governance-category questions"}
       ]
@@ -95,7 +95,7 @@
       "name": "override-is-explicit-only",
       "description": "Override is emitted only when the user expressly requests weaker enforcement.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In a btp-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod with no directory structure and 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
+      "prompt": "In a sap-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod with no directory structure and 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
       "trap": "Override is a powerful exception. The skill must add it when directly requested, but must not treat any ordinary full-policy prompt as authorization to add it.",
       "assertions": [
         {"id": "6.1", "text": "Writes a complete governance file containing a top-level '- Override: true' entry because the user explicitly requested it"},

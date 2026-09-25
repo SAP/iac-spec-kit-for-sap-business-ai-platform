@@ -11,49 +11,49 @@ The CLI binary SHALL embed command files for all four supported agents (`claude`
 
 #### Scenario: binary ships standalone
 - **WHEN** the compiled binary is moved to a new machine with no source tree
-- **THEN** `btp-iac init` correctly extracts all command files without any external asset path
+- **THEN** `sap-iac init` correctly extracts all command files without any external asset path
 
 #### Scenario: all variants present in binary
 - **WHEN** the compiled binary is run on any machine
 - **THEN** it can install command files for any combination of the four supported agents without external assets
 
 ### Requirement: command files written on init
-The CLI SHALL write the embedded command files for each selected agent to that agent's directory during `btp-iac init`. Every command file contains substantive agent instructions.
+The CLI SHALL write the embedded command files for each selected agent to that agent's directory during `sap-iac init`. Every command file contains substantive agent instructions.
 
 #### Scenario: all eleven files present after init (Claude)
-- **WHEN** `btp-iac init <name> --agent claude` completes successfully
+- **WHEN** `sap-iac init <name> --agent claude` completes successfully
 - **THEN** eleven `.md` files exist under `<name>/.claude/commands/`:
-  - `btp-iac.govern.md`
-  - `btp-iac.scenario.md`
-  - `btp-iac.analyse.md`
-  - `btp-iac.accounts.md`
-  - `btp-iac.services.md`
-  - `btp-iac.security.md`
-  - `btp-iac.connectivity.md`
-  - `btp-iac.next.md`
-  - `btp-iac.tasks.md`
-  - `btp-iac.design.md`
-  - `btp-iac.generate.md`
+  - `sap-iac.govern.md`
+  - `sap-iac.scenario.md`
+  - `sap-iac.analyse.md`
+  - `sap-iac.accounts.md`
+  - `sap-iac.services.md`
+  - `sap-iac.security.md`
+  - `sap-iac.connectivity.md`
+  - `sap-iac.next.md`
+  - `sap-iac.tasks.md`
+  - `sap-iac.design.md`
+  - `sap-iac.generate.md`
 
 #### Scenario: Cursor files present after init with cursor selected
-- **WHEN** `btp-iac init <name> --agent cursor` completes successfully
+- **WHEN** `sap-iac init <name> --agent cursor` completes successfully
 - **THEN** eleven `.mdc` files exist under `<name>/.cursor/rules/`
 
 #### Scenario: Codex files present after init with codex selected
-- **WHEN** `btp-iac init <name> --agent codex` completes successfully
+- **WHEN** `sap-iac init <name> --agent codex` completes successfully
 - **THEN** eleven `.md` files exist under `<name>/.codex/prompts/`
 
 #### Scenario: Copilot files present after init with copilot selected
-- **WHEN** `btp-iac init <name> --agent copilot` completes successfully
+- **WHEN** `sap-iac init <name> --agent copilot` completes successfully
 - **THEN** eleven `.instructions.md` files exist under `<name>/.github/instructions/`
 
 #### Scenario: govern command has full implementation
-- **WHEN** `btp-iac init <name>` completes successfully
-- **THEN** the installed `btp-iac.govern` command file contains the full governance collection and file-writing workflow
+- **WHEN** `sap-iac init <name>` completes successfully
+- **THEN** the installed `sap-iac.govern` command file contains the full governance collection and file-writing workflow
 
 #### Scenario: downstream commands contain governance validation
-- **WHEN** `btp-iac init <name>` completes successfully
-- **THEN** the installed `btp-iac.accounts`, `btp-iac.services`, `btp-iac.security`, and `btp-iac.generate` command files each contain a governance validation step
+- **WHEN** `sap-iac init <name>` completes successfully
+- **THEN** the installed `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, and `sap-iac.generate` command files each contain a governance validation step
 
 ### Requirement: command files are valid markdown
 Each embedded command file SHALL be non-empty and readable as UTF-8 text.
@@ -67,8 +67,8 @@ Every embedded command file that invokes BTP operations SHALL contain the local 
 
 #### Scenario: installed BTP-invoking command contains capability guidance
 - **WHEN** an embedded command that performs BTP operations is installed during init
-- **THEN** it instructs the agent to read `.btp-iac/platform-validation.md` before a required live BTP check
+- **THEN** it instructs the agent to read `.sap-iac/platform-validation.md` before a required live BTP check
 
-#### Scenario: btp-iac-next exempt from BTP boundary
-- **WHEN** `btp-iac.next` is installed during init
+#### Scenario: sap-iac-next exempt from BTP boundary
+- **WHEN** `sap-iac.next` is installed during init
 - **THEN** it does not contain BTP platform-validation boilerplate, as it performs no BTP operations

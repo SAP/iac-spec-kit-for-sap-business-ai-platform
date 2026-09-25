@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.design`: translating the task list into a concrete Terraform folder structure and annotating each task with its target directory and file path.
+Defines the behaviour of `/sap-iac.design`: translating the task list into a concrete Terraform folder structure and annotating each task with its target directory and file path.
 
 ## Requirements
 

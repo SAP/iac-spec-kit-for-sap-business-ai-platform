@@ -1,5 +1,5 @@
 ---
-name: btp-iac-services
+name: sap-iac-services
 description: Resolves infrastructure requirements into a dependency-ordered list of BTP entitlements, subscriptions, and service instances.
 license: Apache-2.0
 metadata:
@@ -25,7 +25,7 @@ The prohibition on state-changing CLI commands excludes the permitted target pre
 
 When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
 
-Read `<project-root>/.btp-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and then `btp list accounts/entitlement` (with `--format json` for machine-readable output: `btp --format json list accounts/entitlement`). If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
+Read `<project-root>/.sap-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and then `btp list accounts/entitlement` (with `--format json` for machine-readable output: `btp --format json list accounts/entitlement`). If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
 If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
 
@@ -33,7 +33,7 @@ If no route is recorded, retain user input without blocking. If a recorded route
 
 ## Governance Check
 
-**Before resolving any service dependencies**, locate the btp-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
+**Before resolving any service dependencies**, locate the sap-iac project root by walking up from the current working directory until a directory containing `specs/`, `memory/`, and `terraform/` is found. Then check whether `<project-root>/memory/governance.md` exists.
 
 **If it does not exist:** proceed without constraints and note: "No governance rules found — proceeding without enforcement."
 
@@ -115,9 +115,9 @@ Check `specs/landscape.md` for the Cloud Foundry environment and its spaces in t
 - If a Cloud Foundry environment exists, ask:
   > "Service instance `<service-name>` in subaccount `<subaccount>`: create on BTP (BTP provider) or inside a Cloud Foundry space (CF provider)? Default is BTP."
 - If the user chooses CF and the subaccount has **more than one** space, ask which space (list the spaces from `specs/landscape.md`); if it has exactly one, use that space without asking. Record the chosen space as `cf_space: <name>`.
-- If the user chooses CF but the subaccount's Cloud Foundry environment has **no space** defined in `specs/landscape.md`, **STOP**: a CF service instance requires a space. Tell the user to add a Cloud Foundry space via `/btp-iac.accounts` (the authoritative source for spaces), then re-run `/btp-iac.services`. Do not invent a space name here.
+- If the user chooses CF but the subaccount's Cloud Foundry environment has **no space** defined in `specs/landscape.md`, **STOP**: a CF service instance requires a space. Tell the user to add a Cloud Foundry space via `/sap-iac.accounts` (the authoritative source for spaces), then re-run `/sap-iac.services`. Do not invent a space name here.
 
-Record `location` for every service instance, plus `cf_space` when `location: cf`. These are passed through to `specs/services.md` and consumed by `/btp-iac.tasks`, `/btp-iac.design`, and `/btp-iac.generate` to select the correct provider and CF space.
+Record `location` for every service instance, plus `cf_space` when `location: cf`. These are passed through to `specs/services.md` and consumed by `/sap-iac.tasks`, `/sap-iac.design`, and `/sap-iac.generate` to select the correct provider and CF space.
 
 ---
 
@@ -151,10 +151,10 @@ After the user confirms `consumption_type: instance` for a service, check whethe
 
 **If no matching entry exists:** proceed silently — write no `parameters:` block for that service entry.
 
-Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. This file is the direct input to `/btp-iac.tasks`.
+Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. This file is the direct input to `/sap-iac.tasks`.
 
 When the resolved plan `category` is `SERVICE` or `QUOTA_BASED_APPLICATION`, add `quota_required: true` to that service entry. Omit the field for all other categories. When the category was not available (fallback path — neither CLI nor MCP, or plan not found), do not record the field.
 
 ## Next step
 
-Next: `/btp-iac.security` — set up IdP trust, roles, and role collection assignments.
+Next: `/sap-iac.security` — set up IdP trust, roles, and role collection assignments.
