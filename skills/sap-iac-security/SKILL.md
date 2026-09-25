@@ -68,6 +68,27 @@ Define for each subaccount:
 - Role collections (see two-step elicitation below)
 - User and group assignments to role collections
 
+### Custom IdP detection and URL collection
+
+**Before any other elicitation**, check `specs/scenario.md` and `specs/landscape.md` for signals indicating a custom Identity Provider (custom IdP) is required or referenced (e.g. mentions of a custom identity provider, external IdP, SAP IAS tenant, or corporate IdP trust).
+
+**If a custom IdP signal is detected:**
+- Ask: **"What is the URL of the custom Identity Provider (IdP)?"**
+- This question MUST be asked. It MUST NOT be omitted or skipped under any circumstances.
+- Record the raw URL in `specs/trust.md`.
+
+**If no custom IdP signal is detected**, also check `memory/governance.md`: if it exists and contains `Custom IdP: required`, treat that as a custom IdP signal and ask for the URL. If neither source provides a signal, proceed without asking.
+
+#### Origin derivation
+
+From the IdP URL, derive the **origin** as follows:
+
+> **Rule:** Take the first label of the hostname (the portion before the first `.`) and append `-platform`.
+
+Example: `testsub12domain.accounts.ondemand.com` → origin is `testsub12domain-platform`
+
+Record the derived origin alongside the IdP URL in `specs/trust.md`. The origin value is reused in role collection assignments (see below) and in Cloud Foundry space assignments (see below).
+
 ### Role collection elicitation
 
 For each subaccount, ask: **"Are role collections required for this subaccount?"**
@@ -82,15 +103,94 @@ If **no**: record no role collections for that subaccount.
 
 Do **not** use unstructured "role template assignments" text. Every role must be captured as a named, structured entry with all three fields.
 
+### Role collection assignment elicitation
+
+**This section applies whenever role collections are created (regardless of whether a custom IdP is in use).**
+
+After collecting all role collections for a subaccount, ask:
+
+> **"How should role collections be assigned — by individual user or by group?"**
+
+Then collect the assignment entries:
+
+- **User assignment**: for each entry collect `username` and `role_collection_name`.
+- **Group assignment**: for each entry collect `group_name` and `role_collection_name`.
+
+**When a custom IdP is in use** (i.e. an IdP URL was collected and an origin was derived), each assignment entry MUST also include the `origin` field (the derived value from [Origin derivation](#origin-derivation)).
+
+Example — user assignment **without** custom IdP:
+```
+username: john.doe@example.com, role_collection_name: MyCollection
+```
+
+Example — user assignment **with** custom IdP (origin derived as `testsub12domain-platform`):
+```
+username: john.doe@example.com, origin: testsub12domain-platform, role_collection_name: MyCollection
+```
+
+Example — group assignment **with** custom IdP:
+```
+group_name: developers, origin: testsub12domain-platform, role_collection_name: MyCollection
+```
+
+### Cloud Foundry space user assignment elicitation
+
+**This section applies only when a Cloud Foundry space creation is detected in `specs/landscape.md` or `specs/scenario.md`.**
+
+If a CF space is in scope, ask:
+
+> **"Which users should be assigned to roles in each Cloud Foundry space? For each entry provide: space name (as defined in the landscape), username, and one or more roles."**
+
+The `space_name` MUST match the CF space name in `specs/landscape.md`.
+
+**Origin rules for CF space assignments:**
+- **With custom IdP**: automatically use the origin derived from the IdP URL (see [Origin derivation](#origin-derivation)); do not ask the user to provide or override it.
+- **Without custom IdP** (default SAP IAS / default IdP): use `sap.ids` as the origin.
+
+Accepted role values (fixed list — multiple roles may be selected per user per space; each becomes a separate resource):
+- `space_auditor`
+- `space_developer`
+- `space_manager`
+- `space_supporter`
+
+Example — with custom IdP (origin `testsub12domain-platform`):
+```
+space_name: dev-space, username: jane.smith@example.com, origin: testsub12domain-platform, roles: space_developer, space_manager
+space_name: dev-space, username: bob.jones@example.com, origin: testsub12domain-platform, roles: space_auditor
+space_name: prod-space, username: jane.smith@example.com, origin: testsub12domain-platform, roles: space_manager
+```
+
+Example — without custom IdP (origin defaults to `sap.ids`):
+```
+space_name: dev-space, username: jane.smith@example.com, roles: space_developer, space_manager
+space_name: dev-space, username: bob.jones@example.com, roles: space_auditor
+```
+
+Collect entries as free-form input and normalize each to the structured format before writing to `specs/trust.md`. When no custom IdP is in use, set `origin: sap.ids` on each normalized entry. Each `(space_name, username, role)` combination becomes one `cloudfoundry_space_role` resource.
+
+If no CF space is in scope, do not ask this question.
+
 Write `specs/trust.md` with the complete security configuration. This file is the direct input to `/sap-iac.tasks`.
 
-### `specs/trust.md` format for role collections
+### `specs/trust.md` format
 
-Role collections MUST be written using the following structured format. The `roles` list may be empty.
+#### IdP configuration block
+
+When a custom IdP is in use, write an IdP block at the top of each subaccount section:
 
 ```markdown
 ## <subaccount-name>
 
+### Custom IdP
+- IdP URL: <raw-url>
+- Origin: <derived-origin>
+```
+
+#### Role collections
+
+Role collections MUST be written using the following structured format. The `roles` list may be empty.
+
+```markdown
 ### Role collections
 
 - **Role collection**: <collection-name>
@@ -107,6 +207,61 @@ Role collections MUST be written using the following structured format. The `rol
 Do **not** write role collections using free-form "role template assignments" prose. Each role MUST appear as a structured list entry with all three fields: `role_name`, `role_template_name`, `role_template_app_id`.
 
 > **Migration note**: If a `specs/trust.md` file exists that uses the old unstructured "role template assignments" format, it must be regenerated by re-running `/sap-iac.security` before proceeding to `/sap-iac.tasks`.
+
+#### Role collection assignments
+
+Write assignments after the role collections block. Use the variant that matches the collected assignment type.
+
+**User assignments — without custom IdP:**
+```markdown
+### Role collection assignments (users)
+
+- username: john.doe@example.com, role_collection_name: MyCollection
+```
+
+**User assignments — with custom IdP:**
+```markdown
+### Role collection assignments (users)
+
+- username: john.doe@example.com, origin: testsub12domain-platform, role_collection_name: MyCollection
+```
+
+**Group assignments — without custom IdP:**
+```markdown
+### Role collection assignments (groups)
+
+- group_name: developers, role_collection_name: MyCollection
+```
+
+**Group assignments — with custom IdP:**
+```markdown
+### Role collection assignments (groups)
+
+- group_name: developers, origin: testsub12domain-platform, role_collection_name: MyCollection
+```
+
+#### Cloud Foundry space user assignments
+
+Write CF space assignments when a CF space is in scope. Each `(space_name, username, role)` combination is a separate entry — do not collapse multiple roles into one line. The `origin` field is always present: use the derived custom-IdP origin when a custom IdP is in use; use `sap.ids` when no custom IdP is configured.
+
+**With custom IdP:**
+```markdown
+### CF space user assignments
+
+- space_name: dev-space, username: jane.smith@example.com, origin: testsub12domain-platform, role: space_developer
+- space_name: dev-space, username: jane.smith@example.com, origin: testsub12domain-platform, role: space_manager
+- space_name: dev-space, username: bob.jones@example.com, origin: testsub12domain-platform, role: space_auditor
+- space_name: prod-space, username: jane.smith@example.com, origin: testsub12domain-platform, role: space_manager
+```
+
+**Without custom IdP (origin defaults to `sap.ids`):**
+```markdown
+### CF space user assignments
+
+- space_name: dev-space, username: jane.smith@example.com, origin: sap.ids, role: space_developer
+- space_name: dev-space, username: jane.smith@example.com, origin: sap.ids, role: space_manager
+- space_name: dev-space, username: bob.jones@example.com, origin: sap.ids, role: space_auditor
+```
 
 ## Next step
 

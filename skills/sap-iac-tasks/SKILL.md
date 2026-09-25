@@ -56,7 +56,7 @@ Destination and certificate tasks from `specs/connectivity.md` are ordered after
 
 ## Resource Mapping
 
-This section is the **single authoritative source** for mapping gathered intent to concrete Terraform resource types at the subaccount level. Consult it whenever translating spec entries into task metadata. This table applies **only to subaccount-level resources**; directory-level resources have no equivalent split and are not covered here.
+This section is the **single authoritative source** for mapping gathered intent to concrete Terraform resource types. Consult it whenever translating spec entries into task metadata. It covers subaccount-level and Cloud Foundry resources; directory-level resources have no equivalent split and are not covered here.
 
 | Intent | Resource to use | Resource to NEVER use |
 |---|---|---|
@@ -64,6 +64,9 @@ This section is the **single authoritative source** for mapping gathered intent 
 | Destination certificate | `btp_subaccount_destination_certificate` | — |
 | Role collection (definition) | `btp_subaccount_role_collection_base` | `btp_subaccount_role_collection` |
 | Role assigned to a collection | `btp_subaccount_role_collection_role` | `btp_subaccount_role_collection` |
+| Role collection user/group assignment | `btp_subaccount_role_collection_assignment` | `btp_subaccount_role_collection` |
+| Cloud Foundry space | `cloudfoundry_space` | — |
+| CF space role assignment | `cloudfoundry_space_role` | — |
 
 ---
 
@@ -91,6 +94,12 @@ For each role collection entry in `specs/trust.md`, apply the Resource Mapping t
 1. Create a `btp_subaccount_role_collection_base` task for the collection. This task **depends on** the subaccount task it is scoped to. Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = <name>`, `subaccount = <subaccount-name>`, `description = <optional>`.
 2. For each role in the collection's structured roles list, create a `btp_subaccount_role_collection_role` task. This task **depends on** the corresponding base task. Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = <collection-name>`, `subaccount = <subaccount-name>`, `role_name = <role-name>`, `role_template_name = <template-name>`, `role_template_app_id = <app-id>`.
 3. If the roles list is empty, create only the base task — no role tasks.
+
+For each Cloud Foundry space in `specs/landscape.md`, create one `cloudfoundry_space` task. This task depends on its Cloud Foundry environment task. Task metadata: `resource_type = cloudfoundry_space`, `name = <space-name>`, and `subaccount = <subaccount-name>`.
+
+For each role collection assignment entry in the `### Role collection assignments` block of `specs/trust.md`, create one `btp_subaccount_role_collection_assignment` task. This task **depends on** the corresponding `btp_subaccount_role_collection_base` task. Task metadata: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount = <subaccount-name>`, `role_collection_name = <collection-name>`, and either `user_name = <username>` (for user assignments) or `group_name = <group-name>` (for group assignments). When an `origin` field is present in the trust entry, include `origin = <origin>` in the metadata.
+
+For each CF space role assignment entry in the `### CF space user assignments` block of `specs/trust.md`, create one `cloudfoundry_space_role` task per entry (each entry already represents one `(space_name, username, role)` combination). This task **depends on** the Cloud Foundry space task for the named space. Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = <space-name>`, `username = <username>`, `role_type = <role>`, `origin = <origin>`.
 
 ### Step 2 — Build task list
 

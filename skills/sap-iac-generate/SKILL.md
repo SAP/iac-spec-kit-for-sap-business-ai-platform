@@ -271,6 +271,65 @@ The `name` attribute MUST reference the corresponding `btp_subaccount_role_colle
 
 ---
 
+## Role collection assignment generation (subaccount level)
+
+For tasks with `resource_type = btp_subaccount_role_collection_assignment`, emit:
+
+```hcl
+resource "btp_subaccount_role_collection_assignment" "<resource-label>" {
+  subaccount_id        = <subaccount_id reference>
+  role_collection_name = btp_subaccount_role_collection_base.<base-resource-label>.name
+  user_name            = "<username>"   # user assignment — omit when group assignment
+  group_name           = "<group-name>" # group assignment — omit when user assignment
+  origin               = "<origin>"     # omit when absent from task metadata
+}
+```
+
+Rules:
+- `role_collection_name` MUST reference the corresponding `btp_subaccount_role_collection_base` resource via a Terraform expression, not a literal string.
+- Emit `user_name` for user assignments; emit `group_name` for group assignments. Never emit both.
+- Emit `origin` only when the task metadata contains an `origin` field; omit it otherwise.
+- This resource MUST be placed in the same configuration unit as its `btp_subaccount_role_collection_base` dependency. Add `SAP/btp` to `required_providers` (already present for any unit with BTP resources).
+
+---
+
+## Cloud Foundry space and role generation
+
+For tasks with `resource_type = cloudfoundry_space`, emit:
+
+```hcl
+resource "cloudfoundry_space" "<resource-label>" {
+  name = "<space-name>"
+  org  = var.cf_org_id
+}
+```
+
+Rules:
+- `name` is the space name from task metadata.
+- `org` MUST use `var.cf_org_id`, the Cloud Foundry organization ID handed over from the corresponding BTP configuration unit.
+- This resource uses the `cloudfoundry/cloudfoundry` provider and MUST be placed in the CF configuration unit. Add that provider to `required_providers` in any unit containing this resource.
+
+For tasks with `resource_type = cloudfoundry_space_role`, emit:
+
+```hcl
+resource "cloudfoundry_space_role" "<resource-label>" {
+  space    = <cf_space_id reference>
+  type     = "<role_type>"
+  username = "<username>"
+  origin   = "<origin>"
+}
+```
+
+Rules:
+- `space` MUST reference the `cloudfoundry_space` resource for the named space via a Terraform expression (e.g. `cloudfoundry_space.dev_space.id`), not a hardcoded ID.
+- `type` is the `role_type` value from task metadata (e.g. `space_developer`, `space_auditor`).
+- `username` is the `username` from task metadata.
+- `origin` is the `origin` from task metadata (either the derived custom-IdP origin or `sap.ids`).
+- This resource uses the `cloudfoundry/cloudfoundry` provider. Add `cloudfoundry/cloudfoundry` to `required_providers` in any configuration unit that contains at least one `cloudfoundry_space_role` resource (it is already present when CF service instances or space resources exist in the same unit).
+- Each `cloudfoundry_space_role` resource depends on its `cloudfoundry_space` resource; the reference expression creates this dependency implicitly — no `depends_on` is needed.
+
+---
+
 ## File layout and cross-directory wiring
 
 Write each configuration unit using the standard layout defined by `/sap-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.

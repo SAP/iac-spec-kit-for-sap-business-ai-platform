@@ -445,6 +445,40 @@ resource "btp_subaccount_environment_instance" "<label>" {
 - **WHEN** no CF environment instance is generated in a configuration unit
 - **THEN** `providers.tf` does not include a `required_version` constraint
 
+### Requirement: generate role collection assignment resources
+For each task with `resource_type = btp_subaccount_role_collection_assignment`, the command SHALL emit one `btp_subaccount_role_collection_assignment` resource. The `role_collection_name` attribute SHALL reference the corresponding `btp_subaccount_role_collection_base` resource via a Terraform expression (not a literal string), creating an implicit dependency. For user assignments the resource SHALL emit `user_name`; for group assignments it SHALL emit `group_name`. The `origin` attribute SHALL be included only when the task metadata contains an `origin` field; it SHALL be omitted otherwise.
+
+#### Scenario: user assignment resource
+- **WHEN** a task has `resource_type = btp_subaccount_role_collection_assignment` and `user_name` in its metadata
+- **THEN** the generated resource contains `user_name` and references the base collection via expression; `origin` is included when present in task metadata
+
+#### Scenario: group assignment resource
+- **WHEN** a task has `resource_type = btp_subaccount_role_collection_assignment` and `group_name` in its metadata
+- **THEN** the generated resource contains `group_name` and references the base collection via expression; `origin` is included when present in task metadata
+
+#### Scenario: origin omitted when absent
+- **WHEN** a `btp_subaccount_role_collection_assignment` task metadata contains no `origin` field
+- **THEN** the generated resource does not include an `origin` attribute
+
+### Requirement: generate Cloud Foundry space and role resources
+For each task with `resource_type = cloudfoundry_space`, the command SHALL emit one `cloudfoundry_space` resource in the CF configuration unit. Its `name` attribute SHALL be the task's space name and its `org` attribute SHALL use `var.cf_org_id`, the organization ID handed over from the corresponding BTP configuration unit. For each task with `resource_type = cloudfoundry_space_role`, the command SHALL emit one `cloudfoundry_space_role` resource. The `space` attribute SHALL reference the corresponding generated `cloudfoundry_space` resource via a Terraform expression (not a hardcoded ID). The `type` attribute is the `role_type` from task metadata; `username` is the `username`; `origin` is the `origin` (either the derived custom-IdP origin or `sap.ids`). The `cloudfoundry/cloudfoundry` provider SHALL be added to `required_providers` in any configuration unit containing at least one `cloudfoundry_space` or `cloudfoundry_space_role` resource.
+
+#### Scenario: CF space resource emitted
+- **WHEN** a task has `resource_type = cloudfoundry_space`
+- **THEN** the generated resource contains its name and `org = var.cf_org_id`
+
+#### Scenario: space role resource emitted
+- **WHEN** a task has `resource_type = cloudfoundry_space_role`
+- **THEN** the generated resource contains `space` (reference expression), `type`, `username`, and `origin` attributes
+
+#### Scenario: space reference is not a literal
+- **WHEN** a `cloudfoundry_space_role` task is generated
+- **THEN** the `space` attribute references the `cloudfoundry_space` resource expression for the named space, not a hardcoded ID
+
+#### Scenario: cloudfoundry provider added for space resources
+- **WHEN** a configuration unit contains at least one `cloudfoundry_space` or `cloudfoundry_space_role` task
+- **THEN** `providers.tf` includes `cloudfoundry/cloudfoundry` in `required_providers`
+
 ### Requirement: lift placeholder values into variables
 Before writing each generated `.tf` file, the command SHALL scan every string literal that is about to be emitted. Any value that is a placeholder — matching the `<something>` angle-bracket pattern, a bare keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`), or a string starting with `my-` / `my_` when no concrete value was supplied in the task metadata — SHALL NOT be written as a literal string. Instead the command SHALL:
 

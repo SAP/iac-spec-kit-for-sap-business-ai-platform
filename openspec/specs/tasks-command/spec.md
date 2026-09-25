@@ -22,7 +22,7 @@ The command SHALL read `specs/landscape.md`, `specs/services.md`, and `specs/tru
 - **THEN** the command produces a dependency-ordered task list that also includes destination and certificate tasks derived from `specs/connectivity.md`
 
 ### Requirement: preserve account environments as tasks
-The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Environment tasks SHALL depend on their subaccount, and Cloud Foundry space tasks SHALL depend on their Cloud Foundry environment. Every `btp_subaccount_environment_instance` task SHALL carry `environment_type` in its task metadata, set to `cloudfoundry` for Cloud Foundry environments and `kyma` for Kyma environments.
+The command SHALL create a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space defined in `specs/landscape.md`. Each task SHALL retain its subaccount, resource type, and name. Cloud Foundry space tasks SHALL use `resource_type = cloudfoundry_space` and depend on their Cloud Foundry environment task. Environment tasks SHALL depend on their subaccount. Every `btp_subaccount_environment_instance` task SHALL carry `environment_type` in its task metadata, set to `cloudfoundry` for Cloud Foundry environments and `kyma` for Kyma environments.
 
 #### Scenario: landscape contains account environments
 - **WHEN** `specs/landscape.md` defines Cloud Foundry or Kyma environments and Cloud Foundry spaces
@@ -35,6 +35,10 @@ The command SHALL create a task for every Cloud Foundry environment, Kyma enviro
 #### Scenario: Kyma environment task carries environment_type
 - **WHEN** `specs/landscape.md` defines a Kyma environment for a subaccount
 - **THEN** its `btp_subaccount_environment_instance` task metadata contains `environment_type = kyma`
+
+#### Scenario: CF space task has a concrete resource type
+- **WHEN** `specs/landscape.md` defines a Cloud Foundry space
+- **THEN** its task metadata contains `resource_type = cloudfoundry_space`, its name and subaccount, and it depends on its Cloud Foundry environment task
 
 ### Requirement: preserve confirmed subaccount classification metadata
 For every subaccount task, the command SHALL copy `subdomain`, `region`, and any confirmed `usage` and `beta_enabled` values from `specs/landscape.md` into structured task metadata. The task metadata is generation input and SHALL NOT alter values downstream. When a legacy landscape omits `usage` or `beta_enabled`, the command SHALL still create the task without inferring, requesting, or inventing the unavailable metadata. `subdomain` and `region` are always present for a valid subaccount entry and SHALL always be copied.
@@ -127,3 +131,33 @@ Each task SHALL be annotated with the stage(s) it belongs to (e.g. `dev`, `test`
 #### Scenario: tasks annotated with stages
 - **WHEN** `specs/tasks.md` is written
 - **THEN** every task entry includes a `stage` annotation
+
+### Requirement: generate role collection assignment tasks
+For each role collection assignment entry in `specs/trust.md`, the command SHALL create one `btp_subaccount_role_collection_assignment` task. Each task SHALL depend on the corresponding `btp_subaccount_role_collection_base` task. Task metadata SHALL include: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount`, `role_collection_name`, and either `user_name` (user assignments) or `group_name` (group assignments). When an `origin` field is present in the trust entry, the task metadata SHALL include `origin`.
+
+#### Scenario: user assignment task created
+- **WHEN** a user assignment entry exists in the trust file role collection assignments block
+- **THEN** one btp_subaccount_role_collection_assignment task is created with user_name and optional origin, depending on the base task
+
+#### Scenario: group assignment task created
+- **WHEN** a group assignment entry exists in the trust file role collection assignments block
+- **THEN** one btp_subaccount_role_collection_assignment task is created with group_name and optional origin, depending on the base task
+
+#### Scenario: no assignments in trust file
+- **WHEN** no role collection assignment block is present in specs/trust.md
+- **THEN** no btp_subaccount_role_collection_assignment tasks are created
+
+### Requirement: generate CF space role tasks
+For each CF space role assignment entry in `specs/trust.md`, the command SHALL create one `cloudfoundry_space_role` task. Each entry represents one `(space_name, username, role)` tuple. Each task SHALL depend on the Cloud Foundry space task for the named space. Task metadata SHALL include: `resource_type = cloudfoundry_space_role`, `space_name`, `username`, `role_type`, `origin`.
+
+#### Scenario: CF space role task created per tuple
+- **WHEN** a CF space user assignment entry exists in specs/trust.md
+- **THEN** one cloudfoundry_space_role task is created for that (space_name, username, role) tuple, depending on the CF space task
+
+#### Scenario: dependency on CF space task
+- **WHEN** generating a cloudfoundry_space_role task
+- **THEN** the task depends on the Cloud Foundry space task whose name matches space_name
+
+#### Scenario: no CF space assignments in trust file
+- **WHEN** no CF space user assignments block is present in specs/trust.md
+- **THEN** no cloudfoundry_space_role tasks are created
