@@ -89,7 +89,7 @@ The command SHALL execute each task from `specs/tasks.md` in dependency order, w
 The command SHALL generate each service resource with the provider indicated by its `resource_type`:
 
 - `btp_subaccount_service_instance` — BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
-- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, resolving offering/plan via CF data sources. Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
+- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, using `service_offering_name` and `service_plan_name` attributes directly (no data source). Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
 - `btp_subaccount_subscription` — BTP provider (`btp_subaccount_subscription`) paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
 - `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
 
@@ -444,3 +444,33 @@ resource "btp_subaccount_environment_instance" "<label>" {
 #### Scenario: required_version constraint omitted when no CF environment present
 - **WHEN** no CF environment instance is generated in a configuration unit
 - **THEN** `providers.tf` does not include a `required_version` constraint
+
+### Requirement: lift placeholder values into variables
+Before writing each generated `.tf` file, the command SHALL scan every string literal that is about to be emitted. Any value that is a placeholder — matching the `<something>` angle-bracket pattern, a bare keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`), or a string starting with `my-` / `my_` when no concrete value was supplied in the task metadata — SHALL NOT be written as a literal string. Instead the command SHALL:
+
+1. Derive a `snake_case` variable name using the format `<resource_type>_<resource_label>_<attribute_name>`, where `<resource_type>` and `<resource_label>` are the first and second strings in `resource "type" "label"`, and `<attribute_name>` is the HCL attribute key lowercased with hyphens replaced by underscores. This formula is unique for every resource attribute in a configuration unit. Examples: resource type `btp_subaccount_role_collection_base`, label `dev_admins`, attribute `name` → `btp_subaccount_role_collection_base_dev_admins_name`; resource type `btp_subaccount_service_instance`, label `hana`, attribute `name` → `btp_subaccount_service_instance_hana_name`.
+2. Declare the variable in the configuration unit's `variables.tf` with no `default` value; set `sensitive = true` only for credentials or secrets.
+3. Replace the placeholder in the `.tf` file with `var.<variable_name>`.
+4. Add a corresponding entry to `terraform.tfvars.example` (merged per the provider-initialization tfvars example rule), using the original placeholder text as the example value.
+
+The auth variables and `globalaccount_subdomain` declared by the authentication and provider-initialization requirements already satisfy this rule for their respective attributes; the command SHALL NOT emit duplicate variable declarations for those.
+
+#### Scenario: angle-bracket placeholder lifted to variable
+- **WHEN** a generated HCL attribute value would be a string matching `<something>`
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: TODO/FIXME/TBD sentinel lifted to variable
+- **WHEN** a generated HCL attribute value is a bare sentinel keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`)
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: my- prefix stand-in lifted to variable
+- **WHEN** a generated HCL attribute value starts with `my-` or `my_` and no concrete value was supplied for that attribute in the task metadata
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: task-provided value is not a placeholder
+- **WHEN** a string value was explicitly provided in the task metadata for an attribute
+- **THEN** it is emitted as a literal string, even if it starts with `my-` or otherwise resembles a placeholder
+
+#### Scenario: no duplicate auth or globalaccount variables
+- **WHEN** the placeholder detection pass runs on a BTP configuration unit
+- **THEN** it does not emit additional declarations for variables already declared by the authentication or provider-initialization requirements

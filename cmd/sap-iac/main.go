@@ -46,7 +46,7 @@ func versionCmd() *cobra.Command {
 		Short: "Print the binary version",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, _ []string) {
-			fmt.Fprintln(cmd.OutOrStdout(), version)
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), version)
 		},
 	}
 }
@@ -270,6 +270,19 @@ func convertCmd() *cobra.Command {
 			for i, p := range planList {
 				planList[i] = strings.TrimSpace(p)
 			}
+			if service == "" {
+				return fmt.Errorf("--service must not be empty")
+			}
+			filtered := planList[:0]
+			for _, p := range planList {
+				if p != "" {
+					filtered = append(filtered, p)
+				}
+			}
+			if len(filtered) == 0 {
+				return fmt.Errorf("--plans must contain at least one non-empty plan name")
+			}
+			planList = filtered
 			out, err := catalogue.Convert(schemaBytes, service, planList)
 			if err != nil {
 				return fmt.Errorf("convert: %w", err)
@@ -319,12 +332,16 @@ func findProjectRoot(dir string) (string, bool) {
 
 // appendToCatalogue appends data to dest, inserting a newline separator when
 // the file is non-empty and does not already end with one.
-func appendToCatalogue(dest string, data []byte) error {
+func appendToCatalogue(dest string, data []byte) (retErr error) {
 	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return fmt.Errorf("open catalogue: %w", err)
 	}
-	defer f.Close() //nolint:errcheck
+	defer func() {
+		if err := f.Close(); err != nil && retErr == nil {
+			retErr = fmt.Errorf("close catalogue: %w", err)
+		}
+	}()
 	if fi, err := f.Stat(); err == nil && fi.Size() > 0 {
 		buf := make([]byte, 1)
 		if _, err := f.ReadAt(buf, fi.Size()-1); err == nil && buf[0] != '\n' {

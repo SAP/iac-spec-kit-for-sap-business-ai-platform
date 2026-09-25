@@ -4,7 +4,7 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.4"
+  version: "1.5"
 ---
 
 # BTP IaC — Generate
@@ -185,11 +185,12 @@ When a `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task
 
 ```hcl
 # Example: task entry has parameters: { data: { memory: 32, edition: "cloud", generateSystemPassword: true } }
+# Task metadata provides no concrete name, so the generated stand-in is lifted to a variable.
 resource "btp_subaccount_service_instance" "hana" {
   subaccount_id         = btp_subaccount.dev.id
   service_offering_name = "hana-cloud"
   serviceplan_name      = "hana"
-  name                  = "my-hana"
+  name                  = var.btp_subaccount_service_instance_hana_name
   parameters = jsonencode({
     data = {
       memory                 = 32
@@ -199,14 +200,32 @@ resource "btp_subaccount_service_instance" "hana" {
   })
 }
 
+# Corresponding variables.tf entry:
+variable "btp_subaccount_service_instance_hana_name" {
+  type        = string
+  description = "Name of the hana service instance."
+}
+
+# Corresponding terraform.tfvars.example entry:
+# btp_subaccount_service_instance_hana_name = "<hana-instance-name>"
+
 # Example: task entry has no parameters block
 resource "btp_subaccount_service_instance" "alert_notification" {
   subaccount_id         = btp_subaccount.dev.id
   service_offering_name = "alert-notification"
   serviceplan_name      = "free"
-  name                  = "my-alert-notification"
+  name                  = var.btp_subaccount_service_instance_alert_notification_name
   # no parameters attribute
 }
+
+# Corresponding variables.tf entry:
+variable "btp_subaccount_service_instance_alert_notification_name" {
+  type        = string
+  description = "Name of the alert_notification service instance."
+}
+
+# Corresponding terraform.tfvars.example entry:
+# btp_subaccount_service_instance_alert_notification_name = "<alert-notification-instance-name>"
 ```
 
 ### Entitlement quota — quota_required flag
@@ -417,6 +436,87 @@ provider "cloudfoundry" {
   api_url      = var.cf_api_url
   sso_passcode = var.cf_sso_passcode
 }
+```
+
+---
+
+## Placeholder Variables
+
+**Any placeholder value** that would appear as a string literal in generated HCL must instead be expressed as a Terraform `variable` in `variables.tf` and listed as a placeholder entry in `terraform.tfvars.example`. Never emit a raw placeholder string directly inside a resource, data source, or locals block in any `.tf` file.
+
+### What counts as a placeholder
+
+A value is a placeholder when it:
+- Matches the pattern `<something>` (angle-bracket sentinel, e.g. `<collection-name>`, `<role-template-app-id>`, `<your-value>`)
+- Is a bare keyword: `TODO`, `FIXME`, `TBD`, `CHANGEME`
+- Starts with the prefix `my-` or `my_` and no concrete value was supplied in the task metadata for that attribute (e.g. `"my-hana"`, `"my-subaccount"`)
+
+A value is **not** a placeholder when it was explicitly provided in the task metadata — even if it happens to look generic.
+
+### Detection pass
+
+Before writing each `.tf` file, scan every string literal that is about to be emitted. For each placeholder found:
+
+1. **Derive a variable name** using the format `<resource_type>_<resource_label>_<attribute_name>` — where `<resource_type>` and `<resource_label>` are the first and second strings in `resource "type" "label"`, and `<attribute_name>` is the HCL attribute key, lowercased with hyphens replaced by underscores. This produces a unique, predictable name for every resource attribute in a configuration unit. Examples: resource type `"btp_subaccount_role_collection_base"`, label `"dev_admins"`, attribute `name` → `btp_subaccount_role_collection_base_dev_admins_name`; resource type `"btp_subaccount_service_instance"`, label `"hana"`, attribute `name` → `btp_subaccount_service_instance_hana_name`; resource type `"btp_subaccount_role"`, label `"dev_admins"`, attribute `app_id` → `btp_subaccount_role_dev_admins_app_id`.
+2. **Declare the variable** in the configuration unit's `variables.tf`:
+   ```hcl
+   # resource "btp_subaccount_role" "developer" { app_id = "<role-template-app-id>" }
+   # → variable name: btp_subaccount_role_developer_app_id
+   variable "btp_subaccount_role_developer_app_id" {
+     type        = string
+     description = "Application ID of the developer role template."
+   }
+   ```
+   - No `default` value — the user must supply it.
+   - `sensitive = true` only for values that are credentials or secrets; omit it for names, descriptions, and identifiers.
+3. **Replace the placeholder** in the `.tf` file with `var.<variable_name>`.
+4. **Add an entry** to `terraform.tfvars.example` (merged per the existing merge rule):
+   ```hcl
+   btp_subaccount_role_developer_app_id = "<role-template-app-id>"
+   ```
+   Preserve the original placeholder text as the example value so the user knows what to fill in.
+
+### Scope
+
+Apply this rule to **all generated `.tf` files** in all configuration units — `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`. The auth-variable and globalaccount rules already satisfy this requirement for their respective attributes; do not duplicate those variables.
+
+### Example
+
+Before (placeholder in `main.tf`):
+```hcl
+resource "btp_subaccount_role_collection_base" "dev_admins" {
+  subaccount_id = btp_subaccount.dev.id
+  name          = "<collection-name>"
+  description   = "<optional description>"
+}
+```
+
+After (variable reference in `main.tf`):
+```hcl
+resource "btp_subaccount_role_collection_base" "dev_admins" {
+  subaccount_id = btp_subaccount.dev.id
+  name          = var.btp_subaccount_role_collection_base_dev_admins_name
+  description   = var.btp_subaccount_role_collection_base_dev_admins_description
+}
+```
+
+Corresponding `variables.tf` additions:
+```hcl
+variable "btp_subaccount_role_collection_base_dev_admins_name" {
+  type        = string
+  description = "Name of the dev_admins role collection."
+}
+
+variable "btp_subaccount_role_collection_base_dev_admins_description" {
+  type        = string
+  description = "Description of the dev_admins role collection."
+}
+```
+
+Corresponding `terraform.tfvars.example` additions:
+```hcl
+btp_subaccount_role_collection_base_dev_admins_name        = "<collection-name>"
+btp_subaccount_role_collection_base_dev_admins_description = "<optional description>"
 ```
 
 ---

@@ -5,6 +5,7 @@ package catalogue
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -86,8 +87,13 @@ func Convert(schemaBytes []byte, service string, plans []string) ([]byte, error)
 		},
 	}
 
-	for key, val := range props {
-		prop, _ := val.(map[string]any)
+	keys := make([]string, 0, len(props))
+	for k := range props {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		prop, _ := props[key].(map[string]any)
 		prop = resolveRef(prop, root)
 		p := buildParam(key, prop, root)
 		if requiredSet[key] {
@@ -101,19 +107,19 @@ func Convert(schemaBytes []byte, service string, plans []string) ([]byte, error)
 }
 
 // extractSchemaFromCatalog pulls the service_instance create parameters schema
-// from a BTP service catalog entry (the first plan's first schema entry).
+// from a BTP service catalog entry (the first plan's schemas map).
+// The BTP Open Service Broker API returns schemas as map[string]any, not []any.
 func extractSchemaFromCatalog(catalog map[string]any) (map[string]any, error) {
 	sp, _ := catalog["servicePlans"].([]any)
 	if len(sp) == 0 {
 		return nil, fmt.Errorf("servicePlans is empty")
 	}
 	plan, _ := sp[0].(map[string]any)
-	schemas, _ := plan["schemas"].([]any)
-	if len(schemas) == 0 {
+	schemas, _ := plan["schemas"].(map[string]any)
+	if schemas == nil {
 		return nil, fmt.Errorf("no schemas in first service plan")
 	}
-	schemaEntry, _ := schemas[0].(map[string]any)
-	si, _ := schemaEntry["service_instance"].(map[string]any)
+	si, _ := schemas["service_instance"].(map[string]any)
 	create, _ := si["create"].(map[string]any)
 	params, _ := create["parameters"].(map[string]any)
 	if params == nil {
@@ -161,7 +167,16 @@ func buildParam(key string, prop map[string]any, root map[string]any) Param {
 }
 
 // exampleValue derives an example value from a property schema.
+// visited tracks $ref paths already on the call stack to prevent infinite
+// recursion on self-referential schemas.
 func exampleValue(key string, prop map[string]any, root map[string]any) any {
+	return exampleValueDepth(key, prop, root, 0)
+}
+
+func exampleValueDepth(key string, prop map[string]any, root map[string]any, depth int) any {
+	if depth > 20 {
+		return "<" + key + ">"
+	}
 	// Unresolved $ref: use the ref string as the placeholder so the YAML is
 	// clearly not a real value.
 	if ref, ok := prop["_unresolved"].(string); ok && ref != "" {
@@ -182,7 +197,7 @@ func exampleValue(key string, prop map[string]any, root map[string]any) any {
 			for subKey, subVal := range subProps {
 				subProp, _ := subVal.(map[string]any)
 				subProp = resolveRef(subProp, root)
-				nested[subKey] = exampleValue(subKey, subProp, root)
+				nested[subKey] = exampleValueDepth(subKey, subProp, root, depth+1)
 			}
 			return nested
 		}
@@ -250,12 +265,11 @@ func marshalEntry(e Entry) ([]byte, error) {
 	appendStrSeq(entryMap, "plans", e.Plans)
 	appendStr(entryMap, "source", e.Source)
 
-	// parameters map
-	appendStr(entryMap, "parameters", "")
-	paramsKey := entryMap.Content[len(entryMap.Content)-2]
-	paramsKey.Value = "parameters"
+	// parameters map — keep a direct reference to the value node so the
+	// back-patch is position-independent (safe if more fields are added above).
+	paramsKeyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: "parameters", Tag: "!!str"}
 	paramsMap := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
-	entryMap.Content[len(entryMap.Content)-1] = paramsMap
+	entryMap.Content = append(entryMap.Content, paramsKeyNode, paramsMap)
 
 	appendParamList(paramsMap, "required", e.Parameters.Required)
 	appendParamList(paramsMap, "optional", e.Parameters.Optional)

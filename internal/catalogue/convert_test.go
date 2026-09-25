@@ -334,6 +334,60 @@ func TestConvert_SourceIsUserDefined(t *testing.T) {
 	}
 }
 
+func TestConvert_BTPServiceCatalog(t *testing.T) {
+	// BTP Open Service Broker API shape: schemas is map[string]any, not []any.
+	catalog := `{
+		"servicePlans": [{
+			"name": "standard",
+			"schemas": {
+				"service_instance": {
+					"create": {
+						"parameters": {
+							"type": "object",
+							"required": ["region"],
+							"properties": {
+								"region": {
+									"type": "string",
+									"description": "Deployment region"
+								},
+								"tier": {
+									"type": "string",
+									"description": "Service tier"
+								}
+							}
+						}
+					}
+				}
+			}
+		}]
+	}`
+	out, err := Convert([]byte(catalog), "my-btp-service", []string{"standard"})
+	if err != nil {
+		t.Fatalf("Convert BTP catalog: %v", err)
+	}
+	s := string(out)
+	if !strings.Contains(s, "service: my-btp-service") {
+		t.Errorf("service name missing: %s", s)
+	}
+	if !strings.Contains(s, "Deployment region") {
+		t.Errorf("required param description missing: %s", s)
+	}
+	if !strings.Contains(s, "key: region") {
+		t.Errorf("required param key missing: %s", s)
+	}
+	if !strings.Contains(s, "key: tier") {
+		t.Errorf("optional param key missing: %s", s)
+	}
+}
+
+func TestConvert_BTPServiceCatalogMissingSchemas(t *testing.T) {
+	catalog := `{"servicePlans": [{"name": "standard"}]}`
+	_, err := Convert([]byte(catalog), "svc", []string{"standard"})
+	if err == nil {
+		t.Fatal("expected error for missing schemas")
+	}
+}
+
 func TestConvert_PlansInOutput(t *testing.T) {
 	schema := `{"type":"object","properties":{}}`
 	out, err := Convert([]byte(schema), "my-service", []string{"plan-a", "plan-b"})

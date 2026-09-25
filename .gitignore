@@ -36,6 +36,10 @@ site/
 # GoReleaser build output
 dist/
 
+# Local build artifacts
+sap-iac
+sap-iac-eval
+
 # Editor/IDE
 # .idea/
 # .vscode/
