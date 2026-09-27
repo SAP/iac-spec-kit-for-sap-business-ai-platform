@@ -182,3 +182,18 @@ If a created space has another space-scoped task but `specs/trust.md` contains n
 #### Scenario: organization-scoped and BTP resources are unchanged
 - **WHEN** tasks are organization-scoped, BTP-provider-managed, or not scoped to a created CF space
 - **THEN** the command does not add CF space-role dependencies to those tasks
+
+### Requirement: generate trust-configuration tasks with explicit-origin provenance
+For each IdP trust configuration in `specs/trust.md`, the command SHALL create a `btp_subaccount_trust_configuration` task with the custom IdP URL as `identity_provider`. It SHALL add an `origin` value and `origin_explicit = true` to that task only when the trust configuration data contains both an origin value and `Trust configuration origin explicit: true`. The command SHALL NOT copy a URL-derived origin into trust-configuration task metadata.
+
+#### Scenario: trust configuration without an explicit origin
+- **WHEN** a trust configuration contains an IdP URL but no explicitly marked trust-configuration origin
+- **THEN** its task metadata contains `resource_type = btp_subaccount_trust_configuration` and `identity_provider`, and contains neither `origin` nor an explicit-origin marker
+
+#### Scenario: trust configuration with an explicit origin
+- **WHEN** a trust configuration contains an origin and `Trust configuration origin explicit: true`
+- **THEN** its task metadata contains `identity_provider`, the explicit `origin`, and `origin_explicit = true`
+
+#### Scenario: derived origin is not mapped to trust configuration
+- **WHEN** `specs/trust.md` contains a URL-derived origin for role or Cloud Foundry assignment use
+- **THEN** that derived value is not added to any `btp_subaccount_trust_configuration` task

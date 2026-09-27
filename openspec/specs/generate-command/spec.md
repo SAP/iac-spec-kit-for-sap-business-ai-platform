@@ -525,3 +525,18 @@ The auth variables and `globalaccount_subdomain` declared by the authentication 
 #### Scenario: no duplicate auth or globalaccount variables
 - **WHEN** the placeholder detection pass runs on a BTP configuration unit
 - **THEN** it does not emit additional declarations for variables already declared by the authentication or provider-initialization requirements
+
+### Requirement: generate trust configuration origin only from explicit input
+For each task with `resource_type = btp_subaccount_trust_configuration`, the command SHALL emit a resource with its `identity_provider`. It SHALL emit the resource `origin` attribute only when task metadata contains both an origin value and `origin_explicit = true`. The command SHALL NOT derive an origin from `identity_provider`, nor emit an origin from a URL-derived value.
+
+#### Scenario: trust configuration generated from IdP URL alone
+- **WHEN** a trust-configuration task contains `identity_provider` and no explicit-origin marker
+- **THEN** the generated `btp_subaccount_trust_configuration` resource contains `identity_provider` and omits `origin`
+
+#### Scenario: trust configuration generated with explicit origin
+- **WHEN** a trust-configuration task contains an origin value marked explicitly user-supplied
+- **THEN** the generated `btp_subaccount_trust_configuration` resource contains both `identity_provider` and that `origin` value
+
+#### Scenario: non-trust resources retain origin behavior
+- **WHEN** generation handles any resource type other than `btp_subaccount_trust_configuration`
+- **THEN** its existing origin derivation, propagation, and emission behavior remains unchanged

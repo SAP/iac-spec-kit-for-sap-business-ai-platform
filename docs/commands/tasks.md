@@ -21,6 +21,7 @@ After `sap-iac.accounts`, `sap-iac.services`, and `sap-iac.security` have all pr
 - Merges the specs into one ordered list.
 - Assigns task IDs and adds parallel-execution markers.
 - Creates a task for every Cloud Foundry environment, Kyma environment, and Cloud Foundry space in the landscape; each Cloud Foundry space task depends on its Cloud Foundry environment.
+- Creates one `btp_subaccount_trust_configuration` task for each custom IdP trust entry. The task always carries the IdP URL as `identity_provider`; it carries `origin` only when security recorded both an explicit trust-configuration origin and its explicit marker.
 - Preserves each service instance's `location`; a CF-located instance retains its `cf_space`, depends on that space, and—when the space is created in the task list—depends on every recorded CF space-role task for that space. This creates `space -> roles -> same-space resource`. If a required space has no recorded roles, stops and directs you to rerun `sap-iac.security`; BTP and organization-scoped resources are unchanged.
 - Annotates each task with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`). All tasks are written regardless of stage; the annotation is consumed by [`sap-iac.generate`](generate.md) to filter which tasks are generated.
 - Writes every task unchecked (`- [ ]`); [`sap-iac.generate`](generate.md) marks tasks `- [x]` as it completes them.

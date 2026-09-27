@@ -243,6 +243,27 @@ resource "btp_subaccount_entitlement" "my_service" {
 
 ---
 
+## Custom IdP trust configuration generation (subaccount level)
+
+For tasks with `resource_type = btp_subaccount_trust_configuration`, emit:
+
+```hcl
+resource "btp_subaccount_trust_configuration" "<resource-label>" {
+  subaccount_id     = <subaccount_id reference>
+  identity_provider = "<identity-provider-url>"
+  origin            = "<origin>" # omit unless origin_explicit = true
+}
+```
+
+Rules:
+- `subaccount_id` MUST reference the matching subaccount resource.
+- `identity_provider` is the URL from task metadata. It is sufficient when no explicit origin was captured.
+- Emit `origin` only when task metadata contains both `origin` and `origin_explicit = true`.
+- Never derive `origin` from `identity_provider`, and never use a derived origin from another task or metadata field.
+- This rule applies only to `btp_subaccount_trust_configuration`. Keep origin handling for every other resource type unchanged.
+
+---
+
 ## Role collection and role generation (subaccount level)
 
 For tasks with `resource_type = btp_subaccount_role_collection_base`, emit:

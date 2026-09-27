@@ -87,7 +87,9 @@ From the IdP URL, derive the **origin** as follows:
 
 Example: `testsub12domain.accounts.ondemand.com` → origin is `testsub12domain-platform`
 
-Record the derived origin alongside the IdP URL in `specs/trust.md`. The origin value is reused in role collection assignments (see below) and in Cloud Foundry space assignments (see below).
+Record the derived origin alongside the IdP URL in `specs/trust.md`. The derived value is reused in role collection assignments (see below) and in Cloud Foundry space assignments (see below). It MUST NOT be used as the `origin` of `btp_subaccount_trust_configuration`; the identity-provider URL is sufficient for that resource unless the user explicitly supplied a trust-configuration origin.
+
+After recording the derived origin, ask: **"The derived origin is `<derived-origin>`. Optionally, provide a different explicit origin for this IdP trust configuration; leave blank to omit the Terraform `origin` attribute."** Record a trust-configuration origin only when the user supplies it, followed by `Trust configuration origin explicit: true`. Do not create either field from the derived origin.
 
 ### Role collection elicitation
 
@@ -184,7 +186,11 @@ When a custom IdP is in use, write an IdP block at the top of each subaccount se
 ### Custom IdP
 - IdP URL: <raw-url>
 - Origin: <derived-origin>
+- Trust configuration origin: <explicit-user-supplied-origin> # omit this line unless the user supplied it
+- Trust configuration origin explicit: true # omit this line unless the user supplied the origin
 ```
+
+`Trust configuration origin explicit: true` is the explicit-origin marker for the IdP trust configuration. It is independent of the derived `Origin` field: do not write either trust-configuration line from derivation, and do not write an empty placeholder when the user leaves the optional value blank.
 
 #### Role collections
 

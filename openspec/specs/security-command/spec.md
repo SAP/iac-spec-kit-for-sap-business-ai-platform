@@ -116,3 +116,18 @@ When the command detects that a Cloud Foundry space is to be created (from `spec
 #### Scenario: role values constrained
 - **WHEN** collecting CF space roles
 - **THEN** only `space_auditor`, `space_developer`, `space_manager`, `space_supporter` are accepted
+
+### Requirement: distinguish explicit trust-configuration origin
+For each custom IdP trust configuration, the command SHALL preserve the raw IdP URL and derived origin used by other resources. It SHALL separately capture an optional origin for `btp_subaccount_trust_configuration` and SHALL record `Trust configuration origin explicit: true` with that value. The command SHALL NOT treat the URL-derived origin as an explicit trust-configuration origin. When the user does not explicitly supply a trust-configuration origin, the trust configuration data in `specs/trust.md` SHALL contain the IdP URL but no trust-configuration origin value or explicit-origin marker.
+
+#### Scenario: custom IdP URL without an explicit trust-configuration origin
+- **WHEN** a custom IdP URL is collected and the user does not explicitly provide an origin for its trust configuration
+- **THEN** `specs/trust.md` retains the IdP URL and the separately derived origin for resources that use it, but records no trust-configuration origin or explicit-origin marker
+
+#### Scenario: explicit trust-configuration origin supplied
+- **WHEN** the user explicitly provides an origin for a custom IdP trust configuration
+- **THEN** `specs/trust.md` records that value as the trust-configuration origin with `Trust configuration origin explicit: true`
+
+#### Scenario: derived origin remains available to other resources
+- **WHEN** a custom IdP URL produces a derived origin and no trust-configuration origin is explicitly supplied
+- **THEN** role collection assignments and Cloud Foundry space-role assignments continue to use the derived origin according to their existing requirements

@@ -1,0 +1,36 @@
+{
+  "skill_name": "sap-iac-security",
+  "evals": [
+    {
+      "id": 1,
+      "name": "custom-idp-omits-derived-trust-configuration-origin",
+      "description": "A derived IdP origin must not become the origin of the trust configuration.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nUse a corporate custom IdP."},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Configure security. The custom IdP URL is https://corp.accounts.ondemand.com. Do not provide an explicit trust-configuration origin.",
+      "assertions": [
+        {"id": "1.1", "text": "specs/trust.md records the IdP URL and derived origin corp-platform"},
+        {"id": "1.2", "text": "specs/trust.md does not contain a Trust configuration origin field"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "custom-idp-preserves-explicit-trust-configuration-origin",
+      "description": "A user-provided trust configuration origin is distinctly recorded.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nUse a corporate custom IdP."},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Configure security. The custom IdP URL is https://corp.accounts.ondemand.com and the explicit trust-configuration origin is corp-custom.",
+      "assertions": [
+        {"id": "2.1", "text": "specs/trust.md records Trust configuration origin: corp-custom and Trust configuration origin explicit: true distinctly from the derived origin corp-platform"}
+      ]
+    }
+  ]
+}

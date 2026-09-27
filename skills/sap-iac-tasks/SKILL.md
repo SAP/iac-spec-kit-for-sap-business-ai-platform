@@ -62,6 +62,7 @@ This section is the **single authoritative source** for mapping gathered intent 
 |---|---|---|
 | Destination | `btp_subaccount_destination_generic` | `btp_subaccount_destination` |
 | Destination certificate | `btp_subaccount_destination_certificate` | — |
+| Custom IdP trust configuration | `btp_subaccount_trust_configuration` | — |
 | Role collection (definition) | `btp_subaccount_role_collection_base` | `btp_subaccount_role_collection` |
 | Role assigned to a collection | `btp_subaccount_role_collection_role` | `btp_subaccount_role_collection` |
 | Role collection user/group assignment | `btp_subaccount_role_collection_assignment` | `btp_subaccount_role_collection` |
@@ -98,6 +99,8 @@ For each role collection entry in `specs/trust.md`, apply the Resource Mapping t
 For each Cloud Foundry space in `specs/landscape.md`, create one `cloudfoundry_space` task. This task depends on its Cloud Foundry environment task. Task metadata: `resource_type = cloudfoundry_space`, `name = <space-name>`, and `subaccount = <subaccount-name>`.
 
 For each role collection assignment entry in the `### Role collection assignments` block of `specs/trust.md`, create one `btp_subaccount_role_collection_assignment` task. This task **depends on** the corresponding `btp_subaccount_role_collection_base` task. Task metadata: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount = <subaccount-name>`, `role_collection_name = <collection-name>`, and either `user_name = <username>` (for user assignments) or `group_name = <group-name>` (for group assignments). When an `origin` field is present in the trust entry, include `origin = <origin>` in the metadata.
+
+For each `### Custom IdP` block in `specs/trust.md`, create one `btp_subaccount_trust_configuration` task. This task **depends on** its subaccount task. Task metadata MUST contain `resource_type = btp_subaccount_trust_configuration`, `subaccount = <subaccount-name>`, and `identity_provider = <IdP URL>`. Add `origin = <value>` and `origin_explicit = true` only when the block contains both `Trust configuration origin: <value>` and `Trust configuration origin explicit: true`. If either field is absent, omit both metadata fields. `Origin: <derived-origin>` is for role collection assignments and Cloud Foundry space roles; it MUST NOT be copied to this trust-configuration task.
 
 For each CF space role assignment entry in the `### CF space user assignments` block of `specs/trust.md`, create one `cloudfoundry_space_role` task per entry (each entry already represents one `(space_name, username, role)` combination). This task **depends on** the Cloud Foundry space task for the named space. Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = <space-name>`, `username = <username>`, `role_type = <role>`, `origin = <origin>`.
 

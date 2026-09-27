@@ -19,6 +19,7 @@ Normally after `sap-iac.services`, following the site-wide `services` → `secur
 ## Behaviour
 
 - Derives trust and authorisation requirements from the scenario and landscape.
+- For a custom IdP, records the IdP URL as the trust configuration's `identity_provider`. Its derived origin remains available for assignments, but `btp_subaccount_trust_configuration.origin` is recorded only when the user explicitly supplies a separate trust-configuration origin.
 - Prefers the `sap-docs` MCP server over web fetches for SAP documentation.
 
 !!! note "Governance enforcement"
@@ -44,6 +45,18 @@ For the HR leave-request app, `security` asks whether role collections are neede
 ### User assignments
 - (assign employees to HR_Leave_Employee)
 ```
+
+For a custom IdP, the trust section keeps derived and explicit values distinct:
+
+```markdown
+### Custom IdP
+- IdP URL: https://corp.accounts.ondemand.com
+- Origin: corp-platform
+- Trust configuration origin: corp-custom
+- Trust configuration origin explicit: true
+```
+
+The final two lines are optional and must appear together. If either is absent, generated `btp_subaccount_trust_configuration` resources include `identity_provider` but omit `origin`.
 
 ## Related
 
