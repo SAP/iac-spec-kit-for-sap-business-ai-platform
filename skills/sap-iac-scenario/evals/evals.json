@@ -1,0 +1,18 @@
+{
+  "skill_name": "sap-iac-scenario",
+  "evals": [
+    {
+      "id": 1,
+      "name": "records-cf-application-sizing",
+      "description": "Cloud Foundry application sizing is structured for downstream entitlement calculation.",
+      "files": [
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Create a dev Cloud Foundry setup with an orders application allocated 256 MB. No destinations are required and dev has its own subaccount.",
+      "assertions": [
+        {"id": "1.1", "text": "Writes specs/scenario.md with a Cloud Foundry applications entry for orders, subaccount or stage dev, and memory_mb 256"}
+      ]
+    }
+  ]
+}

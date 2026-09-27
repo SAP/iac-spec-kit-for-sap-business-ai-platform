@@ -88,6 +88,8 @@ For each service entry in `specs/services.md`, read its `consumption_type` and m
 
 When a service entry in `specs/services.md` has `quota_required: true`, copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the field is absent, do not add it.
 
+When an entitlement-only service entry has an `amount`, copy it unchanged into its `btp_subaccount_entitlement` task metadata. A derived `APPLICATION_RUNTIME` / `MEMORY` entitlement task MUST depend on its subaccount task and retain `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, and its calculated `amount`; do not create an instance or subscription task for it.
+
 When a service entry in `specs/services.md` has a `parameters:` block (placed there by `/sap-iac.services` after catalogue lookup), copy the entire `parameters:` block verbatim into the task metadata block for the corresponding `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task. When the field is absent, do not add it. This is the only mechanism by which `/sap-iac.generate` receives service instance parameters — `specs/tasks.md` is its sole input.
 
 For each role collection entry in `specs/trust.md`, apply the Resource Mapping table above:
@@ -154,6 +156,7 @@ Write the full task list to `specs/tasks.md` using this structure:
 | T-004 | Create Kyma environment in subaccount "dev-sa" | all | T-001 | ✦ |
 | T-005 | Create role collection "MyCollection" in subaccount "dev-sa" | all | T-001 | ✦ |
 | T-006 | Assign role to "MyCollection" in subaccount "dev-sa" | all | T-005 | — |
+| T-007 | Assign Cloud Foundry runtime memory entitlement in subaccount "dev-sa" | dev | T-001 | — |
 
 - [ ] T-001 `[dev]` <title>
   - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
@@ -167,6 +170,8 @@ Write the full task list to `specs/tasks.md` using this structure:
   - Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = MyCollection`, `subaccount = dev-sa`, `description = <optional>`
 - [ ] T-006 `[all]` Assign role to "MyCollection" in subaccount "dev-sa"
   - Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = MyCollection`, `subaccount = dev-sa`, `role_name = <role-name>`, `role_template_name = <template-name>`, `role_template_app_id = <app-id>`
+- [ ] T-007 `[dev]` Assign Cloud Foundry runtime memory entitlement in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_entitlement`, `subaccount = dev-sa`, `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, `amount = 2`
 ```
 
 Use one section per group. The table is for dependency/parallel overview; the checkbox list and its indented metadata are the machine-readable generation input. `/sap-iac.generate` updates only the checkbox state.

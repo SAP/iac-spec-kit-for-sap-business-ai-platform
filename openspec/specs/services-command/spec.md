@@ -154,6 +154,30 @@ When the resolved entitlement plan `category` for a service is `SERVICE` or `QUO
 ### Requirement: validate resolved entitlements
 Before writing output, the command SHALL validate every resolved entitlement, subscription, service offering, and plan with the shared platform-validation capability scoped to the landscape global account.
 
+For the derived `APPLICATION_RUNTIME` / `MEMORY` entitlement, a completed lookup that does not include the required entitlement SHALL stop processing with an error that identifies the unavailable mandatory entitlement. The command SHALL NOT ask for a replacement or omit the entitlement.
+
 #### Scenario: resolved entitlement unavailable
-- **WHEN** the scoped platform lookup does not include a resolved entitlement or subscription
+- **WHEN** the scoped platform lookup does not include a user-selected resolved entitlement or subscription
 - **THEN** the command asks for a valid replacement before writing `specs/services.md`
+
+#### Scenario: mandatory runtime entitlement unavailable
+- **WHEN** the scoped platform lookup does not include `APPLICATION_RUNTIME` / `MEMORY` required for a CF-enabled subaccount with sizing
+- **THEN** the command stops with an error identifying the unavailable mandatory entitlement
+- **AND** does not ask for a replacement or write `specs/services.md`
+
+### Requirement: derive Cloud Foundry runtime memory entitlement
+For each subaccount that has a Cloud Foundry environment in `specs/landscape.md` and Cloud Foundry application sizing in `specs/scenario.md`, the command SHALL add an entitlement-only `APPLICATION_RUNTIME` service with the `MEMORY` plan to `specs/services.md`. The command SHALL derive this entry without asking the user to select, confirm, or configure it, and SHALL not create a service instance or subscription for it.
+
+The entry's entitlement amount SHALL equal the ceiling of the sum of all Cloud Foundry application memory allocations for that subaccount divided by 1,024 MB, and SHALL be at least `1`.
+
+#### Scenario: fractional total rounds up to one GB
+- **WHEN** a CF-enabled subaccount has one Cloud Foundry application sized at 256 MB
+- **THEN** `specs/services.md` contains an entitlement-only `APPLICATION_RUNTIME` / `MEMORY` entry with amount `1` and no service instance or subscription
+
+#### Scenario: application allocations are summed per subaccount
+- **WHEN** a CF-enabled subaccount has Cloud Foundry applications sized at 768 MB and 512 MB
+- **THEN** `specs/services.md` contains one `APPLICATION_RUNTIME` / `MEMORY` entitlement-only entry for that subaccount with amount `2`
+
+#### Scenario: no applicable sizing does not add an entitlement
+- **WHEN** a subaccount has no Cloud Foundry environment or has no Cloud Foundry sizing data
+- **THEN** the command does not add an `APPLICATION_RUNTIME` / `MEMORY` entitlement for that subaccount

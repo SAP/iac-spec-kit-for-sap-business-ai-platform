@@ -68,6 +68,23 @@
       "assertions": [
         {"id": "4.1", "text": "The btp_subaccount_trust_configuration task contains identity_provider, origin = corp-custom, and origin_explicit = true"}
       ]
+    },
+    {
+      "id": 5,
+      "name": "cf-runtime-memory-entitlement-preserves-amount",
+      "description": "The derived application runtime entitlement remains a dependent BTP entitlement task.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "specs/services.md", "content": "# Services\n\n- service_offering_name: APPLICATION_RUNTIME\n  service_plan_name: MEMORY\n  consumption_type: entitlement-only\n  amount: 2\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "5.1", "text": "Creates one btp_subaccount_entitlement task for APPLICATION_RUNTIME / MEMORY that depends on dev-sa"},
+        {"id": "5.2", "text": "Preserves amount = 2 in task metadata and creates no instance or subscription task"}
+      ]
     }
   ]
 }

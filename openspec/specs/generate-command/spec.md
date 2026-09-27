@@ -540,3 +540,10 @@ For each task with `resource_type = btp_subaccount_trust_configuration`, the com
 #### Scenario: non-trust resources retain origin behavior
 - **WHEN** generation handles any resource type other than `btp_subaccount_trust_configuration`
 - **THEN** its existing origin derivation, propagation, and emission behavior remains unchanged
+
+### Requirement: emit calculated Cloud Foundry runtime-memory entitlement amount
+For a `btp_subaccount_entitlement` task representing `APPLICATION_RUNTIME` / `MEMORY` with a calculated amount, the command SHALL generate a BTP entitlement resource with `service_name = "APPLICATION_RUNTIME"`, `plan_name = "MEMORY"`, and `amount` set to that calculated value. It SHALL generate no service instance or subscription resource for the task.
+
+#### Scenario: calculated amount is emitted
+- **WHEN** a runtime-memory entitlement task has calculated amount `2`
+- **THEN** the generated `btp_subaccount_entitlement` resource sets `amount = 2`

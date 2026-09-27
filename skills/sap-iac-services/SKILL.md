@@ -37,7 +37,7 @@ When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retri
 
 Read `<project-root>/.sap-iac/platform-validation.md` and `<project-root>/memory/global-account.md` after locating the project root. Before writing `specs/services.md`, validate every resolved entitlement, subscription, service offering, and plan against the configured global-account subdomain. Prefer the recorded CLI route: when the memory record has a subdomain, run `btp target --global-account <subdomain>` and then `btp list accounts/entitlement` (with `--format json` for machine-readable output: `btp --format json list accounts/entitlement`). If CLI was unavailable at initialization, use an equivalent scoped BTP MCP entitlement/subscription operation only when this agent is recorded as having BTP MCP support. Do not ask for a subdomain.
 
-If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and an item is unavailable, require a valid replacement before writing output.
+If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target the account, or complete the lookup, ask the user to resolve it. If the lookup completes and a user-requested item is unavailable, require a valid replacement before writing output. If the completed lookup does not include the derived mandatory `APPLICATION_RUNTIME` / `MEMORY` entitlement, stop before writing output and report that the required entitlement is unavailable; do not ask for a replacement or omit it.
 
 ---
 
@@ -51,7 +51,7 @@ If no route is recorded, retain user input without blocking. If a recorded route
 
 ### Service plan validation
 
-For each service instance you are about to define, identify its environment tier from `specs/landscape.md` and check the plan:
+For each user-requested service instance you are about to define, identify its environment tier from `specs/landscape.md` and check the plan. The derived `APPLICATION_RUNTIME` / `MEMORY` entitlement is mandatory rather than a user-selectable service-plan decision and is therefore not subject to this service-instance governance check.
 
 - If the plan is **not** in the `Permitted` list for that tier: **STOP**
   > "GOVERNANCE VIOLATION: Plan `<plan>` is not permitted for environment `<tier>` (permitted: `<permitted-plans>`). Change the plan or add `- Override: true` to memory/governance.md."
@@ -76,7 +76,7 @@ If any of these decisions are already recorded there, use them without asking th
 
 ### Step 2 — Classify each service
 
-For every service identified from `specs/scenario.md`, determine its `consumption_type`, one of: `instance` (service instance), `subscription` (app subscription), or `entitlement-only` (entitlement assigned, nothing created).
+For every user-requested service identified from `specs/scenario.md`, determine its `consumption_type`, one of: `instance` (service instance), `subscription` (app subscription), or `entitlement-only` (entitlement assigned, nothing created).
 
 The instance-vs-subscription default is **derived from the entitlement plan `category`** of the matched service/plan — not guessed from whether the service is SaaS or technical. The `category` value maps as follows:
 
@@ -98,7 +98,7 @@ The entitlement data is fetched **once** and shared with BTP platform validation
 
 #### Confirming the type
 
-Ask the user to confirm or override the derived type for **each** service (one question per service; do not batch), presenting the default so a confirmation is a single keystroke. When the category is known, keep the entitlement-only escape hatch as a **two-option** question tailored to the derived type:
+Ask the user to confirm or override the derived type for **each user-requested service** (one question per service; do not batch), presenting the default so a confirmation is a single keystroke. When the category is known, keep the entitlement-only escape hatch as a **two-option** question tailored to the derived type:
 
 **If the derived type is `instance`** ask for **each** such service
 
@@ -111,6 +111,21 @@ Ask the user to confirm or override the derived type for **each** service (one q
 Skip the question only for a service whose type is already fixed by governance (Step 1). This guarantees the user can always mark any service — including a clearly technical one — as entitlement-only.
 
 If a service is classified as `entitlement-only`, record `consumption_type: entitlement-only` — no instance or subscription is created; the entitlement is assigned to the subaccount for future manual use.
+
+### Cloud Foundry runtime-memory entitlement
+
+After reading `specs/scenario.md` and `specs/landscape.md`, derive a runtime-memory entitlement for each subaccount that both has a Cloud Foundry environment and has entries in `### Cloud Foundry applications`. Match sizing entries to the landscape subaccount by their recorded subaccount or stage.
+
+For each matching subaccount, add exactly one hard-wired service entry with:
+
+```markdown
+- service_offering_name: APPLICATION_RUNTIME
+  service_plan_name: MEMORY
+  consumption_type: entitlement-only
+  amount: <max(1, ceil(sum(memory_mb) / 1024))>
+```
+
+Sum all of that subaccount's `memory_mb` values, divide by 1,024 MB, round up to a whole number, and enforce a minimum amount of `1`. Do not ask the user to classify, confirm, configure, or override this entry. It creates only a BTP entitlement assignment: never a service instance or subscription. Do not add this entry when the subaccount has no Cloud Foundry environment or no structured CF sizing.
 
 ### Step 3 — Determine service instance location
 
@@ -161,7 +176,7 @@ After the user confirms `consumption_type: instance` for a service, check whethe
 
 **If no matching entry exists:** proceed silently — write no `parameters:` block for that service entry.
 
-Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. This file is the direct input to `/sap-iac.tasks`.
+Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each user-requested service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. A derived `APPLICATION_RUNTIME` / `MEMORY` entry MUST include its calculated `amount`. This file is the direct input to `/sap-iac.tasks`.
 
 When the resolved plan `category` is `SERVICE` or `QUOTA_BASED_APPLICATION`, add `quota_required: true` to that service entry. Omit the field for all other categories. When the category was not available (fallback path — neither CLI nor MCP, or plan not found), do not record the field.
 

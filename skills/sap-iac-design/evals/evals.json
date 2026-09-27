@@ -1,0 +1,20 @@
+{
+  "skill_name": "sap-iac-design",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cf-runtime-memory-entitlement-is-in-btp-unit",
+      "description": "Runtime memory is a BTP entitlement even when it enables Cloud Foundry.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create Cloud Foundry environment\n  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`\n- [ ] T-002 `[dev]` Assign Cloud Foundry runtime memory entitlement\n  - Task metadata: `resource_type = btp_subaccount_entitlement`, `subaccount = dev-sa`, `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, `amount = 1`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Use per-stage directories and design the Terraform layout.",
+      "assertions": [
+        {"id": "1.1", "text": "Annotates the APPLICATION_RUNTIME / MEMORY task to terraform/dev/btp/main.tf rather than the CF unit"},
+        {"id": "1.2", "text": "Preserves amount = 1 in the task metadata"}
+      ]
+    }
+  ]
+}

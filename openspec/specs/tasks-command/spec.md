@@ -197,3 +197,10 @@ For each IdP trust configuration in `specs/trust.md`, the command SHALL create a
 #### Scenario: derived origin is not mapped to trust configuration
 - **WHEN** `specs/trust.md` contains a URL-derived origin for role or Cloud Foundry assignment use
 - **THEN** that derived value is not added to any `btp_subaccount_trust_configuration` task
+
+### Requirement: create Cloud Foundry runtime-memory entitlement tasks
+When `specs/services.md` contains a derived `APPLICATION_RUNTIME` / `MEMORY` entitlement-only entry, the command SHALL create one `btp_subaccount_entitlement` task for the entry. The task metadata SHALL retain the calculated entitlement amount and the task SHALL depend on its subaccount task. The command SHALL not create a service-instance or subscription task for this entry.
+
+#### Scenario: runtime-memory entitlement becomes a BTP task
+- **WHEN** a subaccount's services entry defines `APPLICATION_RUNTIME` / `MEMORY` with amount `2`
+- **THEN** `specs/tasks.md` contains one dependent `btp_subaccount_entitlement` task with service name `APPLICATION_RUNTIME`, plan name `MEMORY`, and amount `2`

@@ -44,7 +44,7 @@ Determine how stages are modelled by reading `memory/governance.md`. If governan
 
 ## BTP / CF / Kyma split
 
-When a configuration unit contains a Cloud Foundry or Kyma environment, split it into subdirectories: all BTP-provider resources under `btp/`, and all Cloud Foundry- or Kyma-provider resources under a sibling `cf/` or `kyma/`. Drive service-instance placement by `location` (`btp` or `cf`). Subscription tasks (`resource_type = btp_subaccount_subscription`) and entitlement-only tasks (`resource_type = btp_subaccount_entitlement`) carry no `location` but are always BTP-provider resources — place them under `btp/`.
+When a configuration unit contains a Cloud Foundry or Kyma environment, split it into subdirectories: all BTP-provider resources under `btp/`, and all Cloud Foundry- or Kyma-provider resources under a sibling `cf/` or `kyma/`. Drive service-instance placement by `location` (`btp` or `cf`). Subscription tasks (`resource_type = btp_subaccount_subscription`) and entitlement-only tasks (`resource_type = btp_subaccount_entitlement`) carry no `location` but are always BTP-provider resources — place them under `btp/`. This includes derived `APPLICATION_RUNTIME` / `MEMORY` entitlement tasks: preserve their calculated `amount` metadata and never place them under `cf/`.
 
 When no CF or Kyma environment is present, do not split: use the standard layout directly in the unit directory.
 

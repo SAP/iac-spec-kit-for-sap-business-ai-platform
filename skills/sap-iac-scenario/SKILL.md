@@ -56,11 +56,22 @@ For every follow-up, emit exactly one concise plain-text question and wait for t
 
 Ask at most one question for each unresolved topic, in this order:
 
-1. **Runtime and sizing** — determine the required runtime. When Cloud Foundry is selected or permitted, _always_ ask for the memory allocation or sizing required by each Cloud Foundry application. Do not ask for Cloud Foundry memory when Cloud Foundry is not selected. _Always_ make sure that the information about the sizing is available before proceeding.
+1. **Runtime and sizing** — determine the required runtime. When Cloud Foundry is selected or permitted, _always_ ask for the memory allocation required by each Cloud Foundry application, in MB, and the subaccount or stage to which that application belongs. Do not ask for Cloud Foundry memory when Cloud Foundry is not selected. _Always_ make sure that the information about the sizing is available before proceeding.
 2. **Destinations** — unless the scenario explicitly says that no destinations are required or lists the required destinations, ask whether integrations require destinations; if they do, collect each required destination and its purpose.
 3. **Setup structure** — unless the scenario explicitly states the desired topology, ask how the setup should be structured, for example whether each stage has its own subaccount. Governance naming and tier constraints do not suppress this question.
 
 For destinations and setup structure, skip a question only when the scenario input explicitly provides a sufficient answer.
+
+## Cloud Foundry sizing output
+
+When Cloud Foundry sizing is available, write it to `specs/scenario.md` in a `### Cloud Foundry applications` section. Record one entry per application with its name, target subaccount or stage, and `memory_mb` allocation. Preserve the user-supplied MB value; this structured data is consumed by `/sap-iac.services` to calculate the runtime-memory entitlement.
+
+```markdown
+### Cloud Foundry applications
+- name: orders
+  stage: dev
+  memory_mb: 256
+```
 
 ## Next step
 

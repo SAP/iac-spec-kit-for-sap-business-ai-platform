@@ -228,18 +228,22 @@ variable "btp_subaccount_service_instance_alert_notification_name" {
 # btp_subaccount_service_instance_alert_notification_name = "<alert-notification-instance-name>"
 ```
 
-### Entitlement quota — quota_required flag
+### Entitlement amount
 
-When a task's metadata contains `quota_required: true` (set by `/sap-iac.tasks` from the plan category recorded by `/sap-iac.services`), add `amount = 1` to every `btp_subaccount_entitlement` resource generated for that task. When the flag is absent, omit the `amount` attribute.
+For a `btp_subaccount_entitlement` task with an explicit `amount` metadata value, emit that value as the resource's `amount` attribute. This applies to the derived `APPLICATION_RUNTIME` / `MEMORY` runtime-memory entitlement; generate only the entitlement resource, never a service instance or subscription.
+
+Otherwise, when a task's metadata contains `quota_required: true` (set by `/sap-iac.tasks` from the plan category recorded by `/sap-iac.services`), add `amount = 1` to every `btp_subaccount_entitlement` resource generated for that task. When neither field is present, omit the `amount` attribute.
 
 ```hcl
 resource "btp_subaccount_entitlement" "my_service" {
   subaccount_id = btp_subaccount.dev.id
   service_name  = "my-service"
   plan_name     = "standard"
-  amount        = 1   # only when quota_required: true in task metadata
+  amount        = 1   # shown for quota_required: true; explicit metadata uses its own value
 }
 ```
+
+For example, runtime-memory task metadata with `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, and `amount = 2` MUST generate `amount = 2`.
 
 ---
 

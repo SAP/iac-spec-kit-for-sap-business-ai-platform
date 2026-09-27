@@ -84,3 +84,10 @@ The command SHALL define a dedicated directory-per-stage configuration (using th
 #### Scenario: directories not used
 - **WHEN** BTP directories are not used for stages
 - **THEN** no directory-per-stage layer is defined
+
+### Requirement: place Cloud Foundry runtime-memory entitlements in BTP configuration
+The command SHALL annotate a derived `APPLICATION_RUNTIME` / `MEMORY` entitlement task as a BTP-provider resource and preserve its calculated amount metadata. When the subaccount has a Cloud Foundry environment, the annotation SHALL target that subaccount's `btp/` configuration unit rather than its `cf/` configuration unit.
+
+#### Scenario: CF runtime entitlement is annotated for BTP
+- **WHEN** a CF-enabled subaccount has an `APPLICATION_RUNTIME` / `MEMORY` entitlement task with amount `1`
+- **THEN** the task is annotated to the subaccount's BTP configuration unit and retains amount `1`

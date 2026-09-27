@@ -60,6 +60,21 @@
         {"id": "4.1", "text": "The generated btp_subaccount_trust_configuration resource contains identity_provider and origin = corp-custom"},
         {"id": "4.2", "text": "The generated btp_subaccount_role_collection_assignment resource still contains origin = sap.ids"}
       ]
+    },
+    {
+      "id": 5,
+      "name": "cf-runtime-memory-entitlement-emits-calculated-amount",
+      "description": "Generated Terraform uses the calculated amount for the entitlement-only runtime-memory task.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount`, `subdomain = dev`, `region = eu10`\n- [ ] T-002 `[dev]` Assign Cloud Foundry runtime memory entitlement\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_entitlement`, `subaccount = dev`, `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, `amount = 2`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "5.1", "text": "Generates one btp_subaccount_entitlement resource with APPLICATION_RUNTIME and MEMORY"},
+        {"id": "5.2", "text": "The entitlement resource sets amount = 2 and no service instance or subscription resource is generated"}
+      ]
     }
   ]
 }
