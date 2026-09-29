@@ -101,7 +101,7 @@ flowchart TD
     analyse --> accounts[sap-iac.accounts]
     accounts --> services[sap-iac.services]
     services --> security[sap-iac.security]
-    security --> connectivity["sap-iac.connectivity<br/><i>optional</i>"]
+    security --> connectivity["sap-iac.connectivity"]
     connectivity --> tasks[sap-iac.tasks]
     tasks --> design[sap-iac.design]
     design --> generate[sap-iac.generate]

@@ -26,13 +26,13 @@ Run the commands below as slash commands inside the agent (`/sap-iac.govern`, `/
 
 | # | Command | What it does | Writes |
 |---|---|---|---|
-| ○ | `sap-iac.govern` | Set guardrails — regions, naming, service plans, cost policy *(optional)* | `memory/governance.md` |
+| ○ | `sap-iac.govern` | Set guardrails — regions, naming, service plans, cost policy | `memory/governance.md` |
 | 1 | `sap-iac.scenario` | Describe the application (see below) | `specs/scenario.md` |
 | 2 | `sap-iac.analyse` | Scan existing source or Terraform to enrich the scenario *(optional)* | `specs/scenario.md` |
 | 3 | `sap-iac.accounts` | Map the application to directories and subaccounts | `specs/landscape.md` |
 | 4 | `sap-iac.services` | Resolve the BTP services each subaccount needs | `specs/services.md` |
 | 5 | `sap-iac.security` | Set up IdP trust, role collections, and assignments | `specs/trust.md` |
-| 6 | `sap-iac.connectivity` | Define destinations and certificates *(optional)* | `specs/connectivity.md` |
+| 6 | `sap-iac.connectivity` | Define destinations and certificates | `specs/connectivity.md` |
 | 7 | `sap-iac.tasks` | Build a dependency-ordered execution plan | `specs/tasks.md` |
 | 8 | `sap-iac.design` | Annotate each task with its target Terraform file | `specs/tasks.md` |
 | 9 | `sap-iac.generate` | Write and validate all Terraform HCL | `terraform/` |
