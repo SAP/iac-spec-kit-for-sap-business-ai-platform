@@ -1,13 +1,13 @@
 # `sap-iac.scenario`
 
 !!! abstract "Summary"
-    **Role:** Required — the starting point. · **Reads:** your description · **Writes:** `specs/scenario.md`
+    **Role:** Required — the scenario starting point. · **Reads:** your description (+ optional governance) · **Writes:** `specs/scenario.md`
 
 Translates a plain-language description of your application into a structured set of BTP infrastructure requirements. This is the entry point of the workflow: everything downstream builds on the scenario it produces.
 
 ## When to run it
 
-First (after the optional [`sap-iac.govern`](govern.md)). You need only a short description of what you are building.
+After the optional, recommended [`sap-iac.govern`](govern.md). You need only a short description of what you are building.
 
 ## Inputs and outputs
 
@@ -21,6 +21,7 @@ First (after the optional [`sap-iac.govern`](govern.md)). You need only a short 
 
 - Takes your description of the application — runtime, data, users, environments — and structures it into requirements.
 - Asks up to three focused follow-up questions to fill obvious gaps; when governance already determines a choice (for example, a single permitted runtime), it does not ask.
+- When Cloud Foundry is selected or permitted, collects each application's memory allocation in MB and its target subaccount or stage. It records this under `### Cloud Foundry applications` with `memory_mb`; `services` uses the values to calculate runtime-memory entitlement.
 - Prefers the `sap-docs` MCP server over web fetches when it needs to consult SAP documentation.
 - Validates any regions, service offerings, subscriptions, or plan pairs named in the description; if governance sets a preferred infrastructure provider other than `none`, it emits a non-blocking provider-mismatch warning (naming the region and both providers) while retaining the region.
 

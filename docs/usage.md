@@ -1,6 +1,6 @@
 # Usage
 
-The CLI exposes a single command, `sap-iac init`, which scaffolds a new project. All subsequent work happens inside your AI agent through the generated `sap-iac.*` commands.
+The CLI scaffolds projects with `sap-iac init`, reports its build with `sap-iac version`, and manages service-parameter catalogue entries with `sap-iac catalogue convert`. Infrastructure planning and generation happen inside your AI agent through the generated `sap-iac.*` commands.
 
 ## `sap-iac init`
 
@@ -14,7 +14,7 @@ Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a direc
 
 | Argument | Description |
 |---|---|
-| `[name]` | Optional. The project directory to use. In an interactive terminal, omitting it opens a menu to create a new project, adopt the current directory, or add/update agents in an existing project. In a non-interactive context (no TTY, such as CI) the command cannot prompt, so the name must be passed explicitly. |
+| `[name]` | Optional. The project directory to use. In an interactive terminal, omitting it opens a menu to create a new project, adopt the current directory, or add/update agents in an existing project. |
 
 ### Flag
 
@@ -34,9 +34,11 @@ sap-iac init my-iac-project --agent claude
 # Configure for multiple agents
 sap-iac init my-iac-project --agent claude,cursor
 
-# Non-interactive (CI): name and --agent are both required
+# Refresh an existing project without selecting agents interactively
 sap-iac init my-iac-project --agent claude,codex
 ```
+
+Fresh and adopt initialization still prompt for the optional global-account subdomain, and adoption asks for confirmation. They therefore require an interactive input stream even when `--agent` is supplied. A fully non-interactive invocation is currently limited to refreshing an existing sap-iac project by passing its directory name and `--agent`.
 
 ## What `init` creates
 
@@ -46,9 +48,9 @@ my-iac-project/
 │                         # .terraform.lock.hcl, .sap-iac/platform-validation.md,
 │                         # and memory/global-account.md
 ├── specs/                # (empty) requirement specs the agent commands write
-├── memory/               # global-account.md is written at init; governance.md
-│                         # is authored later by sap-iac.govern
-│   └── global-account.md # the global-account subdomain entered at init (optional)
+├── memory/               # project memory used by the generated commands
+│   ├── global-account.md # optional global-account subdomain entered at init
+│   └── service-params-catalogue.yaml # editable service-instance parameters
 ├── terraform/            # (empty) generated Terraform HCL lands here
 ├── .sap-iac/             # internal state (platform-validation.md)
 └── <agent command dir>/  # one per selected agent (see below)
@@ -57,7 +59,9 @@ my-iac-project/
 During a fresh init (and when adopting an existing directory), `init` also prompts for an optional **global-account subdomain** and records it in `memory/global-account.md`. When `git` is available, `init` runs `git init` in the new directory.
 
 !!! warning "Existing projects are updated, not overwritten"
-    Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` only adds or updates the selected agents' command files, leaving your specs and memory untouched. If it is some other existing directory, `init` adopts it — scaffolding the project structure in place.
+    Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` updates the selected agents' command files, refreshes `.sap-iac/platform-validation.md`, and ensures its managed `.gitignore` entries. Existing `specs/`, `memory/`, and `terraform/` content remains untouched. If it is some other existing directory, `init` offers to adopt it and scaffold the project structure in place.
+
+The service-parameter catalogue is created during fresh and adopt initialization. Adoption preserves an existing catalogue, and agent-only refresh does not create or modify it. See [Service-parameter catalogue](catalogue.md).
 
 ### Agent command directories
 
@@ -96,12 +100,12 @@ After `init`, open the project in your AI agent and run the commands in order:
 flowchart TD
     init([sap-iac init]) --> govern
 
-    govern["sap-iac.govern<br/><i>optional</i>"] --> scenario[sap-iac.scenario]
+    govern["sap-iac.govern<br/><i>optional, recommended first</i>"] --> scenario[sap-iac.scenario]
     scenario --> analyse["sap-iac.analyse<br/><i>optional</i>"]
     analyse --> accounts[sap-iac.accounts]
     accounts --> services[sap-iac.services]
     services --> security[sap-iac.security]
-    security --> connectivity["sap-iac.connectivity"]
+    security --> connectivity["sap-iac.connectivity<br/><i>optional</i>"]
     connectivity --> tasks[sap-iac.tasks]
     tasks --> design[sap-iac.design]
     design --> generate[sap-iac.generate]
@@ -117,7 +121,7 @@ flowchart TD
 
 | Step | Command | Purpose |
 |---|---|---|
-| ○ | `sap-iac.govern` | *Optional.* Set guardrails — regions, naming, cost policies. Skip to use defaults. |
+| ○ | `sap-iac.govern` | *Optional; recommended first.* Set guardrails — regions, naming, cost policies. Without it, downstream commands proceed without governance enforcement. |
 | 1 | `sap-iac.scenario` | Describe your application. |
 | 2 | `sap-iac.analyse` | *Optional.* Scan source or Terraform code to extract service dependencies. |
 | 3 | `sap-iac.accounts` | Map your application to BTP directories and subaccounts. |
@@ -130,3 +134,8 @@ flowchart TD
 | — | `sap-iac.next` | *Utility.* Show the current project state and recommend the next command. Run any time. |
 
 Each command reads and writes files under `specs/`, `memory/`, and `terraform/`. For a detailed description of every command — its inputs, outputs, and governance behaviour — see the [command reference](commands/index.md). For a concrete run-through, see the [usage walkthrough](walkthrough.md).
+
+## Other CLI commands
+
+- `sap-iac version` prints the binary version.
+- `sap-iac catalogue convert` converts a JSON Schema into a service-parameter catalogue entry. See [Service-parameter catalogue](catalogue.md).

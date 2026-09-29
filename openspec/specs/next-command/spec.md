@@ -19,11 +19,11 @@ Before inspecting project state, the command SHALL walk upward from the current 
 - **AND** it stops without printing a state summary or recommendation
 
 ### Requirement: inspect project state
-The command SHALL determine the current position in the greenfield flow by checking the existence of the following files in order: `memory/governance.md`, `specs/scenario.md`, `specs/landscape.md`, `specs/services.md`, `specs/trust.md`, `specs/connectivity.md`, `specs/tasks.md`, and at least one `terraform/**/*.tf` file. The generated-code check SHALL match `.tf` files in any subdirectory of `terraform/` (recursive glob), because the design/generate layout places files under provider and stage subdirectories (e.g. `terraform/btp/…`, `terraform/<stage>/btp/…`). The generated-code check SHALL match `.tf` files in any subdirectory of `terraform/` (recursive glob), because the design/generate layout places files under provider and stage subdirectories (e.g. `terraform/btp/…`, `terraform/<stage>/btp/…`).
+The command SHALL determine the current position by checking, in order, `memory/governance.md`, `specs/scenario.md`, `specs/landscape.md`, `specs/services.md`, `specs/trust.md`, `specs/connectivity.md`, `specs/tasks.md`, and at least one recursive `terraform/**/*.tf` file. Missing governance SHALL be the first recommendation regardless of later files, while governance remains optional to the workflow.
 
-#### Scenario: no files exist
-- **WHEN** none of the inspected files exist
-- **THEN** the command recommends `/sap-iac.govern` as the first step
+#### Scenario: governance missing
+- **WHEN** `memory/governance.md` is absent
+- **THEN** the command recommends `/sap-iac.govern` before every other workflow step
 
 #### Scenario: governance present, scenario missing
 - **WHEN** `memory/governance.md` exists and `specs/scenario.md` does not
@@ -35,11 +35,11 @@ The command SHALL determine the current position in the greenfield flow by check
 
 #### Scenario: landscape present, services or trust missing
 - **WHEN** `specs/landscape.md` exists and either `specs/services.md` or `specs/trust.md` is absent
-- **THEN** the command recommends the missing step(s) in order: `/sap-iac.services` before `/sap-iac.security`
+- **THEN** the command recommends the missing steps in order: `/sap-iac.services` before `/sap-iac.security`
 
 #### Scenario: services and trust present, connectivity and tasks absent
 - **WHEN** `specs/services.md` and `specs/trust.md` exist, and neither `specs/connectivity.md` nor `specs/tasks.md` exists
-- **THEN** the command recommends `/sap-iac.connectivity` as the next step
+- **THEN** the command recommends the optional `/sap-iac.connectivity` command
 
 #### Scenario: connectivity present, tasks absent
 - **WHEN** `specs/connectivity.md` exists and `specs/tasks.md` does not
@@ -47,11 +47,11 @@ The command SHALL determine the current position in the greenfield flow by check
 
 #### Scenario: tasks present, no terraform files
 - **WHEN** `specs/tasks.md` exists and no `terraform/**/*.tf` files exist
-- **THEN** the command recommends `/sap-iac.design`
+- **THEN** the command recommends `/sap-iac.design` followed by `/sap-iac.generate`
 
 #### Scenario: terraform files present
 - **WHEN** at least one `terraform/**/*.tf` file exists
-- **THEN** the command outputs a completion message indicating Terraform code is ready to review and apply
+- **THEN** the command reports that Terraform code is ready to review and apply
 
 ### Requirement: standalone output format
 When invoked directly as `/sap-iac.next`, the command SHALL print the current state (which files were found) followed by the recommendation.

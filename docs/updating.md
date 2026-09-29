@@ -25,10 +25,10 @@ go build -o sap-iac ./cmd/sap-iac
 To pick up updated commands in an existing project:
 
 1. Update the CLI, as described above.
-2. Run `init` from inside the project and let it update the agent command files in place:
+2. From the parent directory, pass the existing project's directory name and the agents to refresh:
    ```sh
    sap-iac init my-project --agent claude
    ```
-   Because the directory is already a sap-iac project, `init` runs in "add / update AI agent" mode: it rewrites the selected agents' command files and leaves everything else alone. Run it without `--agent` in a terminal to pick the agents from a menu instead.
+   Alternatively, run `sap-iac init` from inside the project and choose **Add / update AI agent in current project** from the interactive menu.
 
-Your `specs/`, `memory/`, and `terraform/` content is untouched — only the agent command files are replaced.
+Your `specs/`, `memory/`, and `terraform/` content is untouched. The selected agent command files and `.sap-iac/platform-validation.md` are refreshed, and the managed `.gitignore` entries are ensured.

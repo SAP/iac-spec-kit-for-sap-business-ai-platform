@@ -12,7 +12,7 @@ You ran `init` without `--agent` in a non-interactive context (CI, a pipe, or so
 sap-iac init my-project --agent claude
 ```
 
-In a non-interactive context you must also pass the project **name** as an argument, because `init` cannot prompt for it either.
+In a non-interactive context you must also pass the directory name. Only agent-only refresh of an existing sap-iac project is fully non-interactive; fresh and adopt initialization still collect interactive input.
 
 ### `unknown agent "<id>" — supported: claude, codex, cursor, copilot`
 
@@ -37,7 +37,7 @@ The project name is validated before any scaffolding runs. Names containing a pa
 
 ### `Warning: "terraform" was not found on $PATH — install it before running terraform commands.`
 
-Terraform (or OpenTofu) is not installed. You can scaffold now and [install Terraform](https://developer.hashicorp.com/terraform/install) before running the generated HCL.
+The `terraform` executable is not installed. You can scaffold now, but the generation skill requires it for `terraform init`, formatting, and validation. OpenTofu-compatible HCL can still be used separately after generation.
 
 ### `Warning: "git" was not found on $PATH — run "git init" manually in the project directory.`
 

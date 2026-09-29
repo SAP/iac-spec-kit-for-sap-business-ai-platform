@@ -7,10 +7,10 @@ This page describes the prerequisites for the `sap-iac` CLI and the supported wa
 | Dependency | When you need it | Notes |
 |---|---|---|
 | AI agent | Always | [Claude Code](https://www.anthropic.com/claude-code), [Codex](https://openai.com/codex/), [Cursor](https://cursor.com/), or [GitHub Copilot](https://github.com/features/copilot). The agent runs the generated `sap-iac.*` commands. |
-| [Terraform](https://developer.hashicorp.com/terraform/install) | Recommended | Required later to apply the configuration the agent generates. [OpenTofu](https://opentofu.org/) is also supported. |
+| [Terraform](https://developer.hashicorp.com/terraform/install) | Recommended | The generation skill invokes the `terraform` CLI to initialise, format, and validate generated configuration. The resulting HCL may also be used with [OpenTofu](https://opentofu.org/), but the automated generation workflow currently calls Terraform. |
 | [Git](https://git-scm.com/downloads) | Optional | When present, `init` initialises a repository in the new project automatically. |
 
-!!! note "Terraform and Git are never blocking"
+!!! note "Missing Terraform or Git is not blocking"
     `sap-iac init` does not hard-fail when Terraform or Git is missing. It surfaces a warning and continues, so you can scaffold first and install them when convenient.
 
 ## Install
@@ -57,4 +57,4 @@ sap-iac --help
 sap-iac init --help
 ```
 
-You should see the `init` command and its `--agent` flag. Continue to [Usage](usage.md).
+You should see the `init`, `catalogue`, and `version` commands. The `init` help includes its `--agent` flag. Continue to [Usage](usage.md).

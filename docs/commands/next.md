@@ -19,8 +19,8 @@ Whenever you lose track of where you are in the flow — after a break, when pic
 ## Behaviour
 
 - Walks up from the working directory to find the project root (a directory with `specs/`, `memory/`, and `terraform/`). If none is found, it tells you to run it from inside a `sap-iac init` project and stops.
-- Checks each workflow output file in dependency order and picks the first missing one to recommend, treating `specs/connectivity.md` as optional.
-- When both `specs/connectivity.md` and `specs/tasks.md` are missing, it emits a single two-option line offering `/sap-iac.connectivity` (optional) — define destinations and certificates — or `/sap-iac.tasks` to skip connectivity.
+- Checks each workflow output file in dependency order and picks the first missing one to recommend. Missing governance is always the first recommendation, although governance remains optional.
+- When both `specs/connectivity.md` and `specs/tasks.md` are missing, it recommends `/sap-iac.connectivity`. You can skip that optional command by running `/sap-iac.tasks` directly.
 - Once at least one `terraform/**/*.tf` file exists, it prints a **Done** completion message ("Terraform code is in `terraform/`. Review, commit, and apply.") instead of a next-step recommendation.
 - Prints all rows so you can see your full position in the flow, with `✓` for files that exist and `✗` for those that do not.
 

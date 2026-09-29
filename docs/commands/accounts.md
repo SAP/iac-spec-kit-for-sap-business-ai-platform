@@ -14,12 +14,13 @@ After `sap-iac.scenario` (and optional `sap-iac.analyse`), once the requirements
 | | |
 |---|---|
 | **Reads** | `specs/scenario.md`, and `memory/global-account.md` and `memory/governance.md` if present. |
-| **Writes** | `specs/landscape.md` — the global account reference, directory groupings, and one entry per subaccount (name, region, description, subdomain) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
+| **Writes** | `specs/landscape.md` — the global account reference, directory groupings, and one entry per subaccount (name, region, description, subdomain, `usage`, and `beta_enabled`) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
 
 ## Behaviour
 
 - Derives the account topology from the scenario's environment and deployment requirements.
 - Produces the authoritative structure referenced by `services`, `security`, and `generate`.
+- Determines `usage` and `beta_enabled` from exact governance tier classifications when provided. Otherwise it infers them from `prod`/`production`, `dev`/`development`, and `test`/`staging`/`qa` tier-name tokens, asks once for any unmatched tiers, and confirms the complete table before writing.
 - Prefers the `sap-docs` MCP server over web fetches for SAP documentation.
 
 The command is interactive: when the scenario and governance leave an input underspecified, it asks targeted questions before writing `specs/landscape.md` rather than guessing.

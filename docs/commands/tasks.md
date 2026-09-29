@@ -24,6 +24,8 @@ After `sap-iac.accounts`, `sap-iac.services`, and `sap-iac.security` have all pr
 - Creates one `btp_subaccount_trust_configuration` task for each custom IdP trust entry. The task always carries the IdP URL as `identity_provider`; it carries `origin` only when security recorded both an explicit trust-configuration origin and its explicit marker.
 - Preserves each service instance's `location`; a CF-located instance retains its `cf_space`, depends on that space, and—when the space is created in the task list—depends on every recorded CF space-role task for that space. This creates `space -> roles -> same-space resource`. If a required space has no recorded roles, stops and directs you to rerun `sap-iac.security`; BTP and organization-scoped resources are unchanged.
 - Annotates each task with the stage(s) it belongs to (e.g. `dev`, `test`, `prod`). All tasks are written regardless of stage; the annotation is consumed by [`sap-iac.generate`](generate.md) to filter which tasks are generated.
+- Copies `usage` and `beta_enabled` from each subaccount, `quota_required` from service entries, and service-instance `parameters` into task metadata without changing them.
+- Converts a derived `APPLICATION_RUNTIME` / `MEMORY` entry into one dependent `btp_subaccount_entitlement` task, preserving its calculated `amount`.
 - Writes every task unchecked (`- [ ]`); [`sap-iac.generate`](generate.md) marks tasks `- [x]` as it completes them.
 - When `specs/connectivity.md` exists, appends one task per destination and certificate, ordered after the landscape, service, and trust tasks they depend on.
 - Adds no new requirements — it only sequences what the earlier commands resolved.

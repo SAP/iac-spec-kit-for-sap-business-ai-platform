@@ -5,13 +5,13 @@ After `sap-iac init` scaffolds a project, all further work happens inside your A
 This section documents every command on its own page — what it reads, what it writes, how it behaves, and a worked example. The examples share a single running scenario (an HR leave-request application) so you can follow one project across the whole workflow.
 
 !!! info "Run them in order"
-    Each command builds on the files written by the previous ones. `govern`, `analyse`, and `connectivity` are optional; the other seven are required and expect their inputs to exist. If a required input is missing, the command tells you which command to run first and stops.
+    Each command builds on the files written by the previous ones. `govern` is optional but recommended first; `analyse` and `connectivity` are optional. The other seven commands are required and expect their inputs to exist. If a required input is missing, the command tells you which command to run first and stops.
 
 ## At a glance
 
 | # | Command | Reads | Writes | Required |
 |---|---|---|---|---|
-| ○ | [`sap-iac.govern`](govern.md) | `memory/global-account.md` | `memory/governance.md` | Optional |
+| ○ | [`sap-iac.govern`](govern.md) | `memory/global-account.md` | `memory/governance.md` | Optional; recommended |
 | 1 | [`sap-iac.scenario`](scenario.md) | your description | `specs/scenario.md` | Required |
 | ○ | [`sap-iac.analyse`](analyse.md) | `specs/scenario.md`, your code | `specs/scenario.md` | Optional |
 | 2 | [`sap-iac.accounts`](accounts.md) | `specs/scenario.md` | `specs/landscape.md` | Required |
@@ -23,7 +23,7 @@ This section documents every command on its own page — what it reads, what it 
 | 7 | [`sap-iac.generate`](generate.md) | `specs/tasks.md` | `terraform/` | Required |
 | — | [`sap-iac.next`](next.md) | local project files | *(nothing)* | Utility |
 
-When `memory/governance.md` is present, `accounts`, `services`, `security`, and `generate` validate their output against it and **block on any violation**. Adding `- Override: true` to the governance file downgrades blocks to warnings.
+When `memory/governance.md` is present, `accounts`, `services`, `security`, and `generate` validate their output against it and **block on applicable violations**. Adding `- Override: true` to the governance file downgrades blocks to warnings. Without the file, those commands continue and report that governance enforcement is inactive.
 
 Run [`sap-iac.next`](next.md) at any point to see which files exist and which command to run next.
 

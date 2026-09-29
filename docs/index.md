@@ -6,7 +6,7 @@ The Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform is
 
 1. **Install** the `sap-iac` CLI and scaffold a project — see [Installation & Setup](setup.md).
 2. **Describe** your application in plain language, then let the AI agent drive the command workflow — see [Usage](usage.md).
-3. **Generate and review** the Terraform, then apply it against your account yourself using the `sap-iac` CLI.
+3. **Generate and review** the Terraform, then apply it against your account yourself using Terraform.
 
 !!! tip "New here?"
     Start with the [usage walkthrough](walkthrough.md) — it runs a single application end to end, from `sap-iac init` to a `terraform plan`.

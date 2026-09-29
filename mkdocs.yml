@@ -26,6 +26,7 @@ nav:
   - Home: index.md
   - Installation & Setup: setup.md
   - Usage: usage.md
+  - Service-parameter catalogue: catalogue.md
   - Commands:
       - Overview: commands/index.md
       - sap-iac.govern: commands/govern.md

@@ -1,13 +1,13 @@
 # `sap-iac.govern`
 
 !!! abstract "Summary"
-    **Role:** Optional — the foundation. · **Reads:** `memory/governance.md`, `memory/global-account.md` (if present) · **Writes:** `memory/governance.md`
+    **Role:** Optional, recommended first. · **Reads:** `memory/governance.md`, `memory/global-account.md` (if present) · **Writes:** `memory/governance.md`
 
-Establishes the governance guardrails that every later command validates against: preferred infrastructure provider, allowed regions, permitted runtime environments, naming conventions, service plans, security requirements, and cost controls. Run it first if your organisation has rules that the generated landscape must respect.
+Establishes the governance guardrails that later commands validate against: preferred infrastructure provider, allowed regions, permitted runtime environments, naming conventions, service plans, security requirements, and cost controls. It is the recommended first workflow command.
 
 ## When to run it
 
-Before `sap-iac.scenario`, at the very start of a project — or any time you want to review or change the guardrails already in place. It is entirely optional: skip it and the workflow proceeds without enforcement.
+Before `sap-iac.scenario`, at the start of a project — or any time you want to review or change existing guardrails. The command is optional; without `memory/governance.md`, downstream commands proceed without governance enforcement.
 
 ## Inputs and outputs
 
