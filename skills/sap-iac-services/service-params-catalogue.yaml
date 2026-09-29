@@ -1,0 +1,85 @@
+# Service Parameters Catalogue
+#
+# Contains parameter definitions for BTP service instances that require
+# configuration. Used by /sap-iac.services to prompt for values and by
+# /sap-iac.generate to emit jsonencode({...}) blocks.
+#
+# Match key: (service, plan). Add entries for any service+plan combination
+# that requires parameters. Entries with source: user-defined are treated
+# identically to builtin entries.
+#
+# Entry shape:
+#   - service: <service_offering_name>
+#     plans: [<plan1>, <plan2>]
+#     source: builtin | user-defined
+#     parameters:
+#       required:
+#         - key: <param-key>
+#           description: "<description and valid values>"
+#           example: <scalar or nested YAML map>
+#       optional:
+#         - key: <param-key>
+#           description: "<description>"
+#           example: <scalar or nested YAML map>
+#
+# Dotted optional keys (e.g. data.storage) are merged into the parent
+# key's block when constructing the final parameters object.
+
+- service: destination
+  plans: [lite]
+  source: builtin
+  parameters:
+    required: []
+    optional:
+      - key: HTML5Runtime_enabled
+        description: "Enable this instance for use from the HTML5 Application Repository runtime. Default: false."
+        example: false
+
+- service: hana-cloud
+  plans: [hana]
+  source: builtin
+  parameters:
+    required:
+      - key: data
+        description: "Instance configuration block. Edit the fields — memory (GB, 32–2800) and edition (cloud or orange) are required by the service."
+        example:
+          memory: 32
+          edition: cloud
+          generateSystemPassword: true
+    optional:
+      - key: data.storage
+        description: "Disk size in GB (120–16384). Omit to use service default."
+        example: 120
+      - key: data.vcpu
+        description: "Number of vCPUs (minimum 2). Omit to use service default."
+        example: 2
+      - key: data.slaLevel
+        description: "Availability SLA: 'standard' or 'elevated'."
+        example: standard
+      - key: data.disasterRecoveryMode
+        description: "DR mode: 'no_disaster_recovery' or 'one_secondary_async'."
+        example: no_disaster_recovery
+      - key: data.whitelistIPs
+        description: "CIDR ranges allowed to connect (max 900 entries). Omit to allow all."
+        example:
+          - "10.0.0.0/24"
+      - key: data.productVersion
+        description: "Pin a specific HANA product version. Omit to use the current default."
+        example:
+          releaseCycle: quarterly
+          track: "<version-track>"
+      - key: data.enabledservices
+        description: "Optional HANA services to enable: docstore, dpserver, nlp, scriptserver, triplestore."
+        example:
+          scriptserver: false
+          dpserver: false
+      - key: data.autoConfig
+        description: "Automatic disk resize settings."
+        example:
+          storage:
+            enabled: false
+            maxValue: 512
+      - key: data.backup
+        description: "Backup retention period in days (0–215)."
+        example:
+          retentionDays: 14

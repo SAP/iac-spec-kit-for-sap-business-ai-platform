@@ -1,4 +1,4 @@
-# `btp-iac.accounts`
+# `sap-iac.accounts`
 
 !!! abstract "Summary"
     **Role:** Required. · **Reads:** `specs/scenario.md` (+ governance) · **Writes:** `specs/landscape.md`
@@ -7,19 +7,20 @@ Defines the BTP account topology — the subaccounts, regions, and directory gro
 
 ## When to run it
 
-After `btp-iac.scenario` (and optional `btp-iac.analyse`), once the requirements are captured.
+After `sap-iac.scenario` (and optional `sap-iac.analyse`), once the requirements are captured.
 
 ## Inputs and outputs
 
 | | |
 |---|---|
 | **Reads** | `specs/scenario.md`, and `memory/global-account.md` and `memory/governance.md` if present. |
-| **Writes** | `specs/landscape.md` — the global account reference, directory groupings, and one entry per subaccount (name, region, description, subdomain) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
+| **Writes** | `specs/landscape.md` — the global account reference, directory groupings, and one entry per subaccount (name, region, description, subdomain, `usage`, and `beta_enabled`) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
 
 ## Behaviour
 
 - Derives the account topology from the scenario's environment and deployment requirements.
 - Produces the authoritative structure referenced by `services`, `security`, and `generate`.
+- Determines `usage` and `beta_enabled` from exact governance tier classifications when provided. Otherwise it infers them from `prod`/`production`, `dev`/`development`, and `test`/`staging`/`qa` tier-name tokens, asks once for any unmatched tiers, and confirms the complete table before writing.
 - Prefers the `sap-docs` MCP server over web fetches for SAP documentation.
 
 The command is interactive: when the scenario and governance leave an input underspecified, it asks targeted questions before writing `specs/landscape.md` rather than guessing.
@@ -38,7 +39,7 @@ Using only read/list BTP CLI commands and BTP MCP lookups, `accounts` validates 
 ## Example
 
 ```
-/btp-iac.accounts
+/sap-iac.accounts
 ```
 
 For the single-environment HR leave-request scenario, `accounts` writes one subaccount into `specs/landscape.md`:
@@ -59,5 +60,5 @@ Had governance restricted regions to `eu10`/`eu20`, a scenario asking for `us10`
 
 ## Related
 
-- Requires [`btp-iac.scenario`](scenario.md).
-- Feeds [`btp-iac.services`](services.md), [`btp-iac.security`](security.md), and [`btp-iac.generate`](generate.md).
+- Requires [`sap-iac.scenario`](scenario.md).
+- Feeds [`sap-iac.services`](services.md), [`sap-iac.security`](security.md), and [`sap-iac.generate`](generate.md).

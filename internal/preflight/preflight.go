@@ -1,5 +1,5 @@
 // Package preflight checks that required host binaries are available before
-// btp-iac init creates any files on disk.
+// sap-iac init creates any files on disk.
 package preflight
 
 import (

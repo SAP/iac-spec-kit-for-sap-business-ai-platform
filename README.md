@@ -2,24 +2,24 @@
 [![CodeQL](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SAP/btp-iac-spec-kit/actions/workflows/github-code-scanning/codeql)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/btp-iac-spec-kit)](https://api.reuse.software/info/github.com/SAP/btp-iac-spec-kit)
 
-# infrastructure-as-code specification toolkit for SAP BTP
+# Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform
 
 ## About this project
 
-IaC Spec Kit for SAP BTP is an open-source CLI tool that will help SAP BTP administrators and practitioners. The utility is a scaffolding templater that will be used to generate the necessary project structure and skills used by AI agents to help generate IaC (Terraform) configurations for a given BTP account using best practices as recommended by SAP. Users will be able to use the generated skill to create and enhance their IaC scripts for managing their SAP BTP accounts. It will provide an easy entry point for new administrators who may be new to SAP BTP best practices and to following the right approaches when using IaC (Terraform) scripts.
+The Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform is an open-source CLI tool that will help SAP Business AI Platform administrators and practitioners. The utility is a scaffolding templater that will be used to generate the necessary project structure and skills used by AI agents to help generate IaC (Terraform) configurations for a given account using best practices as recommended by SAP. Users will be able to use the generated skill to create and enhance their IaC scripts for managing their accounts. It will provide an easy entry point for new administrators who may be new to SAP best practices and to following the right approaches when using IaC (Terraform) scripts.
 
-The `btp-iac init` workflow currently scaffolds agent integrations for Claude Code, Codex, Cursor, and GitHub Copilot.
+The `sap-iac init` workflow currently scaffolds agent integrations for Claude Code, Codex, Cursor, and GitHub Copilot.
 
 ## Requirements and Setup
 
 The [developer documentation](DEVELOPER.md) is a basic outline on how to build and develop the toolkit.
 
 ## Usage
-Refer to the [Quick Start Guide](https://sap.github.io/btp-iac-spec-kit/) for instructions to efficiently begin utilizing the IaC Spec Kit for SAP BTP.
+Refer to the [Quick Start Guide](https://sap.github.io/btp-iac-spec-kit/) for instructions to efficiently begin utilizing the Infrastructure-as-Code Specification Toolkit.
 
 ## Updating
 
-To update the CLI and refresh the `btp-iac.*` command files in an existing project, see the [Updating guide](https://sap.github.io/btp-iac-spec-kit/updating/).
+To update the CLI and refresh the `sap-iac.*` command files in an existing project, see the [Updating guide](https://sap.github.io/btp-iac-spec-kit/updating/).
 
 ## Support, Feedback, Contributing
 

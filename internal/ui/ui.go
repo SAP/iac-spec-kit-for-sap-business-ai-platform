@@ -1,4 +1,4 @@
-// Package ui renders terminal output for the btp-iac CLI.
+// Package ui renders terminal output for the sap-iac CLI.
 package ui
 
 import (
@@ -81,26 +81,26 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 	}
 
 	section(&body, "Define your guardrails", []stepRow{
-		{"-", "btp-iac.govern", "Set guardrails — regions, naming, cost policies. Skip to use defaults (optional)."},
+		{"-", "sap-iac.govern", "Set guardrails — regions, naming, cost policies. Skip to use defaults (optional)."},
 	})
 
 	section(&body, "Define your infrastructure", []stepRow{
-		{"1)", "btp-iac.scenario", "Describe your scenario."},
-		{"2)", "btp-iac.analyse", "Scan source code to extract service dependencies automatically (optional)."},
-		{"3)", "btp-iac.accounts", "Map your scenario to BTP directories and subaccounts."},
-		{"4)", "btp-iac.services", "Resolve which BTP services each subaccount needs."},
-		{"5)", "btp-iac.security", "Set up IdP trust, roles, role collections and role collection assignments."},
-		{"6)", "btp-iac.connectivity", "Define destinations and certificates (optional)."},
+		{"1)", "sap-iac.scenario", "Describe your scenario."},
+		{"2)", "sap-iac.analyse", "Scan source code to extract service dependencies automatically (optional)."},
+		{"3)", "sap-iac.accounts", "Map your scenario to BTP directories and subaccounts."},
+		{"4)", "sap-iac.services", "Resolve which BTP services each subaccount needs."},
+		{"5)", "sap-iac.security", "Set up IdP trust, roles, role collections and role collection assignments."},
+		{"6)", "sap-iac.connectivity", "Define destinations and certificates."},
 	})
 
 	section(&body, "Generate Terraform", []stepRow{
-		{"7)", "btp-iac.tasks", "Build a dependency-ordered execution plan."},
-		{"8)", "btp-iac.design", "Plan the Terraform file and module layout."},
-		{"9)", "btp-iac.generate", "Write and validate all Terraform HCL."},
+		{"7)", "sap-iac.tasks", "Build a dependency-ordered execution plan."},
+		{"8)", "sap-iac.design", "Plan the Terraform file and module layout."},
+		{"9)", "sap-iac.generate", "Write and validate all Terraform HCL."},
 	})
 
 	section(&body, "Utilities", []stepRow{
-		{"  ", "btp-iac.next", "Show current project state and recommend the next command."},
+		{"  ", "sap-iac.next", "Show current project state and recommend the next command."},
 	})
 
 	sb.WriteString(panel.Render(body.String()))

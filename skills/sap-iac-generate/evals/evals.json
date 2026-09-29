@@ -1,0 +1,80 @@
+{
+  "skill_name": "sap-iac-generate",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cf-service-instance-depends-on-all-same-space-roles",
+      "description": "Generation maps role-task dependencies to explicit Terraform dependencies.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create space dev-apps\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = dev-apps`\n- [ ] T-002 `[dev]` Assign developer in dev-apps\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = dev-apps`, `username = alice@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-003 `[dev]` Assign manager in dev-apps\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = dev-apps`, `username = bob@example.com`, `role_type = space_manager`, `origin = sap.ids`\n- [ ] T-004 `[dev]` Create orders service\n  - Depends on: T-001, T-002, T-003\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_service_instance`, `cf_space = dev-apps`, `service_offering_name = xsuaa`, `service_plan_name = application`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "1.1", "text": "The generated cloudfoundry_service_instance retains a reference to the dev-apps cloudfoundry_space resource"},
+        {"id": "1.2", "text": "The service resource has an explicit depends_on containing both dev-apps cloudfoundry_space_role resources"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cf-role-dependencies-never-cross-space-or-provider-boundaries",
+      "description": "Only dependencies declared for the target CF space are emitted.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create space apps\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = apps`\n- [ ] T-002 `[dev]` Assign apps developer\n  - Depends on: T-001\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = apps`, `username = alice@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-003 `[dev]` Create space data\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = data`\n- [ ] T-004 `[dev]` Assign data developer\n  - Depends on: T-003\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = data`, `username = bob@example.com`, `role_type = space_developer`, `origin = sap.ids`\n- [ ] T-005 `[dev]` Create data service\n  - Depends on: T-003, T-004\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_service_instance`, `cf_space = data`, `service_offering_name = xsuaa`, `service_plan_name = application`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "2.1", "text": "The data service depends on the data role resource and not on the apps role resource"},
+        {"id": "2.2", "text": "No CF space-role depends_on is added to the cloudfoundry_space or cloudfoundry_space_role resources themselves"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "trust-configuration-omits-derived-origin",
+      "description": "The IdP URL alone is sufficient for a trust configuration.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount`, `subdomain = dev`, `region = eu10`\n- [ ] T-002 `[dev]` Configure custom IdP trust\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_trust_configuration`, `subaccount = dev`, `identity_provider = https://corp.accounts.ondemand.com`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "3.1", "text": "The generated btp_subaccount_trust_configuration resource contains identity_provider set to https://corp.accounts.ondemand.com"},
+        {"id": "3.2", "text": "The generated trust configuration resource omits origin"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "trust-configuration-emits-explicit-origin-only",
+      "description": "A dedicated metadata marker permits origin emission without changing other resource rules.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount`, `subdomain = dev`, `region = eu10`\n- [ ] T-002 `[dev]` Configure custom IdP trust\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_trust_configuration`, `subaccount = dev`, `identity_provider = https://corp.accounts.ondemand.com`, `origin = corp-custom`, `origin_explicit = true`\n- [ ] T-003 `[dev]` Create Administrators collection\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_role_collection_base`, `subaccount = dev`, `collection_name = Administrators`\n- [ ] T-004 `[dev]` Assign administrator\n  - Depends on: T-003\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount = dev`, `role_collection_name = Administrators`, `user_name = alice@example.com`, `origin = sap.ids`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "4.1", "text": "The generated btp_subaccount_trust_configuration resource contains identity_provider and origin = corp-custom"},
+        {"id": "4.2", "text": "The generated btp_subaccount_role_collection_assignment resource still contains origin = sap.ids"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "cf-runtime-memory-entitlement-emits-calculated-amount",
+      "description": "Generated Terraform uses the calculated amount for the entitlement-only runtime-memory task.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount`, `subdomain = dev`, `region = eu10`\n- [ ] T-002 `[dev]` Assign Cloud Foundry runtime memory entitlement\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_entitlement`, `subaccount = dev`, `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, `amount = 2`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "5.1", "text": "Generates one btp_subaccount_entitlement resource with APPLICATION_RUNTIME and MEMORY"},
+        {"id": "5.2", "text": "The entitlement resource sets amount = 2 and no service instance or subscription resource is generated"}
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-	"name": "BTP IaC Spec Kit - Development",
+	"name": "Spec Kit - Development",
 	"image": "mcr.microsoft.com/devcontainers/go:dev-1.27",
 	"features": {
 		"ghcr.io/devcontainers/features/terraform:1": {

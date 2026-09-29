@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.scenario`: translating a plain-language application description into structured BTP infrastructure requirements.
+Defines the behaviour of `/sap-iac.scenario`: translating a plain-language application description into structured BTP infrastructure requirements.
 
 ## Requirements
 
@@ -60,3 +60,10 @@ The command SHALL apply the shared platform-validation capability to supplied re
 - **WHEN** governance selects a preferred infrastructure provider and a supplied region returns different unambiguous provider metadata
 - **THEN** the command warns with the region and both providers
 - **AND** retains the region for further scenario processing
+
+### Requirement: record Cloud Foundry application memory sizing
+When Cloud Foundry is selected or permitted, the command SHALL record each Cloud Foundry application's supplied memory allocation in `specs/scenario.md` in a structured form that identifies the application and allocation. Downstream commands SHALL be able to determine the total allocation for each subaccount from this output.
+
+#### Scenario: Cloud Foundry sizing is captured
+- **WHEN** the scenario includes a Cloud Foundry application with a 256 MB memory allocation
+- **THEN** `specs/scenario.md` records that application's 256 MB allocation as structured sizing data for its subaccount

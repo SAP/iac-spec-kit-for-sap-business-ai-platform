@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
+Defines the behaviour of `/sap-iac.generate`: running a full pre-generation governance validation pass, generating Terraform HCL in dependency order, and validating the output.
 
 ## Requirements
 
@@ -75,14 +75,25 @@ The command SHALL apply cost controls governance during the pre-generation pass.
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: generate Terraform HCL in dependency order
-The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the file paths annotated by `/btp-iac.design`.
+The command SHALL execute each task from `specs/tasks.md` in dependency order, writing resources to the directory and file paths annotated by `/sap-iac.design`, using the standard file layout per configuration unit: resources in `main.tf`, input variables in `variables.tf`, output values in `outputs.tf`, provider configuration and `required_providers` in `providers.tf`, and a `backend.tf` defaulting to a local backend.
 
 #### Scenario: resources generated
 - **WHEN** the pre-generation pass passes
-- **THEN** the command writes Terraform HCL for each task to its annotated file path
+- **THEN** the command writes Terraform HCL for each task to its annotated path using the standard `main.tf` / `variables.tf` / `outputs.tf` / `providers.tf` / `backend.tf` layout
 
-### Requirement: select provider by service instance location
-The command SHALL generate each service instance with the provider indicated by its `location`: BTP provider for `btp`, Cloud Foundry provider (`SAP/cloudfoundry`) for `cf`. Entitlement-only services SHALL generate only the entitlement assignment. The `required_providers` block SHALL include every provider the resolved locations require.
+#### Scenario: local backend emitted
+- **WHEN** a configuration unit is written
+- **THEN** it includes a `backend.tf` configured for a local backend by default
+
+### Requirement: select provider by service resource type
+The command SHALL generate each service resource with the provider indicated by its `resource_type`:
+
+- `btp_subaccount_service_instance` — BTP provider (`btp_subaccount_service_instance`, using `btp_subaccount_entitlement` / `btp_subaccount_service_plan` as needed).
+- `cloudfoundry_service_instance` — Cloud Foundry provider (`cloudfoundry_service_instance`) scoped to the `cf_space` recorded on the task, using `service_offering_name` and `service_plan_name` attributes directly (no data source). Use `cloudfoundry/cloudfoundry` as its `required_providers` source.
+- `btp_subaccount_subscription` — BTP provider (`btp_subaccount_subscription`) paired with its `btp_subaccount_entitlement`. No `location` or `cf_space` applies.
+- `btp_subaccount_entitlement` (entitlement-only) — generate only the entitlement assignment resource; no instance or subscription resource.
+
+Kyma-provider resources SHALL use the `hashicorp/kubernetes` provider. The `required_providers` block in `providers.tf` SHALL include every provider the resolved resource types require.
 
 #### Scenario: btp service instance
 - **WHEN** a service instance task has `location: btp`
@@ -90,11 +101,73 @@ The command SHALL generate each service instance with the provider indicated by 
 
 #### Scenario: cf service instance
 - **WHEN** a service instance task has `location: cf`
-- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space`
+- **THEN** the command generates a Cloud Foundry-provider service instance resource scoped to the task's `cf_space` using the `cloudfoundry/cloudfoundry` provider
+
+#### Scenario: subscription service
+- **WHEN** a service task has `resource_type: btp_subaccount_subscription`
+- **THEN** the command generates a `btp_subaccount_subscription` resource paired with its `btp_subaccount_entitlement`, both via the BTP provider, with no `location` or `cf_space`
 
 #### Scenario: entitlement-only service
 - **WHEN** a service is classified as entitlement-only
 - **THEN** the command generates only the entitlement assignment and no instance or subscription resource
+
+#### Scenario: kyma resources
+- **WHEN** a configuration unit contains Kyma-provider resources
+- **THEN** those resources use the `hashicorp/kubernetes` provider
+
+### Requirement: emit BTP outputs for CF and Kyma provider wiring
+When a configuration unit is split for a Cloud Foundry or Kyma environment, the command SHALL emit in the BTP directory's `outputs.tf` the connection values the downstream provider needs, derived from the environment instance labels: the Cloud Foundry API endpoint via `provider::btp::extract_cf_api_url(...)`, the CF Org ID via `provider::btp::extract_cf_org_id(...)`, and the Kyma kubeconfig URL via `provider::btp::extract_kyma_kubeconfig_url(...)`. For Kyma the command SHALL expose only the kubeconfig URL; it SHALL NOT generate the download or parsing of the kubeconfig for the `hashicorp/kubernetes` provider.
+
+#### Scenario: cf api url output
+- **WHEN** a unit contains a Cloud Foundry environment
+- **THEN** the BTP `outputs.tf` exposes the CF API endpoint using `provider::btp::extract_cf_api_url` against the environment instance labels
+
+#### Scenario: cf org id output
+- **WHEN** a unit contains a Cloud Foundry environment
+- **THEN** the BTP `outputs.tf` exposes the CF Org ID using `provider::btp::extract_cf_org_id` against the environment instance labels
+
+#### Scenario: kyma kubeconfig url output
+- **WHEN** a unit contains a Kyma environment
+- **THEN** the BTP `outputs.tf` exposes the kubeconfig URL using `provider::btp::extract_kyma_kubeconfig_url` against the environment instance labels
+- **AND** the command does not generate kubeconfig download or parsing for the kubernetes provider
+
+### Requirement: emit directory ID output when a directory-per-stage layer exists
+When `/sap-iac.design` defined a BTP directory-per-stage layer, the command SHALL emit that configuration's `outputs.tf` exposing the directory ID, intended to feed the BTP configuration's `parent_id`.
+
+#### Scenario: directory id output
+- **WHEN** a directory-per-stage layer was defined
+- **THEN** its `outputs.tf` exposes the directory ID
+
+### Requirement: emit tfvars handover placeholder between directories
+Because separate directories are independent Terraform roots on a local backend, the command SHALL move cross-directory values by manual tfvars handover rather than `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), the command SHALL emit the declaring directory's `outputs.tf` together with a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The command SHALL NOT generate `terraform_remote_state` coupling. When the producing BTP directory contains a Cloud Foundry environment, both `cf_api_url` and `cf_org_id` SHALL appear in the consuming directory's `terraform.tfvars.example`.
+
+#### Scenario: handover scaffolding emitted
+- **WHEN** a consuming directory depends on values produced by another directory
+- **THEN** the command emits the producing directory's `outputs.tf` and a `terraform.tfvars.example` in the consuming directory naming the variables to copy
+- **AND** the command does not generate a `terraform_remote_state` data source
+
+#### Scenario: cf handover includes org id
+- **WHEN** the producing BTP directory contains a Cloud Foundry environment
+- **THEN** the consuming directory's `terraform.tfvars.example` lists both `cf_api_url` and `cf_org_id` as handover variables
+
+### Requirement: emit provider-initialization tfvars example
+For each configuration unit that contains a `provider "btp"` block, the command SHALL emit a `terraform.tfvars.example` file listing the variables referenced by the `provider "btp"` block in that unit as placeholder entries. The file SHALL be named `terraform.tfvars.example` (never `terraform.tfvars`) so Terraform does not load it automatically. If `memory/global-account.md` exists in the project root and contains a non-empty `- Subdomain: <value>` line, the command SHALL use that value as the pre-filled entry for `globalaccount_subdomain`; a blank `- Subdomain:` record or an absent file SHALL produce the sentinel `<your-globalaccount-subdomain>`. When both this requirement and the handover requirement apply to the same directory (e.g. a BTP configuration unit that also consumes a directory ID), the command SHALL emit a single `terraform.tfvars.example` containing the union of all entries from both requirements.
+
+#### Scenario: tfvars example emitted with sentinel placeholder
+- **WHEN** a BTP configuration unit is generated and `memory/global-account.md` is absent or its `- Subdomain:` line is blank
+- **THEN** the command writes `terraform.tfvars.example` in that unit's directory with one entry per provider-initialization variable, each set to a descriptive sentinel (e.g. `globalaccount_subdomain = "<your-globalaccount-subdomain>"`)
+
+#### Scenario: tfvars example pre-filled from memory
+- **WHEN** a BTP configuration unit is generated and `memory/global-account.md` contains a non-empty `- Subdomain: <value>` line
+- **THEN** the command writes `terraform.tfvars.example` in that unit's directory with `globalaccount_subdomain` set to that value
+
+#### Scenario: file is never named terraform.tfvars
+- **WHEN** any provider-initialization example file is written
+- **THEN** the file is named `terraform.tfvars.example`, not `terraform.tfvars`
+
+#### Scenario: merged file when both handover and provider-init apply
+- **WHEN** a directory qualifies for both the handover placeholder (it consumes cross-directory outputs such as a `parent_id`) and the provider-initialization example
+- **THEN** the command writes exactly one `terraform.tfvars.example` containing the union of all handover variables and all provider-initialization variables
 
 ### Requirement: emit available subaccount classification attributes
 For each `btp_subaccount` task selected by the stage filter, the command SHALL read `usage` and `beta_enabled` from task metadata and emit every present, valid value on the generated `btp_subaccount` resource. It SHALL NOT infer defaults or substitute governance values. Missing values are supported for legacy tasks and SHALL NOT stop generation; invalid values that are present SHALL stop before writing that resource.
@@ -116,33 +189,85 @@ For each `btp_subaccount` task selected by the stage filter, the command SHALL r
 - **THEN** the command stops before writing that resource and identifies the invalid task metadata
 
 ### Requirement: resolve latest provider versions at runtime
-The command SHALL look up the current latest version of each required Terraform provider before writing `versions.tf`, and use those versions as `~>` constraints in `required_providers`. It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
+The command SHALL look up the current latest version of each required Terraform provider before writing `providers.tf`, and use those versions as `~>` constraints in `required_providers`. The provider set SHALL include, as required by the resolved resource types, each of `SAP/btp`, `cloudfoundry/cloudfoundry`, `hashicorp/kubernetes`, and `hashicorp/random` (when `btp_subaccount` resources are present). It SHALL NOT hardcode any version. Before using WebFetch, it SHALL check if the `terraform` MCP server is available and prefer it.
 
 #### Scenario: provider version resolved
-- **WHEN** generating `versions.tf`
-- **THEN** the command looks up the latest version for each provider via the terraform MCP server or WebFetch fallback, and uses it as the `~>` constraint
+- **WHEN** generating `providers.tf`
+- **THEN** the command looks up the latest version for each required provider via the terraform MCP server or WebFetch fallback, and uses it as the `~>` constraint
+
+#### Scenario: kyma provider included
+- **WHEN** the task set contains a Kyma environment
+- **THEN** the resolved provider set includes `hashicorp/kubernetes` at its latest version
+
+#### Scenario: random provider included when subaccounts present
+- **WHEN** the task set contains at least one `btp_subaccount` resource
+- **THEN** the resolved provider set includes `hashicorp/random` at its latest version
+
+### Requirement: look up provider schema via MCP before writing HCL
+Before writing any HCL block for a resource or data source, the command SHALL query the terraform MCP server for the exact current schema of that resource type. The lookup sequence is: (1) `search_providers` to obtain the `provider_doc_id` for the resource type's provider, (2) `get_provider_details` to read the exact schema including all attributes, types, and required fields. The command SHALL use the returned schema as the authoritative source for attribute names, types, and required/optional classification. If the terraform MCP server is unavailable, the command SHALL fall back to WebFetch against the Terraform registry and note the fallback.
+
+#### Scenario: schema retrieved from MCP
+- **WHEN** the terraform MCP server is available
+- **THEN** the command calls `search_providers` then `get_provider_details` for each resource type before writing its HCL, and uses the returned schema as the authoritative attribute set
+
+#### Scenario: schema fallback to WebFetch
+- **WHEN** the terraform MCP server is unavailable
+- **THEN** the command fetches the provider documentation from the Terraform registry via WebFetch and notes that the MCP server was unavailable
+
+### Requirement: resolve service instance plan via named attributes, not data sources
+When generating a `btp_subaccount_service_instance` resource, the command SHALL use the `service_offering_name` and `service_plan_name` attributes directly on the resource. It SHALL NOT generate a `btp_subaccount_service_plan` data source or any other data source to look up a technical plan ID. When generating a `cloudfoundry_service_instance` resource, the command SHALL use the `service_offering_name` and `service_plan_name` attributes directly on the resource. It SHALL NOT generate a `cloudfoundry_service_plan` data source or any other data source to resolve the plan.
+
+#### Scenario: BTP service instance uses named attributes
+- **WHEN** a task has `resource_type: btp_subaccount_service_instance`
+- **THEN** the generated resource contains `service_offering_name` and `service_plan_name` attributes
+- **AND** no `data "btp_subaccount_service_plan"` block is generated for that service instance
+
+#### Scenario: CF service instance uses named attributes
+- **WHEN** a task has `resource_type: cloudfoundry_service_instance`
+- **THEN** the generated resource contains `service_offering_name` and `service_plan_name` attributes
+- **AND** no `data "cloudfoundry_service_plan"` block is generated for that service instance
+
+### Requirement: Render parameters block on service instance resources
+When a `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task's entry in `specs/services.md` contains a `parameters:` block, the command SHALL emit a `parameters = jsonencode({...})` attribute on the generated resource, using the key-value pairs from the `parameters:` block. When the `parameters:` block is absent, the command SHALL omit the `parameters` attribute entirely.
+
+#### Scenario: parameters block present produces jsonencode attribute
+- **WHEN** a `btp_subaccount_service_instance` task entry in `specs/services.md` contains a `parameters:` block with collected values
+- **THEN** the generated resource includes `parameters = jsonencode({ <key> = <value> ... })`
+
+#### Scenario: parameters block absent produces no parameters attribute
+- **WHEN** a `btp_subaccount_service_instance` task entry in `specs/services.md` has no `parameters:` block
+- **THEN** the generated resource does not include a `parameters` attribute
+
+#### Scenario: nested parameters rendered correctly
+- **WHEN** the `parameters:` block contains a nested object value
+- **THEN** `jsonencode(...)` receives the correctly nested structure
 
 ### Requirement: run terraform init before fmt and validate
-The command SHALL run `terraform init` on the `terraform/` directory before `terraform fmt` and `terraform validate`.
+The command SHALL run `terraform init` on each generated directory before `terraform fmt` and `terraform validate` for that directory.
 
 #### Scenario: init succeeds
-- **WHEN** all files are written and `terraform init` succeeds
-- **THEN** the command proceeds to `terraform fmt --recursive` then `terraform validate`
+- **WHEN** all files are written and `terraform init` succeeds for a generated directory
+- **THEN** the command proceeds to `terraform fmt --recursive` then `terraform validate` for that directory
 
 #### Scenario: init fails
-- **WHEN** `terraform init` fails
-- **THEN** the command reports the error and does not proceed to fmt or validate
+- **WHEN** `terraform init` fails for a generated directory
+- **THEN** the command reports the error and does not proceed to fmt or validate for that directory
 
 ### Requirement: run terraform fmt and validate on completion
-The command SHALL run `terraform fmt --recursive` and `terraform validate` after `terraform init` and report the outcome.
+The command SHALL run `terraform fmt --recursive` and `terraform validate` on each generated directory after its `terraform init` and report the outcome per directory. Generation is not complete until `terraform validate` passes on every generated directory. The command SHALL NOT report generation success if `terraform validate` has not passed on all directories.
 
 #### Scenario: fmt and validate pass
-- **WHEN** all files are written and both commands succeed
-- **THEN** the command reports success
+- **WHEN** all files are written and both commands succeed for a generated directory
+- **THEN** the command reports success for that directory
 
-#### Scenario: fmt or validate fails — fix and retry
-- **WHEN** `terraform fmt --recursive` or `terraform validate` fails
-- **THEN** the command fixes the reported issues in the affected files, then re-runs `terraform fmt --recursive` and `terraform validate` until both pass
+#### Scenario: fmt or validate fails — fix and retry until passing
+- **WHEN** `terraform fmt --recursive` or `terraform validate` fails for a generated directory
+- **THEN** the command fixes the reported issues in the affected files, re-runs `terraform fmt --recursive` and `terraform validate`, and repeats until `terraform validate` passes
+- **AND** the command does not report generation success until all directories pass
+
+#### Scenario: user cancels during retry loop
+- **WHEN** the user explicitly cancels while the command is in the fix-and-retry loop
+- **THEN** the command stops and reports the directories that have not yet passed validation
 
 ### Requirement: do not commit generated code by default
 The command SHALL NOT run `git commit` (or stage files) after generating Terraform HCL unless the user explicitly requests a commit.
@@ -165,3 +290,260 @@ The command SHALL NOT run `git push` after generating Terraform HCL unless the u
 #### Scenario: user requests push
 - **WHEN** the user explicitly asks to push (e.g. "push", "git push")
 - **THEN** the command may push the changes
+
+### Requirement: append random UUID suffix to btp_subaccount subdomain
+For every generated `btp_subaccount` resource the command SHALL append a `-${random_uuid.<label>.result}` suffix to the base subdomain value read from the subaccount's task metadata `subdomain` field. BTP subdomains are limited to 63 characters; the suffix is 37 characters (hyphen + 36-character UUID), so the base SHALL be truncated to at most 26 characters before appending. The command SHALL use a `locals` block with `substr(<base>, 0, 26)` to enforce this, and set `subdomain` to the local. The command SHALL generate one `random_uuid` resource per `btp_subaccount` resource, keyed by the same resource label, using the `hashicorp/random` provider. The `hashicorp/random` provider SHALL be added to the `required_providers` block whenever at least one `btp_subaccount` resource is generated; its version SHALL be resolved at runtime the same way as other providers — not hardcoded.
+
+#### Scenario: subdomain gets uuid suffix with truncation
+- **WHEN** a `btp_subaccount` task is selected for generation
+- **THEN** the generated resource sets `subdomain` to a local defined as `"${substr("<base>", 0, 26)}-${random_uuid.<label>.result}"`, a corresponding `random_uuid "<label>"` resource is emitted in the same `main.tf`, and the local name follows the pattern `<label>_subdomain`
+
+#### Scenario: base subdomain already short
+- **WHEN** the base subdomain from task metadata is 26 characters or fewer
+- **THEN** `substr` is a no-op and the full base value is used unchanged before the UUID suffix
+
+#### Scenario: random provider included
+- **WHEN** at least one `btp_subaccount` resource is generated
+- **THEN** `providers.tf` includes `hashicorp/random` in `required_providers` with a `~>` version constraint resolved at runtime
+
+#### Scenario: no subaccount — random provider omitted
+- **WHEN** no `btp_subaccount` resources are generated in a configuration unit
+- **THEN** `hashicorp/random` is not added to `required_providers` for that unit
+
+### Requirement: prompt for BTP provider authentication method once per run
+When the stage-filtered task set contains at least one BTP resource, the command SHALL ask the user once how BTP provider authentication should be performed. Both the BTP and CF auth prompts SHALL be asked after the stage-filter question and before writing any file. The answer applies to every BTP configuration unit generated in that run. The supported methods are:
+
+- **username/password** — emits `login_name` and `password` variables; no `idp` variable unless the user also specifies a custom IdP
+- **username/password with custom IdP** — emits `login_name`, `password`, and `idp` variables
+- **SSO / token** — emits only `idp` variable (the user authenticates interactively via a browser-based flow)
+- **mTLS (client certificate)** — emits `x509_private_key` and `x509_cert_chain` variables
+
+The `login_name`, `password`, `idp`, `x509_private_key`, and `x509_cert_chain` variable declarations SHALL have no `default` value and SHALL be declared `sensitive = true`. All auth variables SHALL be declared in `variables.tf` for each BTP configuration unit. The `provider "btp"` block in `providers.tf` SHALL reference only the variables required by the selected method. The `terraform.tfvars.example` SHALL include placeholder entries for every auth variable in the selected method.
+
+#### Scenario: username/password selected
+- **WHEN** the user selects username/password authentication for BTP
+- **THEN** `variables.tf` declares `login_name` and `password` with no default value and `sensitive = true`, and `providers.tf` references both in the `provider "btp"` block
+
+#### Scenario: username/password with custom IdP selected
+- **WHEN** the user selects username/password with custom IdP for BTP
+- **THEN** `variables.tf` declares `login_name`, `password`, and `idp` (no default on any, all `sensitive = true`), and `providers.tf` references all three in the `provider "btp"` block
+
+#### Scenario: SSO/token selected
+- **WHEN** the user selects SSO/token authentication for BTP
+- **THEN** `variables.tf` declares `idp` (no default, `sensitive = true`), and `providers.tf` references `idp` in the `provider "btp"` block; no `login_name` or `password` variable is emitted
+
+#### Scenario: mTLS selected
+- **WHEN** the user selects mTLS authentication for BTP
+- **THEN** `variables.tf` declares `x509_private_key` and `x509_cert_chain` (no default on either, both `sensitive = true`), and `providers.tf` references both in the `provider "btp"` block
+
+#### Scenario: auth variables in tfvars example
+- **WHEN** a `terraform.tfvars.example` is emitted for a BTP configuration unit
+- **THEN** it includes placeholder entries for every variable required by the selected BTP authentication method
+
+#### Scenario: prompt asked once per run
+- **WHEN** a generation run produces multiple BTP configuration units
+- **THEN** the auth method prompt is shown only once; the same selection is applied to all BTP units
+
+#### Scenario: BTP prompt skipped when no BTP resources
+- **WHEN** the task set contains no BTP resources
+- **THEN** the BTP authentication prompt is not shown
+
+### Requirement: prompt for Cloud Foundry provider authentication method once per run
+When the stage-filtered task set contains at least one Cloud Foundry resource, the command SHALL ask the user once, before writing any file, how CF provider authentication should be performed. The answer applies to every CF configuration unit generated in that run. The supported methods are:
+
+- **username/password** — emits `cf_user` and `cf_password` variables; no default on either
+- **username/password with custom origin** — emits `cf_user`, `cf_password`, and `cf_origin` variables; no default on any
+- **SSO / token** — emits only `cf_sso_passcode` variable; no default
+
+All CF auth variables SHALL be declared in `variables.tf` for each CF configuration unit. The `cf_user`, `cf_password`, `cf_origin`, and `cf_sso_passcode` variable declarations SHALL have no `default` value and SHALL be declared `sensitive = true`. The `provider "cloudfoundry"` block in `providers.tf` SHALL reference only the variables required by the selected method. The `terraform.tfvars.example` SHALL include placeholder entries for every auth variable in the selected method.
+
+#### Scenario: CF username/password selected
+- **WHEN** the user selects username/password authentication for CF
+- **THEN** `variables.tf` declares `cf_user` and `cf_password` (no default, both `sensitive = true`), and `providers.tf` references both in the `provider "cloudfoundry"` block
+
+#### Scenario: CF username/password with custom origin selected
+- **WHEN** the user selects username/password with custom origin for CF
+- **THEN** `variables.tf` declares `cf_user`, `cf_password`, and `cf_origin` (no default on any, all `sensitive = true`), and `providers.tf` references all three in the `provider "cloudfoundry"` block
+
+#### Scenario: CF SSO/token selected
+- **WHEN** the user selects SSO/token for CF
+- **THEN** `variables.tf` declares `cf_sso_passcode` (no default, `sensitive = true`), and `providers.tf` references it in the `provider "cloudfoundry"` block
+
+#### Scenario: CF auth variables in tfvars example
+- **WHEN** a `terraform.tfvars.example` is emitted for a CF configuration unit
+- **THEN** it includes placeholder entries for every variable required by the selected CF authentication method
+
+#### Scenario: CF prompt skipped when no CF resources
+- **WHEN** the task set contains no Cloud Foundry resources
+- **THEN** the CF authentication prompt is not shown
+
+#### Scenario: CF prompt asked once per run
+- **WHEN** a generation run produces multiple CF configuration units
+- **THEN** the CF auth method prompt is shown only once; the same selection is applied to all CF units
+
+### Requirement: emit quota attribute for entitlements with quota_required flag
+When a task's metadata contains `quota_required: true` (set by `/sap-iac.tasks` from the plan category recorded by `/sap-iac.services`), every `btp_subaccount_entitlement` resource generated for that task SHALL include `amount = 1`. When the flag is absent the `amount` attribute SHALL be omitted.
+
+#### Scenario: entitlement task has quota_required flag
+- **WHEN** a `btp_subaccount_entitlement` task contains `quota_required: true` in its metadata
+- **THEN** the generated `btp_subaccount_entitlement` resource contains `amount = 1`
+
+#### Scenario: entitlement task without quota_required flag
+- **WHEN** a `btp_subaccount_entitlement` task does not contain `quota_required: true`
+- **THEN** no `amount` attribute is emitted on the `btp_subaccount_entitlement` resource
+
+### Requirement: resolve CF landscape label via data source and terraform_data
+For every generated `btp_subaccount_environment_instance` resource whose task metadata contains `environment_type = cloudfoundry`, the command SHALL emit the following two blocks **before** the resource block in the same `main.tf`. This requirement does NOT apply to tasks whose `environment_type` is `kyma` or any other value.
+
+1. A `btp_subaccount_environments` data source scoped to the same subaccount as the environment instance. The `subaccount_id` SHALL reference the same expression used in the `btp_subaccount_environment_instance` resource (e.g. `btp_subaccount.<label>.id`), never a hardcoded string.
+2. A `terraform_data` resource whose `input` filters the data source's `values` list to the entry where `service_name == "cloudfoundry"`, `environment_type == "cloudfoundry"`, and `availability_level == "ACTIVE"`, and reads its `landscape_label` field via `[0].landscape_label`.
+
+The `landscape_label` attribute on the `btp_subaccount_environment_instance` resource SHALL be set to `terraform_data.<env_label>.output`.
+
+The naming convention for the three resources SHALL follow the environment instance's resource label (e.g. for label `cloudfoundry_dev`: data source `btp_subaccount_environments "env_info_cloudfoundry_dev"`, `terraform_data "active_env_label_cloudfoundry_dev"`, resource `btp_subaccount_environment_instance "cloudfoundry_dev"`).
+
+Because `terraform_data` requires Terraform 1.4 or later, whenever at least one CF environment instance is generated the `terraform {}` block in `providers.tf` SHALL include `required_version = ">= 1.4"`. When no CF environment instance is present this constraint SHALL be omitted.
+
+The emitted pattern SHALL be:
+```hcl
+data "btp_subaccount_environments" "env_info_<label>" {
+  subaccount_id = <subaccount_id_reference>
+}
+
+resource "terraform_data" "active_env_label_<label>" {
+  input = [for env in data.btp_subaccount_environments.env_info_<label>.values : env if env.service_name == "cloudfoundry" && env.environment_type == "cloudfoundry" && env.availability_level == "ACTIVE"][0].landscape_label
+}
+
+resource "btp_subaccount_environment_instance" "<label>" {
+  subaccount_id    = <subaccount_id_reference>
+  landscape_label  = terraform_data.active_env_label_<label>.output
+  # ... other attributes
+}
+```
+
+#### Scenario: landscape label resolved for CF environment at apply time
+- **WHEN** the command generates a `btp_subaccount_environment_instance` resource with `environment_type = "cloudfoundry"`
+- **THEN** a `btp_subaccount_environments` data source and a `terraform_data` resource are emitted before the environment instance block in the same `main.tf`, and the instance's `landscape_label` attribute references `terraform_data.<env_label>.output`
+
+#### Scenario: landscape label pattern not applied to Kyma
+- **WHEN** the command generates a `btp_subaccount_environment_instance` resource with `environment_type = "kyma"`
+- **THEN** no `btp_subaccount_environments` data source or `terraform_data` resource is emitted for that instance, and no `landscape_label` attribute is set on it
+
+#### Scenario: subaccount_id is a reference not a literal
+- **WHEN** the subaccount ID is available as a resource reference (e.g. `btp_subaccount.dev.id`)
+- **THEN** both the `btp_subaccount_environments` data source and the `btp_subaccount_environment_instance` resource use that same reference expression for `subaccount_id`
+
+#### Scenario: naming follows resource label
+- **WHEN** the environment instance resource label is `cloudfoundry_dev`
+- **THEN** the data source is named `env_info_cloudfoundry_dev`, the `terraform_data` resource is named `active_env_label_cloudfoundry_dev`, and the environment instance label remains `cloudfoundry_dev`
+
+#### Scenario: required_version constraint emitted when CF environment present
+- **WHEN** at least one CF environment instance is generated in a configuration unit
+- **THEN** `providers.tf` includes `required_version = ">= 1.4"` in its `terraform {}` block
+
+#### Scenario: required_version constraint omitted when no CF environment present
+- **WHEN** no CF environment instance is generated in a configuration unit
+- **THEN** `providers.tf` does not include a `required_version` constraint
+
+### Requirement: generate role collection assignment resources
+For each task with `resource_type = btp_subaccount_role_collection_assignment`, the command SHALL emit one `btp_subaccount_role_collection_assignment` resource. The `role_collection_name` attribute SHALL reference the corresponding `btp_subaccount_role_collection_base` resource via a Terraform expression (not a literal string), creating an implicit dependency. For user assignments the resource SHALL emit `user_name`; for group assignments it SHALL emit `group_name`. The `origin` attribute SHALL be included only when the task metadata contains an `origin` field; it SHALL be omitted otherwise.
+
+#### Scenario: user assignment resource
+- **WHEN** a task has `resource_type = btp_subaccount_role_collection_assignment` and `user_name` in its metadata
+- **THEN** the generated resource contains `user_name` and references the base collection via expression; `origin` is included when present in task metadata
+
+#### Scenario: group assignment resource
+- **WHEN** a task has `resource_type = btp_subaccount_role_collection_assignment` and `group_name` in its metadata
+- **THEN** the generated resource contains `group_name` and references the base collection via expression; `origin` is included when present in task metadata
+
+#### Scenario: origin omitted when absent
+- **WHEN** a `btp_subaccount_role_collection_assignment` task metadata contains no `origin` field
+- **THEN** the generated resource does not include an `origin` attribute
+
+### Requirement: generate Cloud Foundry space and role resources
+For each task with `resource_type = cloudfoundry_space`, the command SHALL emit one `cloudfoundry_space` resource in the CF configuration unit. Its `name` attribute SHALL be the task's space name and its `org` attribute SHALL use `var.cf_org_id`, the organization ID handed over from the corresponding BTP configuration unit. For each task with `resource_type = cloudfoundry_space_role`, the command SHALL emit one `cloudfoundry_space_role` resource. The `space` attribute SHALL reference the corresponding generated `cloudfoundry_space` resource via a Terraform expression (not a hardcoded ID). The `type` attribute is the `role_type` from task metadata; `username` is the `username`; `origin` is the `origin` (either the derived custom-IdP origin or `sap.ids`). The `cloudfoundry/cloudfoundry` provider SHALL be added to `required_providers` in any configuration unit containing at least one `cloudfoundry_space` or `cloudfoundry_space_role` resource.
+
+#### Scenario: CF space resource emitted
+- **WHEN** a task has `resource_type = cloudfoundry_space`
+- **THEN** the generated resource contains its name and `org = var.cf_org_id`
+
+#### Scenario: space role resource emitted
+- **WHEN** a task has `resource_type = cloudfoundry_space_role`
+- **THEN** the generated resource contains `space` (reference expression), `type`, `username`, and `origin` attributes
+
+#### Scenario: space reference is not a literal
+- **WHEN** a `cloudfoundry_space_role` task is generated
+- **THEN** the `space` attribute references the `cloudfoundry_space` resource expression for the named space, not a hardcoded ID
+
+#### Scenario: cloudfoundry provider added for space resources
+- **WHEN** a configuration unit contains at least one `cloudfoundry_space` or `cloudfoundry_space_role` task
+- **THEN** `providers.tf` includes `cloudfoundry/cloudfoundry` in `required_providers`
+
+### Requirement: emit Terraform dependencies for CF space role barriers
+For every generated Cloud Foundry-provider resource that is scoped to a newly created CF space, other than `cloudfoundry_space_role`, `/sap-iac.generate` SHALL emit an explicit Terraform `depends_on` containing every generated `cloudfoundry_space_role` resource for that same space. The resource's existing reference to `cloudfoundry_space` SHALL remain intact. This SHALL enforce `cloudfoundry_space -> cloudfoundry_space_role(s) -> other space-scoped resource` in Terraform's apply graph.
+
+The command SHALL derive the dependency set from the task dependencies for that resource, and SHALL not add role-based dependencies to organization-scoped resources, BTP-provider resources, or resources scoped to a different CF space.
+
+#### Scenario: service instance waits for all roles in its space
+- **WHEN** a `cloudfoundry_service_instance` task is scoped to a newly created space and depends on two role tasks for that space
+- **THEN** its generated resource retains its space reference and contains a `depends_on` with references to both corresponding `cloudfoundry_space_role` resources
+
+#### Scenario: no cross-space role dependency
+- **WHEN** generated resources target two different CF spaces with separate role assignments
+- **THEN** each resource's `depends_on` contains only role resources for its own space
+
+#### Scenario: non-space resource is unaffected
+- **WHEN** a generated resource is BTP-provider-managed or Cloud Foundry organization-scoped
+- **THEN** the command does not emit a CF space-role `depends_on` for it
+
+### Requirement: lift placeholder values into variables
+Before writing each generated `.tf` file, the command SHALL scan every string literal that is about to be emitted. Any value that is a placeholder — matching the `<something>` angle-bracket pattern, a bare keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`), or a string starting with `my-` / `my_` when no concrete value was supplied in the task metadata — SHALL NOT be written as a literal string. Instead the command SHALL:
+
+1. Derive a `snake_case` variable name using the format `<resource_type>_<resource_label>_<attribute_name>`, where `<resource_type>` and `<resource_label>` are the first and second strings in `resource "type" "label"`, and `<attribute_name>` is the HCL attribute key lowercased with hyphens replaced by underscores. This formula is unique for every resource attribute in a configuration unit. Examples: resource type `btp_subaccount_role_collection_base`, label `dev_admins`, attribute `name` → `btp_subaccount_role_collection_base_dev_admins_name`; resource type `btp_subaccount_service_instance`, label `hana`, attribute `name` → `btp_subaccount_service_instance_hana_name`.
+2. Declare the variable in the configuration unit's `variables.tf` with no `default` value; set `sensitive = true` only for credentials or secrets.
+3. Replace the placeholder in the `.tf` file with `var.<variable_name>`.
+4. Add a corresponding entry to `terraform.tfvars.example` (merged per the provider-initialization tfvars example rule), using the original placeholder text as the example value.
+
+The auth variables and `globalaccount_subdomain` declared by the authentication and provider-initialization requirements already satisfy this rule for their respective attributes; the command SHALL NOT emit duplicate variable declarations for those.
+
+#### Scenario: angle-bracket placeholder lifted to variable
+- **WHEN** a generated HCL attribute value would be a string matching `<something>`
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: TODO/FIXME/TBD sentinel lifted to variable
+- **WHEN** a generated HCL attribute value is a bare sentinel keyword (`TODO`, `FIXME`, `TBD`, `CHANGEME`)
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: my- prefix stand-in lifted to variable
+- **WHEN** a generated HCL attribute value starts with `my-` or `my_` and no concrete value was supplied for that attribute in the task metadata
+- **THEN** the command declares a variable named `<resource_type>_<resource_label>_<attribute_name>` in `variables.tf`, references it via `var.<name>` in the `.tf` file, and adds it to `terraform.tfvars.example`
+
+#### Scenario: task-provided value is not a placeholder
+- **WHEN** a string value was explicitly provided in the task metadata for an attribute
+- **THEN** it is emitted as a literal string, even if it starts with `my-` or otherwise resembles a placeholder
+
+#### Scenario: no duplicate auth or globalaccount variables
+- **WHEN** the placeholder detection pass runs on a BTP configuration unit
+- **THEN** it does not emit additional declarations for variables already declared by the authentication or provider-initialization requirements
+
+### Requirement: generate trust configuration origin only from explicit input
+For each task with `resource_type = btp_subaccount_trust_configuration`, the command SHALL emit a resource with its `identity_provider`. It SHALL emit the resource `origin` attribute only when task metadata contains both an origin value and `origin_explicit = true`. The command SHALL NOT derive an origin from `identity_provider`, nor emit an origin from a URL-derived value.
+
+#### Scenario: trust configuration generated from IdP URL alone
+- **WHEN** a trust-configuration task contains `identity_provider` and no explicit-origin marker
+- **THEN** the generated `btp_subaccount_trust_configuration` resource contains `identity_provider` and omits `origin`
+
+#### Scenario: trust configuration generated with explicit origin
+- **WHEN** a trust-configuration task contains an origin value marked explicitly user-supplied
+- **THEN** the generated `btp_subaccount_trust_configuration` resource contains both `identity_provider` and that `origin` value
+
+#### Scenario: non-trust resources retain origin behavior
+- **WHEN** generation handles any resource type other than `btp_subaccount_trust_configuration`
+- **THEN** its existing origin derivation, propagation, and emission behavior remains unchanged
+
+### Requirement: emit calculated Cloud Foundry runtime-memory entitlement amount
+For a `btp_subaccount_entitlement` task representing `APPLICATION_RUNTIME` / `MEMORY` with a calculated amount, the command SHALL generate a BTP entitlement resource with `service_name = "APPLICATION_RUNTIME"`, `plan_name = "MEMORY"`, and `amount` set to that calculated value. It SHALL generate no service instance or subscription resource for the task.
+
+#### Scenario: calculated amount is emitted
+- **WHEN** a runtime-memory entitlement task has calculated amount `2`
+- **THEN** the generated `btp_subaccount_entitlement` resource sets `amount = 2`

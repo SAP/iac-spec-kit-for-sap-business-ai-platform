@@ -1,6 +1,6 @@
 # Troubleshooting
 
-This page lists the errors and warnings `btp-iac init` can emit, and how to resolve each one. Errors stop the command; warnings are advisory and the project is still created.
+This page lists the errors and warnings `sap-iac init` can emit, and how to resolve each one. Errors stop the command; warnings are advisory and the project is still created.
 
 ## Errors (`init` stops)
 
@@ -9,10 +9,10 @@ This page lists the errors and warnings `btp-iac init` can emit, and how to reso
 You ran `init` without `--agent` in a non-interactive context (CI, a pipe, or some IDE terminals). Without a terminal, the interactive picker cannot be shown, so pass the agents explicitly:
 
 ```sh
-btp-iac init my-project --agent claude
+sap-iac init my-project --agent claude
 ```
 
-In a non-interactive context you must also pass the project **name** as an argument, because `init` cannot prompt for it either.
+In a non-interactive context you must also pass the directory name. Only agent-only refresh of an existing sap-iac project is fully non-interactive; fresh and adopt initialization still collect interactive input.
 
 ### `unknown agent "<id>" — supported: claude, codex, cursor, copilot`
 
@@ -28,7 +28,7 @@ The interactive multi-select was dismissed without a choice. Select at least one
 
 ### `invalid project name "<name>": must not contain path separators or start with '.'`
 
-The project name is validated before any scaffolding runs. Names containing a path separator (e.g. `btp-iac init foo/bar`) or starting with a dot (e.g. `btp-iac init .foo`) are rejected to prevent directory traversal and hidden-directory confusion. Choose a plain name: `btp-iac init my-project`.
+The project name is validated before any scaffolding runs. Names containing a path separator (e.g. `sap-iac init foo/bar`) or starting with a dot (e.g. `sap-iac init .foo`) are rejected to prevent directory traversal and hidden-directory confusion. Choose a plain name: `sap-iac init my-project`.
 
 ## Warnings (`init` still succeeds)
 
@@ -37,7 +37,7 @@ The project name is validated before any scaffolding runs. Names containing a pa
 
 ### `Warning: "terraform" was not found on $PATH — install it before running terraform commands.`
 
-Terraform (or OpenTofu) is not installed. You can scaffold now and [install Terraform](https://developer.hashicorp.com/terraform/install) before running the generated HCL.
+The `terraform` executable is not installed. You can scaffold now, but the generation skill requires it for `terraform init`, formatting, and validation. OpenTofu-compatible HCL can still be used separately after generation.
 
 ### `Warning: "git" was not found on $PATH — run "git init" manually in the project directory.`
 
@@ -57,6 +57,6 @@ Your agent has no BTP CLI or per-agent BTP MCP route for platform validation. `i
 
 If Git **is** installed but `git init` fails, `init` treats this as a hard error and removes the partially created project. Resolve the underlying problem (permissions, corrupt configuration) and re-run.
 
-### The agent does not recognise the `btp-iac.*` commands
+### The agent does not recognise the `sap-iac.*` commands
 
 Confirm you scaffolded for the agent you are using and that its command directory exists (`.claude/commands/`, `.codex/prompts/`, `.cursor/rules/`, or `.github/instructions/`). If you recently updated the CLI, see [Updating](updating.md) to refresh the command files.

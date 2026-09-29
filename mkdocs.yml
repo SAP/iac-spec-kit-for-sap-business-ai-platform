@@ -1,4 +1,4 @@
-site_name: IaC Spec Kit for SAP BTP
+site_name: Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform
 theme:
   name: material
   features:
@@ -26,19 +26,20 @@ nav:
   - Home: index.md
   - Installation & Setup: setup.md
   - Usage: usage.md
+  - Service-parameter catalogue: catalogue.md
   - Commands:
       - Overview: commands/index.md
-      - btp-iac.govern: commands/govern.md
-      - btp-iac.scenario: commands/scenario.md
-      - btp-iac.analyse: commands/analyse.md
-      - btp-iac.accounts: commands/accounts.md
-      - btp-iac.services: commands/services.md
-      - btp-iac.security: commands/security.md
-      - btp-iac.connectivity: commands/connectivity.md
-      - btp-iac.tasks: commands/tasks.md
-      - btp-iac.design: commands/design.md
-      - btp-iac.generate: commands/generate.md
-      - btp-iac.next: commands/next.md
+      - sap-iac.govern: commands/govern.md
+      - sap-iac.scenario: commands/scenario.md
+      - sap-iac.analyse: commands/analyse.md
+      - sap-iac.accounts: commands/accounts.md
+      - sap-iac.services: commands/services.md
+      - sap-iac.security: commands/security.md
+      - sap-iac.connectivity: commands/connectivity.md
+      - sap-iac.tasks: commands/tasks.md
+      - sap-iac.design: commands/design.md
+      - sap-iac.generate: commands/generate.md
+      - sap-iac.next: commands/next.md
   - Examples:
       - Usage Walkthrough: walkthrough.md
       - Scenario Examples: scenarios.md

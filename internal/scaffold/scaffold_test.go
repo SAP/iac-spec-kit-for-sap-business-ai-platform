@@ -26,8 +26,8 @@ func TestScaffoldClaude(t *testing.T) {
 		"specs", "memory", "terraform",
 		filepath.Join(".claude", "commands"),
 		".gitignore", ".git",
-		filepath.Join(".claude", "commands", "btp-iac.govern.md"),
-		filepath.Join(".claude", "commands", "btp-iac.generate.md"),
+		filepath.Join(".claude", "commands", "sap-iac.govern.md"),
+		filepath.Join(".claude", "commands", "sap-iac.generate.md"),
 	}
 	for _, rel := range expected {
 		if _, err := os.Stat(filepath.Join("myproject", rel)); err != nil {
@@ -37,10 +37,10 @@ func TestScaffoldClaude(t *testing.T) {
 
 	// All eleven command files must be present.
 	allCmds := []string{
-		"btp-iac.govern.md", "btp-iac.scenario.md", "btp-iac.analyse.md",
-		"btp-iac.accounts.md", "btp-iac.services.md", "btp-iac.security.md",
-		"btp-iac.connectivity.md", "btp-iac.next.md", "btp-iac.tasks.md",
-		"btp-iac.design.md", "btp-iac.generate.md",
+		"sap-iac.govern.md", "sap-iac.scenario.md", "sap-iac.analyse.md",
+		"sap-iac.accounts.md", "sap-iac.services.md", "sap-iac.security.md",
+		"sap-iac.connectivity.md", "sap-iac.next.md", "sap-iac.tasks.md",
+		"sap-iac.design.md", "sap-iac.generate.md",
 	}
 	for _, f := range allCmds {
 		if _, err := os.Stat(filepath.Join("myproject", ".claude", "commands", f)); err != nil {
@@ -73,7 +73,7 @@ func TestScaffoldCursor(t *testing.T) {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join("myproject", ".cursor", "rules", "btp-iac.govern.mdc")); err != nil {
+	if _, err := os.Stat(filepath.Join("myproject", ".cursor", "rules", "sap-iac.govern.mdc")); err != nil {
 		t.Errorf("missing cursor rule file: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join("myproject", ".claude")); err == nil {
@@ -94,7 +94,7 @@ func TestScaffoldCodex(t *testing.T) {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join("myproject", ".codex", "prompts", "btp-iac.govern.md")); err != nil {
+	if _, err := os.Stat(filepath.Join("myproject", ".codex", "prompts", "sap-iac.govern.md")); err != nil {
 		t.Errorf("missing codex prompt file: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join("myproject", ".claude")); err == nil {
@@ -115,7 +115,7 @@ func TestScaffoldCopilot(t *testing.T) {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join("myproject", ".github", "instructions", "btp-iac.govern.instructions.md")); err != nil {
+	if _, err := os.Stat(filepath.Join("myproject", ".github", "instructions", "sap-iac.govern.instructions.md")); err != nil {
 		t.Errorf("missing copilot instructions file: %v", err)
 	}
 }
@@ -134,10 +134,10 @@ func TestScaffoldMultiAgent(t *testing.T) {
 	}
 
 	checks := []string{
-		filepath.Join(".claude", "commands", "btp-iac.scenario.md"),
-		filepath.Join(".codex", "prompts", "btp-iac.scenario.md"),
-		filepath.Join(".cursor", "rules", "btp-iac.scenario.mdc"),
-		filepath.Join(".github", "instructions", "btp-iac.scenario.instructions.md"),
+		filepath.Join(".claude", "commands", "sap-iac.scenario.md"),
+		filepath.Join(".codex", "prompts", "sap-iac.scenario.md"),
+		filepath.Join(".cursor", "rules", "sap-iac.scenario.mdc"),
+		filepath.Join(".github", "instructions", "sap-iac.scenario.instructions.md"),
 	}
 	for _, rel := range checks {
 		if _, err := os.Stat(filepath.Join("myproject", rel)); err != nil {
@@ -219,7 +219,7 @@ func TestApplyAdopt(t *testing.T) {
 
 	mustExist := []string{
 		"specs", "memory", "terraform",
-		filepath.Join(".claude", "commands", "btp-iac.govern.md"),
+		filepath.Join(".claude", "commands", "sap-iac.govern.md"),
 		".gitignore",
 	}
 	for _, rel := range mustExist {
@@ -252,7 +252,7 @@ func TestApplyAdoptPreservesGitignore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := existing + ".btp-iac/platform-validation.md\nmemory/global-account.md\n"
+	want := existing + ".sap-iac/platform-validation.md\nmemory/global-account.md\n"
 	if string(got) != want {
 		t.Errorf("Adopt: .gitignore = %q, want %q", string(got), want)
 	}
@@ -263,8 +263,8 @@ func TestEnsureGitignoreEntryRecognizesCRLFAndDirectoryRule(t *testing.T) {
 		existing string
 		entry    string
 	}{
-		{existing: ".btp-iac/platform-validation.md\r\n", entry: ".btp-iac/platform-validation.md"},
-		{existing: ".btp-iac/\n", entry: ".btp-iac/platform-validation.md"},
+		{existing: ".sap-iac/platform-validation.md\r\n", entry: ".sap-iac/platform-validation.md"},
+		{existing: ".sap-iac/\n", entry: ".sap-iac/platform-validation.md"},
 		{existing: "memory/\n", entry: filepath.Join("memory", GlobalAccountFile)},
 	}
 	for _, test := range tests {
@@ -288,7 +288,7 @@ func TestEnsureGitignoreEntryRecognizesCRLFAndDirectoryRule(t *testing.T) {
 
 func TestApplyAgentOnly(t *testing.T) {
 	dir := t.TempDir()
-	// Simulate an existing btp-iac project — specs and memory already exist.
+	// Simulate an existing sap-iac project — specs and memory already exist.
 	for _, d := range []string{"specs", "memory", "terraform"} {
 		if err := os.Mkdir(filepath.Join(dir, d), 0o755); err != nil {
 			t.Fatal(err)
@@ -300,14 +300,114 @@ func TestApplyAgentOnly(t *testing.T) {
 		t.Fatalf("Apply(AgentOnly): %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(dir, ".cursor", "rules", "btp-iac.govern.mdc")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, ".cursor", "rules", "sap-iac.govern.mdc")); err != nil {
 		t.Error("AgentOnly: missing cursor rule file")
 	}
 	// AgentOnly records local files that must remain untracked too.
 	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
-	if err != nil || !strings.Contains(string(data), ".btp-iac/platform-validation.md") || !strings.Contains(string(data), "memory/global-account.md") {
+	if err != nil || !strings.Contains(string(data), ".sap-iac/platform-validation.md") || !strings.Contains(string(data), "memory/global-account.md") {
 		t.Errorf("AgentOnly: local-file ignore rules missing: %v", err)
 	}
+}
+
+func TestWriteCatalogueFile(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := WriteCatalogueFile(dir, skills.Commands); err != nil {
+		t.Fatalf("WriteCatalogueFile: %v", err)
+	}
+	dest := filepath.Join(dir, "memory", CatalogueFile)
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("catalogue file missing after write: %v", err)
+	}
+	if len(data) == 0 {
+		t.Error("catalogue file is empty")
+	}
+
+	// Write a sentinel value; second call must not overwrite it.
+	sentinel := []byte("# user-edited\n")
+	if err := os.WriteFile(dest, sentinel, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := WriteCatalogueFile(dir, skills.Commands); err != nil {
+		t.Fatalf("WriteCatalogueFile(second call): %v", err)
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(sentinel) {
+		t.Errorf("second WriteCatalogueFile overwrote existing file: got %q", got)
+	}
+}
+
+func TestApplyCataloguePresence(t *testing.T) {
+	catalogue := filepath.Join("memory", CatalogueFile)
+
+	t.Run("fresh", func(t *testing.T) {
+		tmp := t.TempDir()
+		orig, _ := os.Getwd()
+		if err := os.Chdir(tmp); err != nil {
+			t.Fatal(err)
+		}
+		defer os.Chdir(orig) //nolint:errcheck
+		if _, err := Scaffold("proj", skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Scaffold: %v", err)
+		}
+		if _, err := os.Stat(filepath.Join("proj", catalogue)); err != nil {
+			t.Errorf("fresh: catalogue file missing")
+		}
+	})
+
+	t.Run("adopt", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, err := Apply(dir, ModeAdopt, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(Adopt): %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(dir, catalogue)); err != nil {
+			t.Errorf("adopt: catalogue file missing")
+		}
+	})
+
+	t.Run("adopt-preserves-existing", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		sentinel := []byte("# user-edited\n")
+		if err := os.WriteFile(filepath.Join(dir, catalogue), sentinel, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Apply(dir, ModeAdopt, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(Adopt): %v", err)
+		}
+		got, err := os.ReadFile(filepath.Join(dir, catalogue))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != string(sentinel) {
+			t.Errorf("adopt overwrote existing catalogue: got %q", got)
+		}
+	})
+
+	t.Run("agent-only", func(t *testing.T) {
+		dir := t.TempDir()
+		for _, d := range []string{"specs", "memory", "terraform"} {
+			if err := os.Mkdir(filepath.Join(dir, d), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := Apply(dir, ModeAgentOnly, skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+			t.Fatalf("Apply(AgentOnly): %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(dir, catalogue)); err == nil {
+			t.Error("agent-only: catalogue file must not be written")
+		}
+	})
 }
 
 func TestWriteGlobalAccountSubdomain(t *testing.T) {

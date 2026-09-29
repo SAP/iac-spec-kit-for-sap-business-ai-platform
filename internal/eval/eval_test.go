@@ -14,8 +14,14 @@ func TestLoadAndFixture(t *testing.T) {
 		skill string
 		paths []string
 	}{
-		{"btp-iac-govern", []string{"specs/.gitkeep", "memory/.gitkeep", "terraform/.gitkeep"}},
-		{"btp-iac-accounts", []string{"specs/scenario.md", "memory/governance.md", "terraform/.gitkeep"}},
+		{"sap-iac-govern", []string{"specs/.gitkeep", "memory/.gitkeep", "terraform/.gitkeep"}},
+		{"sap-iac-scenario", []string{"memory/.gitkeep", "terraform/.gitkeep"}},
+		{"sap-iac-accounts", []string{"specs/scenario.md", "memory/governance.md", "terraform/.gitkeep"}},
+		{"sap-iac-services", []string{"specs/scenario.md", "specs/landscape.md", "memory/.gitkeep", "terraform/.gitkeep"}},
+		{"sap-iac-security", []string{"specs/scenario.md", "specs/landscape.md", "memory/.gitkeep", "terraform/.gitkeep"}},
+		{"sap-iac-tasks", []string{"specs/landscape.md", "specs/services.md", "specs/trust.md"}},
+		{"sap-iac-design", []string{"specs/tasks.md", "memory/.gitkeep", "terraform/.gitkeep"}},
+		{"sap-iac-generate", []string{"specs/tasks.md", "terraform/.gitkeep"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.skill, func(t *testing.T) {

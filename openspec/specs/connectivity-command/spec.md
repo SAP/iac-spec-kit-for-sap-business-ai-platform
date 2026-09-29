@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.connectivity`: eliciting, structuring, and writing BTP destination and destination-certificate requirements to `specs/connectivity.md`.
+Defines the behaviour of `/sap-iac.connectivity`: eliciting, structuring, and writing BTP destination and destination-certificate requirements to `specs/connectivity.md`.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ The command SHALL write the collected requirements to `specs/connectivity.md`.
 
 #### Scenario: connectivity file is input to tasks
 - **WHEN** `specs/connectivity.md` exists
-- **THEN** `/btp-iac.tasks` reads it and includes destination and certificate tasks in `specs/tasks.md`
+- **THEN** `/sap-iac.tasks` reads it and includes destination and certificate tasks in `specs/tasks.md`
 
 ### Requirement: apply BTP operation safety boundary
 The command SHALL apply the shared BTP platform-validation and read-only boundary: it SHALL only invoke BTP read/list operations; it SHALL never mutate BTP state. `btp target --global-account <subdomain>` is permitted only as an account-selection prelude to BTP CLI read/list commands.

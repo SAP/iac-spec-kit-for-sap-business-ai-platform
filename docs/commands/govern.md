@@ -1,13 +1,13 @@
-# `btp-iac.govern`
+# `sap-iac.govern`
 
 !!! abstract "Summary"
-    **Role:** Optional — the foundation. · **Reads:** `memory/governance.md`, `memory/global-account.md` (if present) · **Writes:** `memory/governance.md`
+    **Role:** Optional, recommended first. · **Reads:** `memory/governance.md`, `memory/global-account.md` (if present) · **Writes:** `memory/governance.md`
 
-Establishes the governance guardrails that every later command validates against: preferred infrastructure provider, allowed regions, permitted runtime environments, naming conventions, service plans, security requirements, and cost controls. Run it first if your organisation has rules that the generated landscape must respect.
+Establishes the governance guardrails that later commands validate against: preferred infrastructure provider, allowed regions, permitted runtime environments, naming conventions, service plans, security requirements, and cost controls. It is the recommended first workflow command.
 
 ## When to run it
 
-Before `btp-iac.scenario`, at the very start of a project — or any time you want to review or change the guardrails already in place. It is entirely optional: skip it and the workflow proceeds without enforcement.
+Before `sap-iac.scenario`, at the start of a project — or any time you want to review or change existing guardrails. The command is optional; without `memory/governance.md`, downstream commands proceed without governance enforcement.
 
 ## Inputs and outputs
 
@@ -19,7 +19,7 @@ Before `btp-iac.scenario`, at the very start of a project — or any time you wa
 
 ## Behaviour
 
-- Must run inside a project created by `btp-iac init`: it walks up from the current directory looking for a root that contains `specs/`, `memory/`, and `terraform/`, and stops without creating or modifying anything if none is found.
+- Must run inside a project created by `sap-iac init`: it walks up from the current directory looking for a root that contains `specs/`, `memory/`, and `terraform/`, and stops without creating or modifying anything if none is found.
 - Inspects your invocation prompt to see which categories you have already described, and asks one question at a time only for the ones still uncovered.
 - When your prompt names specific regions or service plans and a global-account subdomain is configured in `memory/global-account.md`, it validates them against the live BTP account using read/list lookups only, warns on an infrastructure-provider mismatch, and may ask for a valid replacement if a value is unavailable. With no subdomain configured, it keeps your input without a live check.
 - Writes the guardrails to a fixed section structure that downstream commands know how to read. (The *Environments* answer is split across `## Account Setup` and `## Naming`.)
@@ -33,7 +33,7 @@ Before `btp-iac.scenario`, at the very start of a project — or any time you wa
 Invoke the command with the rules you already know, and answer its follow-up questions for anything you left out:
 
 ```
-/btp-iac.govern Only EU regions (eu10, eu20). Subaccounts named <project>-<env>.
+/sap-iac.govern Only EU regions (eu10, eu20). Subaccounts named <project>-<env>.
 Production databases must use the "large" plan. Every subaccount needs a cost-centre tag.
 ```
 
@@ -52,5 +52,5 @@ From here on, if `accounts` is asked to place a subaccount in `us10`, it will st
 
 ## Related
 
-- Next in the workflow: [`btp-iac.scenario`](scenario.md).
-- Guardrail-aware commands: [`btp-iac.accounts`](accounts.md), [`btp-iac.services`](services.md), [`btp-iac.security`](security.md), [`btp-iac.generate`](generate.md).
+- Next in the workflow: [`sap-iac.scenario`](scenario.md).
+- Guardrail-aware commands: [`sap-iac.accounts`](accounts.md), [`sap-iac.services`](services.md), [`sap-iac.security`](security.md), [`sap-iac.generate`](generate.md).

@@ -1,0 +1,101 @@
+{
+  "skill_name": "sap-iac-accounts",
+  "evals": [
+    {
+      "id": 1,
+      "name": "governed-cf-and-kyma-topology",
+      "description": "The account workflow uses governed account setup and collects optional environment details.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate dev and prod subaccounts for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n- Data residency: EU only\n- Compliance reason: GDPR\n- Preferred region: eu10\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry, Kyma\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier, {space} = space purpose\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "For dev create both environments: the CF org is acme-dev-billing with spaces acme-dev-dev and acme-dev-qa; the Kyma environment is acme-dev-billing-kyma. For prod create no runtime environment."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "1.1", "text": "Uses acme-global as the global account subdomain without asking for a GUID or another global account identifier"},
+        {"id": "1.2", "text": "Collects that dev has both Cloud Foundry and Kyma and that prod has no runtime environment"},
+        {"id": "1.3", "text": "Collects and validates the two named Cloud Foundry spaces only after Cloud Foundry is selected"},
+        {"id": "1.4", "text": "Shows a confirmation table before writing, then writes specs/landscape.md containing the governed global account subdomain, selected environment and space details, and inferred dev/prod usage and beta_enabled values"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "missing-global-subdomain-rejects-guid",
+      "description": "A global account GUID is not accepted when the governance policy has no subdomain.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate one dev subaccount for the billing application."},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "The global account is 123e4567-e89b-12d3-a456-426614174000."},
+        {"role": "user", "content": "Its subdomain is acme-global; create no runtime environment for dev."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "2.1", "text": "Rejects the UUID-shaped global account value and asks for a subdomain"},
+        {"id": "2.2", "text": "Uses acme-global only after it is supplied as the global account subdomain"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "forbidden-environment-hard-block",
+      "description": "A selected runtime environment outside governance is blocked before the landscape is written.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate a dev subaccount with a Cloud Foundry environment."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n- Data residency: unrestricted\n- Compliance reason: none\n- Preferred region: eu10\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Kyma\n\n## Naming\n- Subaccount pattern: acme-{env}\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}\n- Kyma environment pattern: acme-{env}-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Define the account topology, including the requested Cloud Foundry environment.",
+      "assertions": [
+        {"id": "3.1", "text": "Stops with an Account Setup governance violation because Cloud Foundry is not allowed"},
+        {"id": "3.2", "text": "Does not write specs/landscape.md before the violation is resolved or Override is explicitly enabled"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "multiple-unmatched-tier-clarification-and-correction",
+      "description": "Multiple unmatched tiers are clarified in one question before the confirmation table, and the clarified values are persisted.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate integration and sandbox subaccounts for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: integration, sandbox\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Create acme-integration-billing and acme-sandbox-billing in eu10 with no runtime environment."},
+        {"role": "user", "content": "For integration use NOT_USED_FOR_PRODUCTION and beta_enabled false; for sandbox use NOT_USED_FOR_PRODUCTION and beta_enabled true."},
+        {"role": "user", "content": "Accept the table."}
+      ],
+      "assertions": [
+        {"id": "4.1", "text": "Asks one clarification question listing both unmatched integration and sandbox tiers before showing the confirmation table"},
+        {"id": "4.2", "text": "Writes the clarified usage and beta_enabled values for both tiers to specs/landscape.md after acceptance"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "confirmation-row-correction",
+      "description": "A user can correct an inferred value in the confirmation table before landscape is written.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate a test subaccount for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: test\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Create acme-test-billing in eu10 with no runtime environment."},
+        {"role": "user", "content": "acme-test-billing: beta=false"}
+      ],
+      "assertions": [
+        {"id": "5.1", "text": "Shows inferred NOT_USED_FOR_PRODUCTION and beta_enabled true for the test tier in a confirmation table"},
+        {"id": "5.2", "text": "Writes beta_enabled false for acme-test-billing after the row correction"}
+      ]
+    }
+  ]
+}

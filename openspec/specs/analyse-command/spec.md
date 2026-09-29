@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the behaviour of `/btp-iac.analyse`: reading application source code or Terraform configuration to extract concrete infrastructure signals as evidenced, confidence-rated facts, and enriching `specs/scenario.md` in place without leaking secrets or overwriting user content.
+Defines the behaviour of `/sap-iac.analyse`: reading application source code or Terraform configuration to extract concrete infrastructure signals as evidenced, confidence-rated facts, and enriching `specs/scenario.md` in place without leaking secrets or overwriting user content.
 
 ## Requirements
 
@@ -88,11 +88,11 @@ The command SHALL define its behaviour for boundary conditions before and during
 - **THEN** the command records the conflict as an unresolved item rather than choosing one silently
 
 ### Requirement: enrich scenario file in place
-The command SHALL enrich `specs/scenario.md` in place with findings from the analysis, writing them only between the paired markers `<!-- btp-iac:analyse:begin -->` and `<!-- btp-iac:analyse:end -->`. On re-runs the command SHALL replace only the content enclosed by those markers and SHALL preserve all content outside them. The command SHALL NOT perform a whole-file rewrite. The generated section SHALL organise findings under "Observed services", "Observed security", "Terraform architecture", and "Unresolved mappings and conflicts".
+The command SHALL enrich `specs/scenario.md` in place with findings from the analysis, writing them only between the paired markers `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`. On re-runs the command SHALL replace only the content enclosed by those markers and SHALL preserve all content outside them. The command SHALL NOT perform a whole-file rewrite. The generated section SHALL organise findings under "Observed services", "Observed security", "Terraform architecture", and "Unresolved mappings and conflicts".
 
 #### Scenario: scenario file enriched between markers
 - **WHEN** the analysis is complete
-- **THEN** the extracted findings are written between `<!-- btp-iac:analyse:begin -->` and `<!-- btp-iac:analyse:end -->`, organised into the observed-services, observed-security, Terraform-architecture, and unresolved subsections
+- **THEN** the extracted findings are written between `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`, organised into the observed-services, observed-security, Terraform-architecture, and unresolved subsections
 
 #### Scenario: re-run preserves surrounding content
 - **WHEN** the command runs again on a file that already contains the paired markers

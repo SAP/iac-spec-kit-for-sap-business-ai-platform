@@ -1,0 +1,67 @@
+{
+  "skill_name": "sap-iac-services",
+  "evals": [
+    {
+      "id": 1,
+      "name": "derives-minimum-cf-runtime-memory-entitlement",
+      "description": "A sub-GB CF application receives the minimum runtime-memory entitlement without an interactive classification.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\n### Cloud Foundry applications\n- name: orders\n  subaccount: dev-sa\n  memory_mb: 256\n"},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Resolve services.",
+      "assertions": [
+        {"id": "1.1", "text": "Creates one entitlement-only APPLICATION_RUNTIME / MEMORY service entry for dev-sa with amount 1"},
+        {"id": "1.2", "text": "Does not ask the user to classify or confirm the runtime-memory entitlement and creates no instance or subscription for it"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "sums-cf-runtime-memory-per-subaccount",
+      "description": "The runtime-memory amount is the per-subaccount ceiling of total MB divided by 1024.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\n### Cloud Foundry applications\n- name: orders\n  subaccount: dev-sa\n  memory_mb: 768\n- name: worker\n  subaccount: dev-sa\n  memory_mb: 512\n"},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Resolve services.",
+      "assertions": [
+        {"id": "2.1", "text": "Creates exactly one entitlement-only APPLICATION_RUNTIME / MEMORY entry for dev-sa with amount 2"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "omits-runtime-entitlement-without-cf-sizing",
+      "description": "No runtime-memory entitlement is added when sizing is unavailable.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n"},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Resolve services.",
+      "assertions": [
+        {"id": "3.1", "text": "Does not create an APPLICATION_RUNTIME / MEMORY entitlement when no structured CF sizing is present"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "unavailable-runtime-entitlement-stops-without-replacement",
+      "description": "A mandatory runtime-memory entitlement cannot be replaced when the scoped lookup reports it unavailable.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\n### Cloud Foundry applications\n- name: orders\n  stage: dev\n  memory_mb: 256\n"},
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Resolve services. The scoped entitlement lookup completes but does not include APPLICATION_RUNTIME / MEMORY.",
+      "assertions": [
+        {"id": "4.1", "text": "Stops before writing specs/services.md and identifies APPLICATION_RUNTIME / MEMORY as unavailable"},
+        {"id": "4.2", "text": "Does not ask for a replacement or omit the mandatory runtime-memory entitlement"}
+      ]
+    }
+  ]
+}

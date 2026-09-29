@@ -6,7 +6,7 @@ func TestWarn(t *testing.T) {
 	if got := Warn("sh"); got != "" {
 		t.Errorf("Warn(found binary) = %q, want empty", got)
 	}
-	if got := Warn("btp-iac-nonexistent-binary-xyz"); got == "" {
+	if got := Warn("sap-iac-nonexistent-binary-xyz"); got == "" {
 		t.Error("Warn(missing binary) = empty, want non-empty warning")
 	}
 }
@@ -18,7 +18,7 @@ func TestCheck(t *testing.T) {
 		wantErr bool
 	}{
 		{"found", "sh", false},
-		{"not found", "btp-iac-nonexistent-binary-xyz", true},
+		{"not found", "sap-iac-nonexistent-binary-xyz", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

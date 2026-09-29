@@ -9,7 +9,7 @@ go test ./...
 Live runs require authenticated `codex` and/or `claude` CLIs. They are opt-in because they use model capacity and can modify only temporary fixture projects. Run both providers with Codex as the AI judge:
 
 ```sh
-go run ./cmd/btp-iac-eval -live -provider all -judge codex -timeout 30m
+go run ./cmd/sap-iac-eval -live -provider all -judge codex -timeout 30m
 ```
 
 Use `-provider codex` or `-provider claude` to run one agent, and `-judge claude` to use Claude as the judge. Reports are written to `eval-artifacts/<provider>-report.json`; add `-keep` to retain the temporary project paths recorded in the report.

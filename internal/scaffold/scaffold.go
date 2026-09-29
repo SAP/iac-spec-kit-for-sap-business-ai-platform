@@ -1,4 +1,4 @@
-// Package scaffold creates the btp-iac project directory structure.
+// Package scaffold creates the sap-iac project directory structure.
 package scaffold
 
 import (
@@ -20,7 +20,7 @@ const (
 	// ModeFresh creates a new project subdirectory with all dirs, agent files,
 	// .gitignore, and runs git init.
 	ModeFresh Mode = iota + 1
-	// ModeAdopt sets up btp-iac inside an existing directory (e.g. a Terraform
+	// ModeAdopt sets up sap-iac inside an existing directory (e.g. a Terraform
 	// repo). Creates specs/, memory/, terraform/, agent files, and .gitignore
 	// if absent. Skips git init.
 	ModeAdopt
@@ -37,16 +37,16 @@ type Agent struct {
 	Dir string
 	// Ext is the file extension written for command files (e.g. ".md", ".mdc").
 	Ext string
-	// Prefix is prepended to each command filename (e.g. "btp-iac.").
+	// Prefix is prepended to each command filename (e.g. "sap-iac.").
 	Prefix string
 }
 
 // KnownAgents is the registry of supported agents, keyed by ID.
 var KnownAgents = map[string]Agent{
-	"claude":  {ID: "claude", Dir: filepath.Join(".claude", "commands"), Ext: ".md", Prefix: "btp-iac."},
-	"codex":   {ID: "codex", Dir: filepath.Join(".codex", "prompts"), Ext: ".md", Prefix: "btp-iac."},
-	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc", Prefix: "btp-iac."},
-	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md", Prefix: "btp-iac."},
+	"claude":  {ID: "claude", Dir: filepath.Join(".claude", "commands"), Ext: ".md", Prefix: "sap-iac."},
+	"codex":   {ID: "codex", Dir: filepath.Join(".codex", "prompts"), Ext: ".md", Prefix: "sap-iac."},
+	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc", Prefix: "sap-iac."},
+	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md", Prefix: "sap-iac."},
 }
 
 var baseDirs = []string{"specs", "memory", "terraform"}
@@ -81,7 +81,7 @@ func Scaffold(name string, commands embed.FS, agents []Agent) (warning string, e
 	return warning, nil
 }
 
-// IsProject reports whether dir looks like an existing btp-iac project by
+// IsProject reports whether dir looks like an existing sap-iac project by
 // checking for the presence of specs/ or memory/.
 func IsProject(dir string) bool {
 	for _, marker := range []string{"specs", "memory"} {
@@ -101,6 +101,9 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 			if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
 				return "", fmt.Errorf("create directory %s: %w", d, err)
 			}
+		}
+		if err := WriteCatalogueFile(dir, commands); err != nil {
+			return "", err
 		}
 	}
 
@@ -136,6 +139,29 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 	}
 
 	return "", nil
+}
+
+// CatalogueFile is the name of the service parameters catalogue written to memory/.
+const CatalogueFile = "service-params-catalogue.yaml"
+
+// WriteCatalogueFile copies the embedded service-params-catalogue.yaml to
+// <dir>/memory/service-params-catalogue.yaml. It is a no-op when the file
+// already exists, preserving any user edits on re-init.
+func WriteCatalogueFile(dir string, commands embed.FS) error {
+	dest := filepath.Join(dir, "memory", CatalogueFile)
+	if _, err := os.Stat(dest); err == nil {
+		return nil
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("stat catalogue file: %w", err)
+	}
+	data, err := commands.ReadFile("sap-iac-services/" + CatalogueFile)
+	if err != nil {
+		return fmt.Errorf("read embedded catalogue: %w", err)
+	}
+	if err := os.WriteFile(dest, data, 0o644); err != nil {
+		return fmt.Errorf("write catalogue file: %w", err)
+	}
+	return nil
 }
 
 // WriteGlobalAccountSubdomain stores the optional global-account subdomain
@@ -174,7 +200,7 @@ func ensureGitignoreEntry(dir, entry string) error {
 		}
 		return nil
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSuffix(line, "\r")
 		if line == entry ||
 			line == platformvalidation.Directory ||
@@ -210,8 +236,8 @@ func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) err
 		if err != nil {
 			return fmt.Errorf("read embedded file %s: %w", path, err)
 		}
-		// Extract command name from the skill directory (e.g. "btp-iac-govern" → "govern").
-		base := strings.TrimPrefix(filepath.Base(filepath.Dir(path)), "btp-iac-")
+		// Extract command name from the skill directory (e.g. "sap-iac-govern" → "govern").
+		base := strings.TrimPrefix(filepath.Base(filepath.Dir(path)), "sap-iac-")
 		dest := filepath.Join(destDir, agent.Prefix+base+agent.Ext)
 		if err := os.WriteFile(dest, data, 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", dest, err)

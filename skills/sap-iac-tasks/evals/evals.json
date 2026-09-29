@@ -1,0 +1,90 @@
+{
+  "skill_name": "sap-iac-tasks",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cf-space-role-barriers-are-per-space",
+      "description": "Multiple role assignments gate only the CF resources in their own created space.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n    - Spaces: dev-apps, dev-data\n"},
+        {"path": "specs/services.md", "content": "# Services\n\n- name: orders\n  consumption_type: instance\n  location: cf\n  cf_space: dev-apps\n- name: reporting\n  consumption_type: instance\n  location: cf\n  cf_space: dev-data\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n\n### CF space user assignments\n- space_name: dev-apps\n  username: alice@example.com\n  role: space_developer\n  origin: sap.ids\n- space_name: dev-apps\n  username: bob@example.com\n  role: space_manager\n  origin: sap.ids\n- space_name: dev-data\n  username: carol@example.com\n  role: space_developer\n  origin: sap.ids\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "1.1", "text": "Creates one cloudfoundry_space_role task for each trust assignment, each after its matching space"},
+        {"id": "1.2", "text": "Makes the orders task depend on dev-apps and both dev-apps role tasks"},
+        {"id": "1.3", "text": "Makes the reporting task depend on dev-data and only the dev-data role task, without cross-space role dependencies"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "missing-cf-space-roles-stop-task-generation",
+      "description": "A created space with a scoped CF resource cannot produce an unsafe task list without roles.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n    - Spaces: dev-apps\n"},
+        {"path": "specs/services.md", "content": "# Services\n\n- name: orders\n  consumption_type: instance\n  location: cf\n  cf_space: dev-apps\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "2.1", "text": "Stops before writing specs/tasks.md because dev-apps has a CF-scoped resource but no CF space role assignment"},
+        {"id": "2.2", "text": "Directs the user to rerun /sap-iac.security and record the required dev-apps role assignments"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "custom-idp-trust-configuration-omits-derived-origin",
+      "description": "Tasks map the IdP URL without treating its derived origin as explicit input.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n"},
+        {"path": "specs/services.md", "content": "# Services\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n\n## dev-sa\n\n### Custom IdP\n- IdP URL: https://corp.accounts.ondemand.com\n- Origin: corp-platform\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "3.1", "text": "Creates a btp_subaccount_trust_configuration task with identity_provider set to https://corp.accounts.ondemand.com"},
+        {"id": "3.2", "text": "The trust-configuration task omits origin and origin_explicit despite the derived Origin field"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "custom-idp-trust-configuration-carries-explicit-origin",
+      "description": "Only the dedicated security-stage field enables trust-configuration origin metadata.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n"},
+        {"path": "specs/services.md", "content": "# Services\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n\n## dev-sa\n\n### Custom IdP\n- IdP URL: https://corp.accounts.ondemand.com\n- Origin: corp-platform\n- Trust configuration origin: corp-custom\n- Trust configuration origin explicit: true\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "4.1", "text": "The btp_subaccount_trust_configuration task contains identity_provider, origin = corp-custom, and origin_explicit = true"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "cf-runtime-memory-entitlement-preserves-amount",
+      "description": "The derived application runtime entitlement remains a dependent BTP entitlement task.",
+      "files": [
+        {"path": "specs/landscape.md", "content": "# Landscape\n\n- Subaccount: dev-sa\n  - Cloud Foundry environment: dev-org\n"},
+        {"path": "specs/services.md", "content": "# Services\n\n- service_offering_name: APPLICATION_RUNTIME\n  service_plan_name: MEMORY\n  consumption_type: entitlement-only\n  amount: 2\n"},
+        {"path": "specs/trust.md", "content": "# Trust\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate the dependency-ordered task list.",
+      "assertions": [
+        {"id": "5.1", "text": "Creates one btp_subaccount_entitlement task for APPLICATION_RUNTIME / MEMORY that depends on dev-sa"},
+        {"id": "5.2", "text": "Preserves amount = 2 in task metadata and creates no instance or subscription task"}
+      ]
+    }
+  ]
+}

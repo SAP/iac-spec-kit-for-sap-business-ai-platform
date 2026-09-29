@@ -1,0 +1,196 @@
+---
+name: sap-iac-tasks
+description: Consolidates landscape, services, trust, and (optionally) connectivity specs into a single dependency-ordered task list.
+license: Apache-2.0
+metadata:
+  author: SAP
+  version: "1.3"
+---
+
+# BTP IaC — Tasks
+
+Consolidates `specs/landscape.md`, `specs/services.md`, and `specs/trust.md` into a single dependency-ordered task list with IDs, structured task metadata, and parallel execution markers. Preserve every Cloud Foundry environment, Kyma environment, and Cloud Foundry space from the landscape as a task with its subaccount, type, and name; order each after its subaccount and Cloud Foundry spaces after their Cloud Foundry environment. Every `btp_subaccount_environment_instance` task MUST carry `environment_type` in its metadata: `cloudfoundry` for Cloud Foundry environments, `kyma` for Kyma environments. This field is the sole discriminator used by `/sap-iac.generate` to decide whether to emit the CF landscape-label lookup pattern.
+
+If `specs/connectivity.md` exists, also read it and append destination and certificate tasks (see **Connectivity tasks** below).
+
+Produces `specs/tasks.md`, which is the direct input to `/sap-iac.design` and `/sap-iac.generate`.
+
+## Platform Name Normalization
+
+The following names all refer to the same platform and are semantically equivalent for all natural-language interpretation in this skill:
+- **SAP Business Technology Platform** (and "Business Technology Platform")
+- **SAP BTP** (and "BTP" used as a product name in prose)
+- **SAP Business AI Platform** (and "Business AI Platform")
+- **SAP BAIP** (and "BAIP")
+
+Treat any of these aliases as identical when interpreting user intent. This normalization applies only to natural-language prose. Technical identifiers remain untouched: BTP CLI command tokens (`btp list`, `btp target`), Terraform provider names (`btp`, `hashicorp/btp`), resource type prefixes (`btp_subaccount`, `btp_service_instance`), region codes, and API paths.
+
+## BTP platform validation
+
+### BTP operation safety boundary
+
+The prohibition on state-changing CLI commands excludes the permitted target prelude.
+
+When invoking the BTP CLI or any BTP MCP tool, perform **only read or list retrievals**. For the BTP CLI, invoke only documented read/list commands (for example, `btp list ...`); for BTP MCP, invoke only a tool explicitly documented as a read/list lookup. `btp target --global-account <subdomain>` is the sole permitted account-selection prelude and may be used only immediately before those read/list CLI commands. Never invoke, suggest, or approve a BTP operation that creates, updates, deletes, assigns, unassigns, enables, disables, or otherwise mutates BTP state — even when requested by the user. Do not run login, config, profile, or any other state-changing CLI command.
+
+If this workflow needs a live BTP availability check, read `<project-root>/.sap-iac/platform-validation.md` and prefer its recorded CLI route, then this agent's recorded BTP MCP route. If no route is recorded, retain user input without blocking. If a recorded route cannot authenticate, target, or complete its lookup, ask the user to resolve it before relying on platform data.
+
+---
+
+## Connectivity tasks
+
+When `specs/connectivity.md` exists, read it after the three mandatory inputs and append the following tasks to `specs/tasks.md` in dependency order:
+
+**Destination tasks** (see Resource Mapping table for resource type):
+- Create one task per destination listed in `specs/connectivity.md`.
+- Each destination task **depends on** the subaccount task it is scoped to.
+- If the destination is service-instance-scoped, it additionally **depends on** the corresponding service instance task.
+- Mark tasks that share the same subaccount (and have no mutual dependency) as parallelisable.
+
+**Certificate tasks** (`btp_subaccount_destination_certificate`):
+- Create one task per certificate listed in `specs/connectivity.md`.
+- Each certificate task **depends on** its subaccount task.
+- If the certificate is service-instance-scoped, it additionally **depends on** the corresponding service instance task.
+
+Destination and certificate tasks from `specs/connectivity.md` are ordered after all landscape, service, and trust tasks that they depend on. They do not block any existing task.
+
+## Resource Mapping
+
+This section is the **single authoritative source** for mapping gathered intent to concrete Terraform resource types. Consult it whenever translating spec entries into task metadata. It covers subaccount-level and Cloud Foundry resources; directory-level resources have no equivalent split and are not covered here.
+
+| Intent | Resource to use | Resource to NEVER use |
+|---|---|---|
+| Destination | `btp_subaccount_destination_generic` | `btp_subaccount_destination` |
+| Destination certificate | `btp_subaccount_destination_certificate` | — |
+| Custom IdP trust configuration | `btp_subaccount_trust_configuration` | — |
+| Role collection (definition) | `btp_subaccount_role_collection_base` | `btp_subaccount_role_collection` |
+| Role assigned to a collection | `btp_subaccount_role_collection_role` | `btp_subaccount_role_collection` |
+| Role collection user/group assignment | `btp_subaccount_role_collection_assignment` | `btp_subaccount_role_collection` |
+| Cloud Foundry space | `cloudfoundry_space` | — |
+| CF space role assignment | `cloudfoundry_space_role` | — |
+
+---
+
+## Workflow
+
+### Step 1 — Read input specs
+
+Read all three input files: `specs/landscape.md`, `specs/services.md`, `specs/trust.md`.
+
+**Trust spec format guard**: Before processing `specs/trust.md`, check whether it contains unstructured "role template assignments" prose instead of the structured roles list defined by `/sap-iac.security`. If the old format is detected, **STOP** and instruct the user:
+> "specs/trust.md was generated by an older version of the security skill. Re-run `/sap-iac.security` to regenerate it with the structured roles format before continuing."
+
+For each service entry in `specs/services.md`, read its `consumption_type` and map it to `resource_type` in the task metadata as follows:
+
+- `instance` → `resource_type = btp_subaccount_service_instance` (or `cloudfoundry_service_instance` when `location: cf`). Preserve `location` (`btp` or `cf`) on the task so `/sap-iac.design` and `/sap-iac.generate` select the correct provider. A `cf` instance also carries `cf_space`; its task **depends on** that specific Cloud Foundry space task and, when the space is created by this task list, every role-assignment task for that space (see **CF space role barrier** below).
+- `subscription` → `resource_type = btp_subaccount_subscription`. No `location` or `cf_space` fields apply; subscriptions are always managed via the BTP provider.
+- `entitlement-only` → `resource_type = btp_subaccount_entitlement`. Create only the entitlement assignment task — no service instance or subscription task.
+
+When a service entry in `specs/services.md` has `quota_required: true`, copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the field is absent, do not add it.
+
+When an entitlement-only service entry has an `amount`, copy it unchanged into its `btp_subaccount_entitlement` task metadata. A derived `APPLICATION_RUNTIME` / `MEMORY` entitlement task MUST depend on its subaccount task and retain `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, and its calculated `amount`; do not create an instance or subscription task for it.
+
+When a service entry in `specs/services.md` has a `parameters:` block (placed there by `/sap-iac.services` after catalogue lookup), copy the entire `parameters:` block verbatim into the task metadata block for the corresponding `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task. When the field is absent, do not add it. This is the only mechanism by which `/sap-iac.generate` receives service instance parameters — `specs/tasks.md` is its sole input.
+
+For each role collection entry in `specs/trust.md`, apply the Resource Mapping table above:
+
+1. Create a `btp_subaccount_role_collection_base` task for the collection. This task **depends on** the subaccount task it is scoped to. Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = <name>`, `subaccount = <subaccount-name>`, `description = <optional>`.
+2. For each role in the collection's structured roles list, create a `btp_subaccount_role_collection_role` task. This task **depends on** the corresponding base task. Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = <collection-name>`, `subaccount = <subaccount-name>`, `role_name = <role-name>`, `role_template_name = <template-name>`, `role_template_app_id = <app-id>`.
+3. If the roles list is empty, create only the base task — no role tasks.
+
+For each Cloud Foundry space in `specs/landscape.md`, create one `cloudfoundry_space` task. This task depends on its Cloud Foundry environment task. Task metadata: `resource_type = cloudfoundry_space`, `name = <space-name>`, and `subaccount = <subaccount-name>`.
+
+For each role collection assignment entry in the `### Role collection assignments` block of `specs/trust.md`, create one `btp_subaccount_role_collection_assignment` task. This task **depends on** the corresponding `btp_subaccount_role_collection_base` task. Task metadata: `resource_type = btp_subaccount_role_collection_assignment`, `subaccount = <subaccount-name>`, `role_collection_name = <collection-name>`, and either `user_name = <username>` (for user assignments) or `group_name = <group-name>` (for group assignments). When an `origin` field is present in the trust entry, include `origin = <origin>` in the metadata.
+
+For each `### Custom IdP` block in `specs/trust.md`, create one `btp_subaccount_trust_configuration` task. This task **depends on** its subaccount task. Task metadata MUST contain `resource_type = btp_subaccount_trust_configuration`, `subaccount = <subaccount-name>`, and `identity_provider = <IdP URL>`. Add `origin = <value>` and `origin_explicit = true` only when the block contains both `Trust configuration origin: <value>` and `Trust configuration origin explicit: true`. If either field is absent, omit both metadata fields. `Origin: <derived-origin>` is for role collection assignments and Cloud Foundry space roles; it MUST NOT be copied to this trust-configuration task.
+
+For each CF space role assignment entry in the `### CF space user assignments` block of `specs/trust.md`, create one `cloudfoundry_space_role` task per entry (each entry already represents one `(space_name, username, role)` combination). This task **depends on** the Cloud Foundry space task for the named space. Task metadata: `resource_type = cloudfoundry_space_role`, `space_name = <space-name>`, `username = <username>`, `role_type = <role>`, `origin = <origin>`.
+
+#### CF space role barrier
+
+After creating the space and CF space-role tasks, resolve each other Cloud Foundry-provider task that is scoped to a created space. A task is scoped to a space when its metadata identifies the target space; currently this is `cf_space` on `cloudfoundry_service_instance`. Do not treat `cloudfoundry_space_role` itself as an other space-scoped task.
+
+For each scoped task, retain its dependency on the matching `cloudfoundry_space` task and add a dependency on **every** `cloudfoundry_space_role` task whose `space_name` matches its target space. List the dependencies in stable task-ID order. The resulting graph is:
+
+```text
+cloudfoundry_space -> all cloudfoundry_space_role tasks for that space -> other same-space CF task
+```
+
+If a created space has an other space-scoped task but no matching CF space-role assignment in `specs/trust.md`, **STOP without writing `specs/tasks.md`** and instruct the user:
+
+> "Cloud Foundry space `<space-name>` has space-scoped resources but no CF space role assignments. Re-run `/sap-iac.security` and record the users and roles required for that space before re-running `/sap-iac.tasks`."
+
+Apply this barrier only to resources scoped to a created CF space. Do not add CF space-role dependencies to BTP-provider resources, Cloud Foundry organization-scoped resources, or tasks for another space. Future Cloud Foundry-provider task types that identify a created target space follow this same rule.
+
+### Step 2 — Build task list
+
+Produce a dependency-ordered task list. Each task MUST have:
+
+- A unique short ID (e.g. `T-001`, `T-002`)
+- A title
+- A group / category (e.g. `Accounts`, `Services`, `Security`)
+- Stage(s) derived from the input specs (e.g. `dev`, `test`, `prod`, or `all` if not stage-specific)
+- Dependencies (IDs of tasks that must complete first, or `—` if none)
+- A parallel marker (`✦` if this task can run in parallel with others at the same dependency level, `—` if it must run alone)
+- A checkbox `- [ ]` (all tasks start unchecked; `/sap-iac.generate` marks them `- [x]` as it completes them)
+- An indented `Task metadata` block containing the resource type and the values needed to generate that resource
+
+For every `btp_subaccount` task, copy `subdomain` and `region` from the matching entry in `specs/landscape.md` into its `Task metadata` block — these are always present for a valid subaccount and are required by `/sap-iac.generate` for UUID suffix interpolation. Also copy any confirmed `usage` and `beta_enabled` values without changing them. A legacy landscape may omit `usage` or `beta_enabled`; still create the task, do not infer or request those missing values, and omit only the unavailable classification fields.
+
+### Step 3 — Write `specs/tasks.md`
+
+Write the full task list to `specs/tasks.md` using this structure:
+
+```markdown
+# Task List
+
+<!-- Generated by /sap-iac.tasks — do not edit task IDs; update completion state via /sap-iac.generate -->
+
+## <Group Name>
+
+| ID | Task | Stage | Depends on | Parallel |
+|---|---|---|---|---|
+| T-001 | <title> | dev | — | ✦ |
+| T-002 | <title> | dev, test | T-001 | — |
+| T-003 | Create Cloud Foundry environment in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-004 | Create Kyma environment in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-005 | Create role collection "MyCollection" in subaccount "dev-sa" | all | T-001 | ✦ |
+| T-006 | Assign role to "MyCollection" in subaccount "dev-sa" | all | T-005 | — |
+| T-007 | Assign Cloud Foundry runtime memory entitlement in subaccount "dev-sa" | dev | T-001 | — |
+
+- [ ] T-001 `[dev]` <title>
+  - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
+- [ ] T-002 `[dev, test]` <title>
+  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`, `parameters = <parameters block when present>`
+- [ ] T-003 `[all]` Create Cloud Foundry environment in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`, `name = <cf-org-name>`
+- [ ] T-004 `[all]` Create Kyma environment in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = kyma`, `subaccount = dev-sa`, `name = <kyma-env-name>`
+- [ ] T-005 `[all]` Create role collection "MyCollection" in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_role_collection_base`, `collection_name = MyCollection`, `subaccount = dev-sa`, `description = <optional>`
+- [ ] T-006 `[all]` Assign role to "MyCollection" in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_role_collection_role`, `collection_name = MyCollection`, `subaccount = dev-sa`, `role_name = <role-name>`, `role_template_name = <template-name>`, `role_template_app_id = <app-id>`
+- [ ] T-007 `[dev]` Assign Cloud Foundry runtime memory entitlement in subaccount "dev-sa"
+  - Task metadata: `resource_type = btp_subaccount_entitlement`, `subaccount = dev-sa`, `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, `amount = 2`
+```
+
+Use one section per group. The table is for dependency/parallel overview; the checkbox list and its indented metadata are the machine-readable generation input. `/sap-iac.generate` updates only the checkbox state.
+
+### Step 4 — Report in terminal
+
+**If the task list is short enough to read comfortably inline:** print the full checkbox list in the terminal.
+
+**If the task list is extensive:** print only a summary and direct the user to the file:
+
+```
+Task list written to specs/tasks.md (<N> tasks across <K> groups):
+  <Group 1>: <count> tasks
+  <Group 2>: <count> tasks
+  ...
+
+Open specs/tasks.md to review or update completion state.
+```
+
+## Next step
+
+Next: `/sap-iac.design` — plan the Terraform file and module layout.

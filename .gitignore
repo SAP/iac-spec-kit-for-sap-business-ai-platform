@@ -19,7 +19,6 @@ profile.cov
 
 # Live skill-evaluation reports (upload as CI artifacts; do not commit)
 eval-artifacts/
-btp-iac-eval
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -33,6 +32,13 @@ go.work.sum
 
 # Docs build output (Zensical / MkDocs)
 site/
+
+# GoReleaser build output
+dist/
+
+# Local build artifacts
+sap-iac
+sap-iac-eval
 
 # Editor/IDE
 # .idea/
