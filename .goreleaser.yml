@@ -52,13 +52,13 @@ nfpms:
     # Your app's homepage.
     #
     # Default: inferred from global metadata.
-    homepage: https://github.com/SAP/sap-iac-spec-kit/
+    homepage: https://sap.github.io/iac-spec-kit-for-sap-business-ai-platform/
 
     # Your app's description.
     #
     # Default: inferred from global metadata.
     description: |-
-      The SAP IAC Spec Kit is a spec-driven development toolkit for creating Terraform configurations.
+      Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform.
 
     # Your app's license.
     #
