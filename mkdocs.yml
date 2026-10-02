@@ -18,7 +18,7 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
-repo_url: https://github.com/SAP/btp-iac-spec-kit
+repo_url: https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform
 extra:
   generator: false
 copyright: Copyright © 2026 SAP SE or an SAP affiliate company. All rights reserved.

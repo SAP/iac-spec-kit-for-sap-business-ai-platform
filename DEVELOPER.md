@@ -21,7 +21,7 @@ The Codespace uses the configuration in [.devcontainer/default/devcontainer.json
 Clone the repository:
 
 ```bash
-git clone https://github.com/SAP/btp-iac-spec-kit.git
+git clone https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform.git
 ```
 
 Open the cloned repository in [Visual Studio Code](https://code.visualstudio.com/), press the "Open a Remote Window" button in the lower-left corner, and choose "Reopen in Container". This starts the dev container defined in [.devcontainer/default/devcontainer.json](.devcontainer/default/devcontainer.json) with Go, Terraform, OpenTofu, and the GitHub CLI preinstalled.
@@ -53,7 +53,7 @@ choco install git golang golangci-lint make terraform
 ### Cloning the Repository
 
 ```bash
-git clone https://github.com/SAP/btp-iac-spec-kit.git
+git clone https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform.git
 ```
 
 Navigate into the directory of the cloned repository.
@@ -87,7 +87,7 @@ sap-iac init --help
 
 You should see the `init` command and its `--agent` flag. If `sap-iac` is not found, make sure `$(go env GOPATH)/bin` is on your `PATH`.
 
-If you are still stuck, feel free to ask for support by raising a [question](https://github.com/SAP/btp-iac-spec-kit/discussions/) in the [GitHub Discussions](https://github.com/SAP/btp-iac-spec-kit/discussions/) of this repository.
+If you are still stuck, feel free to ask for support by raising a [question](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/discussions/) in the [GitHub Discussions](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/discussions/) of this repository.
 
 ## Updating
 
