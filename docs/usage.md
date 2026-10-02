@@ -96,29 +96,6 @@ Terraform operations in your AI agent may not work.
 
 After `init`, open the project in your AI agent and run the commands in order:
 
-```mermaid
-flowchart TD
-    init([sap-iac init]) --> govern
-
-    govern["sap-iac.govern<br/><i>optional, recommended first</i>"] --> scenario[sap-iac.scenario]
-    scenario --> analyse["sap-iac.analyse<br/><i>optional</i>"]
-    analyse --> accounts[sap-iac.accounts]
-    accounts --> services[sap-iac.services]
-    services --> security[sap-iac.security]
-    security --> connectivity["sap-iac.connectivity<br/><i>optional</i>"]
-    connectivity --> tasks[sap-iac.tasks]
-    tasks --> design[sap-iac.design]
-    design --> generate[sap-iac.generate]
-    generate --> tf([terraform/ HCL])
-
-    next["sap-iac.next<br/><i>utility — run any time</i>"] -.-> scenario
-
-    classDef optional fill:#f5f5f5,stroke:#999,stroke-dasharray:4 3;
-    classDef util fill:#eef,stroke:#88a,stroke-dasharray:4 3;
-    class govern,analyse,connectivity optional;
-    class next util;
-```
-
 | Step | Command | Purpose |
 |---|---|---|
 | ○ | `sap-iac.govern` | *Optional; recommended first.* Set guardrails — regions, naming, cost policies. Without it, downstream commands proceed without governance enforcement. |
