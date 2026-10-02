@@ -15,7 +15,6 @@ builds:
       - -trimpath
     ldflags:
       - "-s -w"
-      - "-X main.version={{.RawVersion}}"
     goos:
       - windows
       - linux
