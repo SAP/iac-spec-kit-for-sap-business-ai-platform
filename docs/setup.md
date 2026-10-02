@@ -18,7 +18,7 @@ This page describes the prerequisites for the `sap-iac` CLI and the supported wa
 ### Build from source
 
 ```sh
-git clone https://github.com/SAP/btp-iac-spec-kit.git
+git clone https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform.git
 cd btp-iac-spec-kit
 go build -o sap-iac ./cmd/sap-iac
 ```
