@@ -1,6 +1,4 @@
 name: Deploy gh-page
-# Pages are built on demand (manual dispatch) or when invoked by another
-# workflow (e.g. on release) via workflow_call.
 on:
   workflow_dispatch:
   workflow_call:
@@ -9,23 +7,12 @@ on:
 # Pages artifact flow (no gh-pages branch). Requires Settings > Pages source
 # to be set to "GitHub Actions".
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/configure-pages@v6
-        with:
-          # Create/enable the Pages site on first run instead of requiring a
-          # manual Settings > Pages change. Needs the org to permit Pages for
-          # this repo; otherwise enable it in repo settings.
-          enablement: true
       - uses: actions/checkout@v7
       - name: Configure Git Credentials
         run: |
@@ -34,10 +21,5 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: 3.x
-      - run: pip install zensical
-      - run: zensical build --clean --strict
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: site
-      - uses: actions/deploy-pages@v5
-        id: deployment
+      - run: pip install mkdocs-material==9.5.33
+      - run: mkdocs gh-deploy --force
