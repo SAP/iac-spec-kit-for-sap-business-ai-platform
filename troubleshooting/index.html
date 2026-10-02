@@ -1,0 +1,1158 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../updating/">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.33">
+    
+    
+      
+        <title>Troubleshooting - Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform" class="md-header__button md-logo" aria-label="Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform" data-md-component="logo">
+      
+  <img src="../img/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform" class="md-nav__button md-logo" aria-label="Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform" data-md-component="logo">
+      
+  <img src="../img/logo.svg" alt="logo">
+
+    </a>
+    Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation & Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalogue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Service-parameter catalogue
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Commands
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Commands
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/govern/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.govern
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/scenario/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.scenario
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/analyse/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.analyse
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/accounts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.accounts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/connectivity/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.connectivity
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/tasks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.tasks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/generate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.generate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/next/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sap-iac.next
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../walkthrough/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Usage Walkthrough
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scenario Examples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../updating/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Updating
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#errors-init-stops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Errors (init stops)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Errors (init stops)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-tty-detected-use-agent-to-specify-agents-eg-agent-claudecodexcursorcopilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unknown-agent-id-supported-claude-codex-cursor-copilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      unknown agent "&lt;id&gt;" — supported: claude, codex, cursor, copilot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-agent-value-is-empty-supported-claude-codex-cursor-copilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      --agent value is empty — supported: claude, codex, cursor, copilot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#at-least-one-agent-must-be-selected" class="md-nav__link">
+    <span class="md-ellipsis">
+      at least one agent must be selected
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-project-name-name-must-not-contain-path-separators-or-start-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid project name "&lt;name&gt;": must not contain path separators or start with '.'
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warnings-init-still-succeeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warnings (init still succeeds)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Warnings (init still succeeds)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#warning-terraform-was-not-found-on-path-install-it-before-running-terraform-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: "terraform" was not found on $PATH — install it before running terraform commands.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-git-was-not-found-on-path-run-git-init-manually-in-the-project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: "git" was not found on $PATH — run "git init" manually in the project directory.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-agent-no-terraform-or-opentofu-mcp-server-detected-terraform-operations-in-your-ai-agent-may-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: [&lt;agent&gt;] No Terraform or OpenTofu MCP server detected. Terraform operations in your AI agent may not work.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-agent-no-btp-cli-or-btp-mcp-server-detected-platform-validation-will-use-user-input-without-blocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: [&lt;agent&gt;] No BTP CLI or BTP MCP server detected. Platform validation will use user input without blocking.
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Other">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#git-init-failed" class="md-nav__link">
+    <span class="md-ellipsis">
+      git init failed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-agent-does-not-recognise-the-sap-iac-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      The agent does not recognise the sap-iac.* commands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#errors-init-stops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Errors (init stops)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Errors (init stops)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-tty-detected-use-agent-to-specify-agents-eg-agent-claudecodexcursorcopilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unknown-agent-id-supported-claude-codex-cursor-copilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      unknown agent "&lt;id&gt;" — supported: claude, codex, cursor, copilot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-agent-value-is-empty-supported-claude-codex-cursor-copilot" class="md-nav__link">
+    <span class="md-ellipsis">
+      --agent value is empty — supported: claude, codex, cursor, copilot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#at-least-one-agent-must-be-selected" class="md-nav__link">
+    <span class="md-ellipsis">
+      at least one agent must be selected
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-project-name-name-must-not-contain-path-separators-or-start-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid project name "&lt;name&gt;": must not contain path separators or start with '.'
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warnings-init-still-succeeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warnings (init still succeeds)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Warnings (init still succeeds)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#warning-terraform-was-not-found-on-path-install-it-before-running-terraform-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: "terraform" was not found on $PATH — install it before running terraform commands.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-git-was-not-found-on-path-run-git-init-manually-in-the-project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: "git" was not found on $PATH — run "git init" manually in the project directory.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-agent-no-terraform-or-opentofu-mcp-server-detected-terraform-operations-in-your-ai-agent-may-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: [&lt;agent&gt;] No Terraform or OpenTofu MCP server detected. Terraform operations in your AI agent may not work.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-agent-no-btp-cli-or-btp-mcp-server-detected-platform-validation-will-use-user-input-without-blocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Warning: [&lt;agent&gt;] No BTP CLI or BTP MCP server detected. Platform validation will use user input without blocking.
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Other">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#git-init-failed" class="md-nav__link">
+    <span class="md-ellipsis">
+      git init failed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-agent-does-not-recognise-the-sap-iac-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      The agent does not recognise the sap-iac.* commands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p>This page lists the errors and warnings <code>sap-iac init</code> can emit, and how to resolve each one. Errors stop the command; warnings are advisory and the project is still created.</p>
+<h2 id="errors-init-stops">Errors (<code>init</code> stops)</h2>
+<h3 id="no-tty-detected-use-agent-to-specify-agents-eg-agent-claudecodexcursorcopilot"><code>no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)</code></h3>
+<p>You ran <code>init</code> without <code>--agent</code> in a non-interactive context (CI, a pipe, or some IDE terminals). Without a terminal, the interactive picker cannot be shown, so pass the agents explicitly:</p>
+<div class="highlight"><pre><span></span><code>sap-iac<span class="w"> </span>init<span class="w"> </span>my-project<span class="w"> </span>--agent<span class="w"> </span>claude
+</code></pre></div>
+<p>In a non-interactive context you must also pass the directory name. Only agent-only refresh of an existing sap-iac project is fully non-interactive; fresh and adopt initialization still collect interactive input.</p>
+<h3 id="unknown-agent-id-supported-claude-codex-cursor-copilot"><code>unknown agent "&lt;id&gt;" — supported: claude, codex, cursor, copilot</code></h3>
+<p><code>--agent</code> accepts only <code>claude</code>, <code>codex</code>, <code>cursor</code>, and <code>copilot</code>, comma-separated. Check for typos and stray spaces — for example, <code>--agent claude,cursor</code>.</p>
+<h3 id="-agent-value-is-empty-supported-claude-codex-cursor-copilot"><code>--agent value is empty — supported: claude, codex, cursor, copilot</code></h3>
+<p>You passed <code>--agent</code> with only whitespace (e.g. <code>--agent " "</code>). Provide at least one agent ID, comma-separated: <code>--agent claude</code>.</p>
+<h3 id="at-least-one-agent-must-be-selected"><code>at least one agent must be selected</code></h3>
+<p>The interactive multi-select was dismissed without a choice. Select at least one agent (space to toggle, enter to confirm), or pass <code>--agent</code>.</p>
+<h3 id="invalid-project-name-name-must-not-contain-path-separators-or-start-with"><code>invalid project name "&lt;name&gt;": must not contain path separators or start with '.'</code></h3>
+<p>The project name is validated before any scaffolding runs. Names containing a path separator (e.g. <code>sap-iac init foo/bar</code>) or starting with a dot (e.g. <code>sap-iac init .foo</code>) are rejected to prevent directory traversal and hidden-directory confusion. Choose a plain name: <code>sap-iac init my-project</code>.</p>
+<h2 id="warnings-init-still-succeeds">Warnings (<code>init</code> still succeeds)</h2>
+<div class="admonition info">
+<p class="admonition-title">Warnings do not stop <code>init</code></p>
+<p>Each warning below is advisory. The project is created regardless; the warning tells you what to install or configure to unblock a later step.</p>
+</div>
+<h3 id="warning-terraform-was-not-found-on-path-install-it-before-running-terraform-commands"><code>Warning: "terraform" was not found on $PATH — install it before running terraform commands.</code></h3>
+<p>The <code>terraform</code> executable is not installed. You can scaffold now, but the generation skill requires it for <code>terraform init</code>, formatting, and validation. OpenTofu-compatible HCL can still be used separately after generation.</p>
+<h3 id="warning-git-was-not-found-on-path-run-git-init-manually-in-the-project-directory"><code>Warning: "git" was not found on $PATH — run "git init" manually in the project directory.</code></h3>
+<p>Git is not installed, so <code>init</code> skipped repository initialisation. The project is fine; run <code>git init</code> inside it once Git is available.</p>
+<h3 id="warning-agent-no-terraform-or-opentofu-mcp-server-detected-terraform-operations-in-your-ai-agent-may-not-work"><code>Warning: [&lt;agent&gt;] No Terraform or OpenTofu MCP server detected. Terraform operations in your AI agent may not work.</code></h3>
+<p>Your agent has no MCP server configured for Terraform/OpenTofu. <code>init</code> does not set this up — configuring it is your responsibility. Without the Terraform server the agent cannot run Terraform. Configure the server in your agent, then reopen the project.</p>
+<h3 id="warning-agent-no-btp-cli-or-btp-mcp-server-detected-platform-validation-will-use-user-input-without-blocking"><code>Warning: [&lt;agent&gt;] No BTP CLI or BTP MCP server detected. Platform validation will use user input without blocking.</code></h3>
+<p>Your agent has no BTP CLI or per-agent BTP MCP route for platform validation. <code>init</code> does not set these up — configuring them is your responsibility. Without a BTP route, platform validation falls back to your input without blocking. Configure the BTP CLI or a BTP MCP server for your agent, then reopen the project.</p>
+<h2 id="other">Other</h2>
+<h3 id="git-init-failed"><code>git init</code> failed</h3>
+<p>If Git <strong>is</strong> installed but <code>git init</code> fails, <code>init</code> treats this as a hard error and removes the partially created project. Resolve the underlying problem (permissions, corrupt configuration) and re-run.</p>
+<h3 id="the-agent-does-not-recognise-the-sap-iac-commands">The agent does not recognise the <code>sap-iac.*</code> commands</h3>
+<p>Confirm you scaffolded for the agent you are using and that its command directory exists (<code>.claude/commands/</code>, <code>.codex/prompts/</code>, <code>.cursor/rules/</code>, or <code>.github/instructions/</code>). If you recently updated the CLI, see <a href="../updating/">Updating</a> to refresh the command files.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../updating/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Updating">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Updating
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2026 SAP SE or an SAP affiliate company. All rights reserved.
+    </div>
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.footer"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.af256bd8.min.js"></script>
+      
+    
+  </body>
+</html>
