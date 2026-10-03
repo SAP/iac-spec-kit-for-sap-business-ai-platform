@@ -1,6 +1,6 @@
 ![Golang](https://img.shields.io/badge/Go-1.27-informational)
 [![CodeQL](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/actions/workflows/github-code-scanning/codeql)
-[![REUSE status](https://api.reuse.software/badge/github.com/SAP/btp-iac-spec-kit)](https://api.reuse.software/info/github.com/SAP/btp-iac-spec-kit)
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP/iac-spec-kit-for-sap-business-ai-platform)](https://api.reuse.software/info/github.com/SAP/iac-spec-kit-for-sap-business-ai-platform)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15169/badge)](https://www.bestpractices.dev/projects/15169)
 
 # Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform
@@ -35,7 +35,7 @@ Contribution and feedback are encouraged and always welcome. For more informatio
 > **Note**: We take security and our user's trust seriously. If you believe you have found a security issue in this project, please responsibly disclose it. You find more details on the process in [our security policy](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/security/policy). Please do not create GitHub issues for security-related doubts or problems.
 
 ## Security / Disclosure
-If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
+If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
 
 ## Code of Conduct
 
@@ -43,4 +43,4 @@ We as members, contributors, and leaders pledge to make participation in our com
 
 ## Licensing
 
-Copyright 2026 SAP SE or an SAP affiliate company and infrastructure-as-code-specification-toolkit-for-sap-btp contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP/infrastructure-as-code-specification-toolkit-for-sap-btp).
+Copyright 2026 SAP SE or an SAP affiliate company and iac-spec-kit-for-sap-business-ai-platform contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP/iac-spec-kit-for-sap-business-ai-platform).
