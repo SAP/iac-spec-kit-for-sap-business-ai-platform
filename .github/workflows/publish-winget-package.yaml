@@ -6,8 +6,8 @@ on:
       tag:
         description: "Version tag to package (e.g., 1.2.3)"
         required: false
-  release:
-    types: [published]
+  # release:
+  #   types: [published]
 
 permissions:
   contents: read
@@ -98,8 +98,10 @@ jobs:
           TAG="${{ steps.get-tag.outputs.tag }}"
 
           cd winget-pkgs/manifests/s/SAP/
+          mkdir -p sap-iac
+          cd sap-iac
           mkdir -p "$RELEASE_VERSION"
-          cp 1.1.0/*.yaml "$RELEASE_VERSION/"
+          cp 0.1.0/*.yaml "$RELEASE_VERSION/"
 
 
           yq e -i ".PackageVersion = \"$RELEASE_VERSION\"" "$RELEASE_VERSION/SAP.sapiac.yaml"
