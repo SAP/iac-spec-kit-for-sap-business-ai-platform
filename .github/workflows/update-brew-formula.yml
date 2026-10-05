@@ -27,7 +27,7 @@ jobs:
       - name: Extract SHA from release
         id: extract-sha
         run: |
-          echo "BTP Terraform binary hash:"
+          echo "sap-iac binary hash:"
           tag=$(echo ${{ steps.latest-release.outputs.LATEST_TAG }} | cut -c 2-)
           darwin_amd64_sha="sap-iac_${tag}_darwin_amd64.sha256"
           echo $darwin_amd64_sha $(cat ${{ runner.temp }}/downloaded-assets/$darwin_amd64_sha)
@@ -52,7 +52,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: sap-iac.rb
-          #branch: update_${{ github.event.repository.updated_at }}_${{ steps.latest-release.outputs.LATEST_TAG }}
+          # branch: update_${{ github.event.repository.updated_at }}_${{ steps.latest-release.outputs.LATEST_TAG }}
           delete-branch: true
           title: "chore: Update brew formula to ${{ steps.latest-release.outputs.LATEST_TAG }}"
           body: This PR updates sap-iac.rb to ${{ steps.latest-release.outputs.LATEST_TAG }}
