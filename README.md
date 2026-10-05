@@ -16,11 +16,11 @@ The `sap-iac init` workflow currently scaffolds agent integrations for Claude Co
 The [developer documentation](DEVELOPER.md) is a basic outline on how to build and develop the toolkit.
 
 ## Usage
-Refer to the [Quick Start Guide](https://sap.github.io/btp-iac-spec-kit/) for instructions to efficiently begin utilizing the Infrastructure-as-Code Specification Toolkit.
+Refer to the [Quick Start Guide](https://sap.github.io/iac-spec-kit-for-sap-business-ai-platform/) for instructions to efficiently begin utilizing the Infrastructure-as-Code Specification Toolkit.
 
 ## Updating
 
-To update the CLI and refresh the `sap-iac.*` command files in an existing project, see the [Updating guide](https://sap.github.io/btp-iac-spec-kit/updating/).
+To update the CLI and refresh the `sap-iac.*` command files in an existing project, see the [Updating guide](https://sap.github.io/iac-spec-kit-for-sap-business-ai-platform/updating/).
 
 ## Support, Feedback, Contributing
 
