@@ -15,6 +15,7 @@ builds:
       - -trimpath
     ldflags:
       - "-s -w"
+      - "-X main.version={{ .Env.RELEASE_VERSION }}"
     goos:
       - windows
       - linux
