@@ -20,7 +20,7 @@ try {
 # 2. Download binary with HTTP status check
 try {
     Write-Host "Downloading binary from GitHub..." -ForegroundColor Yellow
-    Invoke-WebRequest -Uri $Url -OutFile$ExePath -UserAgent "PowerShell-Installer"
+    Invoke-WebRequest -Uri $Url -OutFile $ExePath -UserAgent "PowerShell-Installer"
 } catch {
     Write-Host "[ERROR] Download failed!" -ForegroundColor Red
     Write-Host "Details: $_" -ForegroundColor Red
