@@ -1,4 +1,3 @@
-# Stop on error, but handle exceptions gracefully via try-catch
 $ErrorActionPreference = "Stop"
 
 $InstallDir = "$env:LOCALAPPDATA\Programs\SAP-IAC"
@@ -17,10 +16,10 @@ try {
     exit 1
 }
 
-# 2. Download binary with HTTP status check
+# 2. Download binary
 try {
     Write-Host "Downloading binary from GitHub..." -ForegroundColor Yellow
-    Invoke-WebRequest -Uri $Url -OutFile $ExePath -UserAgent "PowerShell-Installer"
+    Invoke-WebRequest -Uri $Url -OutFile$ExePath -UserAgent "PowerShell-Installer"
 } catch {
     Write-Host "[ERROR] Download failed!" -ForegroundColor Red
     Write-Host "Details: $_" -ForegroundColor Red
@@ -28,7 +27,7 @@ try {
     exit 1
 }
 
-# 3. Validate downloaded file (Ensure it is not empty or an HTML error page)
+# 3. Validate file size
 if (-not (Test-Path -Path $ExePath) -or (Get-Item$ExePath).Length -lt 1MB) {
     Write-Host "[ERROR] Downloaded file appears corrupted or invalid (Size < 1MB)." -ForegroundColor Red
     Remove-Item -Path $ExePath -Force -ErrorAction SilentlyContinue
@@ -46,7 +45,7 @@ try {
     Write-Host "[WARNING] Failed to set permanent User PATH environment variable: $_" -ForegroundColor Yellow
 }
 
-# 5. Refresh current session PATH so 'sap-iac' works immediately
+# 5. Refresh current session PATH
 if ($env:Path -notlike "*$InstallDir*") {
     $env:Path += ";$InstallDir"
 }
