@@ -19,7 +19,7 @@ try {
 # 2. Download binary
 try {
     Write-Host "Downloading binary from GitHub..." -ForegroundColor Yellow
-    Invoke-WebRequest -Uri $Url -OutFile$ExePath -UserAgent "PowerShell-Installer"
+    Invoke-WebRequest -Uri $Url -OutFile $ExePath -UserAgent "PowerShell-Installer"
 } catch {
     Write-Host "[ERROR] Download failed!" -ForegroundColor Red
     Write-Host "Details: $_" -ForegroundColor Red
@@ -27,8 +27,8 @@ try {
     exit 1
 }
 
-# 3. Validate file size
-if (-not (Test-Path -Path $ExePath) -or (Get-Item$ExePath).Length -lt 1MB) {
+# 3. Validate file size (Space added between Get-Item and $ExePath)
+if (-not (Test-Path -Path $ExePath) -or (Get-Item $ExePath).Length -lt 1MB) {
     Write-Host "[ERROR] Downloaded file appears corrupted or invalid (Size < 1MB)." -ForegroundColor Red
     Remove-Item -Path $ExePath -Force -ErrorAction SilentlyContinue
     exit 1
@@ -52,7 +52,7 @@ if ($env:Path -notlike "*$InstallDir*") {
 
 # 6. Verification test
 try {
-    $versionOutput = & "$ExePath" --version 2>&1
+    $versionOutput = & "$ExePath" --help 2>&1
     Write-Host "`n[SUCCESS] SAP IAC installed successfully!" -ForegroundColor Green
     Write-Host "Location: $ExePath" -ForegroundColor Gray
     Write-Host "Test Run Output: $versionOutput" -ForegroundColor Gray
