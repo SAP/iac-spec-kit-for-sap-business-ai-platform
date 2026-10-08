@@ -15,11 +15,49 @@ This page describes the prerequisites for the `sap-iac` CLI and the supported wa
 
 ## Install
 
-### Build from source
+### Package Manager
+
+!!! Commands
+    === "Windows"
+        We have submitted the package to be released via `winget`. Once it is available you can install it using the command below. Please refer to the official [Winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) documentation websites for details.
+        ```powershell
+        winget install SAP.sap-iac
+        ```
+
+        Until it is officially available you can use a install script in this repository as a workaround to install the tool on your Windows machine. Open PowerShell and run the install script:
+        ```powershell
+        iwr -useb https://raw.githubusercontent.com/SAP/iac-spec-kit-for-sap-business-ai-platform/refs/heads/main/sap-iac-install.ps1 | iex
+        ```
+    === "Mac OS"
+        Please refer to the [Homebrew](https://brew.sh/) website for details.
+        ```bash
+        brew tap SAP/iac-spec-kit-for-sap-business-ai-platform https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform
+        brew install sap/iac-spec-kit-for-sap-business-ai-platform/sap-iac
+        ```
+    === "Linux"
+        We’ve released `deb` and `rpm` packages to support installation on the most common Linux distributions. You can download the packages from the `assets` section of the [releases](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/releases) page.
+
+        **For Debian-based distributions (like Ubuntu, Linux Mint, etc.):**
+
+        ```bash
+        sudo dpkg -i <path-to-download>/iac-spec-kit-for-sap-business-ai-platform_<latest-version>_linux_amd64.deb
+        ```
+        **For RPM-based distributions (like Fedora, RHEL, CentOS, openSUSE):**
+        ```bash
+        sudo rpm -i <path-to-download>/iac-spec-kit-for-sap-business-ai-platform_<latest-version>_linux_amd64.rpm
+        ```
+
+### Download Binaries
+
+You can download the binaries directly from the [releases section](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/releases) of the GitHub repository.
+
+Select the version that you want to use and download the binary that fits your operating system from the assets of the release. We recommend using the latest version.
+
+### Local Build
 
 ```sh
 git clone https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform.git
-cd btp-iac-spec-kit
+cd iac-spec-kit-for-sap-business-ai-platform
 go build -o sap-iac ./cmd/sap-iac
 ```
 
@@ -28,7 +66,7 @@ This produces a `sap-iac` binary in the current directory. Move it onto your `PA
 ### Install with Go
 
 ```sh
-go install github.com/SAP/btp-iac-spec-kit/cmd/sap-iac@latest
+go install github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/cmd/sap-iac@latest
 ```
 
 The binary is installed to `$(go env GOBIN)`, or `$(go env GOPATH)/bin` if `GOBIN` is unset.
@@ -54,7 +92,6 @@ Confirm the CLI is installed and runnable:
 
 ```sh
 sap-iac --help
-sap-iac init --help
 ```
 
-You should see the `init`, `catalogue`, and `version` commands. The `init` help includes its `--agent` flag. Continue to [Usage](usage.md).
+Continue to [Usage](usage.md).
