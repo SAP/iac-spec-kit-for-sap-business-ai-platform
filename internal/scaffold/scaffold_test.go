@@ -1,7 +1,9 @@
 package scaffold
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -491,6 +493,139 @@ func TestApplyCataloguePresence(t *testing.T) {
 	})
 }
 
+func TestIsEmptyRemote(t *testing.T) {
+	bare := t.TempDir()
+	if err := runGit(t, "", "init", "--bare", bare); err != nil {
+		t.Skip("git not available:", err)
+	}
+
+	empty, err := IsEmptyRemote(bare)
+	if err != nil {
+		t.Fatalf("IsEmptyRemote on empty repo: %v", err)
+	}
+	if !empty {
+		t.Error("expected empty repo to be detected as empty")
+	}
+
+	// Commit something to make it non-empty.
+	work := t.TempDir()
+	for _, args := range [][]string{
+		{"clone", bare, work},
+		{"-C", work, "commit", "--allow-empty", "-m", "init"},
+		{"-C", work, "push", "origin", "HEAD"},
+	} {
+		if err := runGit(t, "", args...); err != nil {
+			t.Fatalf("git %v: %v", args, err)
+		}
+	}
+
+	empty, err = IsEmptyRemote(bare)
+	if err != nil {
+		t.Fatalf("IsEmptyRemote on non-empty repo: %v", err)
+	}
+	if empty {
+		t.Error("expected non-empty repo to not be detected as empty")
+	}
+}
+
+func TestSetRemote(t *testing.T) {
+	bare := t.TempDir()
+	if err := runGit(t, "", "init", "--bare", bare); err != nil {
+		t.Skip("git not available:", err)
+	}
+
+	// Create a fresh project dir (already git-inited by Scaffold).
+	tmp := t.TempDir()
+	orig, _ := os.Getwd()
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(orig) //nolint:errcheck
+
+	if _, err := Scaffold("proj", skills.Commands, []Agent{KnownAgents["claude"]}); err != nil {
+		t.Fatalf("Scaffold: %v", err)
+	}
+
+	if err := SetRemote("proj", bare, "main", "feature/setup"); err != nil {
+		t.Fatalf("SetRemote: %v", err)
+	}
+
+	// Verify remote was added and we are on the working branch.
+	out, err := runGitOutput(t, "proj", "remote", "get-url", "origin")
+	if err != nil {
+		t.Fatalf("git remote get-url: %v", err)
+	}
+	if strings.TrimSpace(out) != bare {
+		t.Errorf("origin = %q, want %q", strings.TrimSpace(out), bare)
+	}
+
+	branch, err := runGitOutput(t, "proj", "symbolic-ref", "--short", "HEAD")
+	if err != nil {
+		t.Fatalf("git symbolic-ref HEAD: %v", err)
+	}
+	if strings.TrimSpace(branch) != "feature/setup" {
+		t.Errorf("HEAD branch = %q, want %q", strings.TrimSpace(branch), "feature/setup")
+	}
+}
+
+func TestCloneAndBranch(t *testing.T) {
+	bare := t.TempDir()
+	if err := runGit(t, "", "init", "--bare", bare); err != nil {
+		t.Skip("git not available:", err)
+	}
+	work := t.TempDir()
+	for _, args := range [][]string{
+		{"clone", bare, work},
+		{"-C", work, "commit", "--allow-empty", "-m", "init"},
+		{"-C", work, "push", "origin", "HEAD"},
+	} {
+		if err := runGit(t, "", args...); err != nil {
+			t.Fatalf("git %v: %v", args, err)
+		}
+	}
+
+	dest := filepath.Join(t.TempDir(), "cloned")
+	if err := CloneAndBranch(bare, dest, "feature/setup"); err != nil {
+		t.Fatalf("CloneAndBranch: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dest, ".git")); err != nil {
+		t.Error("CloneAndBranch: .git directory missing")
+	}
+
+	branch, err := runGitOutput(t, dest, "rev-parse", "--abbrev-ref", "HEAD")
+	if err != nil {
+		t.Fatalf("git rev-parse HEAD: %v", err)
+	}
+	if strings.TrimSpace(branch) != "feature/setup" {
+		t.Errorf("HEAD branch = %q, want feature/setup", strings.TrimSpace(branch))
+	}
+}
+
+// runGit runs a git command, returning an error on failure.
+func runGit(t *testing.T, dir string, args ...string) error {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s: %w", strings.TrimSpace(string(out)), err)
+	}
+	return nil
+}
+
+// runGitOutput runs a git command and returns its stdout.
+func runGitOutput(t *testing.T, dir string, args ...string) (string, error) {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	out, err := cmd.Output()
+	return string(out), err
+}
 func TestWriteGlobalAccountSubdomain(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
