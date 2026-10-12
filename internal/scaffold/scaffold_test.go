@@ -430,7 +430,7 @@ func TestIsEmptyRemote(t *testing.T) {
 	work := t.TempDir()
 	for _, args := range [][]string{
 		{"clone", bare, work},
-		{"-C", work, "commit", "--allow-empty", "-m", "init"},
+		{"-c", "user.email=test@example.com", "-c", "user.name=Test", "-C", work, "commit", "--allow-empty", "-m", "init"},
 		{"-C", work, "push", "origin", "HEAD"},
 	} {
 		if err := runGit(t, "", args...); err != nil {
@@ -495,7 +495,7 @@ func TestCloneAndBranch(t *testing.T) {
 	work := t.TempDir()
 	for _, args := range [][]string{
 		{"clone", bare, work},
-		{"-C", work, "commit", "--allow-empty", "-m", "init"},
+		{"-c", "user.email=test@example.com", "-c", "user.name=Test", "-C", work, "commit", "--allow-empty", "-m", "init"},
 		{"-C", work, "push", "origin", "HEAD"},
 	} {
 		if err := runGit(t, "", args...); err != nil {

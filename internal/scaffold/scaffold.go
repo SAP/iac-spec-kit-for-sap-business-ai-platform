@@ -154,7 +154,7 @@ func IsEmptyRemote(url string) (bool, error) {
 func SetRemote(dir, url, defaultBranch, workingBranch string) error {
 	cmds := [][]string{
 		{"git", "-C", dir, "remote", "add", "origin", url},
-		{"git", "-C", dir, "checkout", "-b", defaultBranch},
+		{"git", "-C", dir, "branch", "-m", defaultBranch},
 		{"git", "-C", dir, "checkout", "-b", workingBranch},
 	}
 	for _, args := range cmds {
