@@ -141,6 +141,40 @@ func Apply(dir string, mode Mode, commands embed.FS, agents []Agent) (warning st
 	return "", nil
 }
 
+func IsEmptyRemote(url string) (bool, error) {
+	out, err := exec.Command("git", "ls-remote", "--heads", url).Output()
+	if err != nil {
+		return false, fmt.Errorf("git ls-remote %s: %w", url, err)
+	}
+	return len(strings.TrimSpace(string(out))) == 0, nil
+}
+
+// SetRemote adds origin pointing at url, sets the default branch, and creates
+// plus switches to workingBranch forked from defaultBranch.
+func SetRemote(dir, url, defaultBranch, workingBranch string) error {
+	cmds := [][]string{
+		{"git", "-C", dir, "remote", "add", "origin", url},
+		{"git", "-C", dir, "branch", "-m", defaultBranch},
+		{"git", "-C", dir, "checkout", "-b", workingBranch},
+	}
+	for _, args := range cmds {
+		if out, err := exec.Command(args[0], args[1:]...).CombinedOutput(); err != nil {
+			return fmt.Errorf("%s: %w\n%s", strings.Join(args, " "), err, out)
+		}
+	}
+	return nil
+}
+
+func CloneAndBranch(url, dir, workingBranch string) error {
+	if out, err := exec.Command("git", "clone", url, dir).CombinedOutput(); err != nil {
+		return fmt.Errorf("git clone %s: %w\n%s", url, err, out)
+	}
+	if out, err := exec.Command("git", "-C", dir, "checkout", "-b", workingBranch).CombinedOutput(); err != nil {
+		return fmt.Errorf("git checkout -b %s: %w\n%s", workingBranch, err, out)
+	}
+	return nil
+}
+
 // CatalogueFile is the name of the service parameters catalogue written to memory/.
 const CatalogueFile = "service-params-catalogue.yaml"
 
