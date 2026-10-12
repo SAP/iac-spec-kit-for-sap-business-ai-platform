@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/SAP/btp-iac-spec-kit/internal/agentselect"
+	"github.com/SAP/btp-iac-spec-kit/internal/backendselect"
 	"github.com/SAP/btp-iac-spec-kit/internal/catalogue"
 	"github.com/SAP/btp-iac-spec-kit/internal/mcpcheck"
 	"github.com/SAP/btp-iac-spec-kit/internal/platformvalidation"
@@ -148,6 +149,7 @@ func resolveIntent(name string) (initIntent, error) {
 
 func initCmd() *cobra.Command {
 	var agentFlag string
+	var backendFlag string
 
 	cmd := &cobra.Command{
 		Use:   "init [name]",
@@ -213,6 +215,16 @@ func initCmd() *cobra.Command {
 				}
 			}
 
+			// Resolve backend type: flag > interactive prompt (skippable).
+			// Skip for ModeAgentOnly — that mode only updates agent files.
+			backendType := backendFlag
+			if backendType == "" && intent.mode != scaffold.ModeAgentOnly {
+				backendType, err = backendselect.Select(backendFlag)
+				if err != nil {
+					return err
+				}
+			}
+
 			var warning string
 			if intent.mode == scaffold.ModeFresh {
 				warning, err = scaffold.Scaffold(intent.dir, skills.Commands, agents)
@@ -233,6 +245,11 @@ func initCmd() *cobra.Command {
 					return err
 				}
 			}
+			if backendType != "" {
+				if err := scaffold.WriteBackendFile(intent.dir, backendType); err != nil {
+					return err
+				}
+			}
 
 			ui.PrintSuccess(intent.dir, agentIDs, intent.mode, warning == "")
 			return nil
@@ -240,6 +257,7 @@ func initCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, codex, cursor, copilot)")
+	cmd.Flags().StringVar(&backendFlag, "backend", "", "terraform backend type (local, remote, azurerm, consul, cos, gcs, http, kubernetes, oci, oss, pg, s3); omit to be prompted")
 	return cmd
 }
 

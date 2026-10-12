@@ -164,6 +164,26 @@ func WriteCatalogueFile(dir string, commands embed.FS) error {
 	return nil
 }
 
+// WriteBackendFile writes terraform/backend.tf with placeholder values for the
+// given backendType.  It is a no-op when the file already exists, preserving
+// any edits the user has made.
+func WriteBackendFile(dir, backendType string) error {
+	tmpl, ok := backendTemplates[backendType]
+	if !ok {
+		return fmt.Errorf("unknown backend type %q; choose one of: %s", backendType, strings.Join(KnownBackends, ", "))
+	}
+	dest := filepath.Join(dir, "terraform", "backend.tf")
+	if _, err := os.Stat(dest); err == nil {
+		return nil // already exists — preserve user edits
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("stat backend file: %w", err)
+	}
+	if err := os.WriteFile(dest, []byte(tmpl), 0o644); err != nil {
+		return fmt.Errorf("write backend file: %w", err)
+	}
+	return nil
+}
+
 // WriteGlobalAccountSubdomain stores the optional global-account subdomain
 // selected during initialization. An empty input creates the record for a new
 // project but never replaces an existing configured value.
