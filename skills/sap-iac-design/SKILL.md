@@ -35,6 +35,34 @@ Every configuration unit (a directory Terraform is run in) uses the standard lay
 
 Do not reintroduce ad-hoc resource-type files. `required_providers` lives in `providers.tf`; there is no separate `versions.tf`.
 
+## State design
+
+Each configuration unit — every directory Terraform is run in — is an **independent Terraform root with its own state file**. Splitting resources across directories therefore splits the state. Before annotating tasks, design the state boundaries so each chunk is small enough to plan and apply on its own, and record the decision so it persists across runs and feeds `/sap-iac.generate`.
+
+Read the state-split decision from the `## State Design` section of `memory/governance.md`. If governance records boundaries, use them. If governance is absent or has no `## State Design` section, **propose** the default boundaries below, let the user confirm or extend them, then write the agreed boundaries back to a `## State Design` section of `memory/governance.md`, leaving every other section untouched.
+
+Default state boundaries, always applied:
+
+- **Provider boundary** — BTP-provider resources and Cloud Foundry-/Kyma-provider resources never share a root (see *BTP / CF / Kyma split*).
+- **Stage boundary** — stages are separated per the *Stage modelling* choice: per-stage directories give one root per stage; a single configuration keeps one root fed by per-stage tfvars.
+- **Management-layer boundary** — when BTP directories model stages or group subaccounts, directory management is its own root, separate from the subaccount and workload roots it parents (see *BTP directory-per-stage layer*).
+
+User-defined boundaries, additive:
+
+- The user MAY define further named state groups (for example per team, per domain, or networking vs. applications). Each named group becomes its own independent root alongside the default boundaries, carrying the standard layout. Record each group's name and the tasks or subaccounts it owns under `## State Design`.
+
+Record the agreed boundaries like this (names and groups vary):
+
+```markdown
+## State Design
+- Provider split: BTP and Cloud Foundry/Kyma in separate roots
+- Stage split: per-stage directories
+- Management-layer split: directory management separate from subaccounts
+- Named group networking: tasks T-010, T-011 (shared VPC and route resources)
+```
+
+Keep roots independent: cross-root values move by **manual tfvars handover**, never `terraform_remote_state` (see the handover note under *BTP / CF / Kyma split*).
+
 ## Stage modelling
 
 Determine how stages are modelled by reading `memory/governance.md`. If governance records a stage-modelling choice, use it. If governance is absent or records no choice, **prompt the user** to pick one of:
@@ -74,7 +102,7 @@ The `btp/` `outputs.tf` carries the connection details the downstream provider n
 
 ## BTP directory-per-stage layer
 
-Only when governance or tasks indicate BTP **directories** are used to model stages, define a dedicated directory-per-stage configuration using the same standard layout. Its `outputs.tf` exposes the directory ID, which is handed (via manual tfvars) into the BTP configuration's `parent_id`. When directories are not used for stages, do not define this layer — subaccounts sit directly under the global account.
+Only when governance or tasks indicate BTP **directories** are used to model stages or to group subaccounts, define a dedicated directory-management configuration using the same standard layout. This is the *management-layer boundary* from *State design*: directory management is its own independent root, separate from the subaccount and workload roots it parents. Its `outputs.tf` exposes the directory ID, which is handed (via manual tfvars) into the BTP configuration's `parent_id`. When directories are not used, do not define this layer — subaccounts sit directly under the global account.
 
 ## Task annotations
 

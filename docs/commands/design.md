@@ -1,7 +1,7 @@
 # `sap-iac.design`
 
 !!! abstract "Summary"
-    **Role:** Required. · **Reads:** `specs/tasks.md` · **Writes:** `specs/tasks.md` (in place)
+    **Role:** Required. · **Reads:** `specs/tasks.md`, `memory/governance.md` · **Writes:** `specs/tasks.md` (in place), `memory/governance.md` (`## State Design` section)
 
 Translates the task list into a concrete Terraform folder structure and annotates each task with the file it will be written to.
 
@@ -13,11 +13,13 @@ After `sap-iac.tasks`, and before `sap-iac.generate`.
 
 | | |
 |---|---|
-| **Reads** | `specs/tasks.md`. |
-| **Writes** | `specs/tasks.md`, updated in place. It does not create a separate output file. |
+| **Reads** | `specs/tasks.md`; `memory/governance.md` for the stage-modelling and state-split choices. |
+| **Writes** | `specs/tasks.md`, updated in place; `memory/governance.md`, adding a `## State Design` section when none exists. It does not create a separate output file. |
 
 ## Behaviour
 
+- Treats every directory as an independent Terraform root with its own state, and designs the state boundaries before annotating tasks — splitting the state into chunks small enough to plan and apply independently. It reads the boundaries from a `## State Design` section of `memory/governance.md`; when none exists it proposes the defaults (provider split, stage split, and directory-vs-subaccount management split), lets the user confirm or extend them, and records the agreed boundaries back to that section.
+- Lets the user define additional named state groups (e.g. per team or domain, networking vs. applications); each becomes its own independent root with the standard layout, recorded under `## State Design`.
 - Emits a standard file layout per configuration unit: `main.tf` (resources), `variables.tf` (input variables), `outputs.tf` (output values), `providers.tf` (provider config and `required_providers`), and `backend.tf` (defaulting to a **local** backend).
 - Chooses how stages are modelled by reading `memory/governance.md`; when governance records no choice, it prompts the user. Two modes: **per-stage directories** (one directory per stage, each with the standard layout) or **single configuration** (one directory handling all stages via stage variables in `variables.tf`, with values in `<stage>.tfvars` files).
 - When a unit contains a Cloud Foundry or Kyma environment, splits it into a `btp/` subdirectory (all BTP-provider resources) plus a sibling `cf/` or `kyma/` subdirectory. In per-stage-directory mode the split sits inside each stage directory. A BTP-only unit is not split.
@@ -25,7 +27,7 @@ After `sap-iac.tasks`, and before `sap-iac.generate`.
 - Places entitlement-only tasks, including `APPLICATION_RUNTIME` / `MEMORY`, in the BTP configuration and preserves their amount and other task metadata.
 - Only when governance/tasks indicate BTP **directories** model stages, defines a directory-per-stage layer whose `outputs.tf` exposes the directory ID, fed into the BTP configuration's `parent_id`.
 - Annotates each task with its target directory and file path, preserving all metadata and dependencies. A CF space, its role assignments, and subsequent resources scoped to that space share the CF `main.tf`, retaining the `space -> roles -> resource` barrier without coupling separate spaces.
-- Performs no BTP mutations for its core function — it only reads and rewrites `specs/tasks.md`, plus `memory/governance.md` for the stage-mode choice.
+- Performs no BTP mutations for its core function — it reads and rewrites `specs/tasks.md`, reads `memory/governance.md` for the stage-mode and state-split choices, and writes back only a `## State Design` section there.
 
 ## Example
 

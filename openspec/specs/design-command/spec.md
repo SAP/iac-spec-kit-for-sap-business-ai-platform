@@ -74,8 +74,28 @@ The command SHALL determine how stages are modelled by reading `memory/governanc
 - **WHEN** single-configuration mode is selected
 - **THEN** the structure uses one directory whose `variables.tf` declares stage-specific variables and whose stage values are supplied via `<stage>.tfvars` files
 
+### Requirement: guide state-splitting design and record boundaries in governance
+The command SHALL treat every configuration unit as an independent Terraform root with its own state and SHALL design the state boundaries before annotating tasks. It SHALL read a `## State Design` section from `memory/governance.md`; when present, it SHALL use the recorded boundaries. When absent, it SHALL propose the default boundaries — the provider split (BTP vs Cloud Foundry/Kyma), the stage split (per the stage-modelling mode), and the management-layer split (directory management separate from the subaccounts it parents) — let the user confirm or extend them, and write the agreed boundaries back to a `## State Design` section of `memory/governance.md` without disturbing other sections. The user MAY define additional named state groups; each named group SHALL become its own independent root carrying the standard layout and SHALL be recorded under `## State Design`. Cross-root values SHALL move by manual tfvars handover, never `terraform_remote_state`.
+
+#### Scenario: boundaries from governance
+- **WHEN** `memory/governance.md` contains a `## State Design` section
+- **THEN** the command uses the recorded state boundaries without re-proposing them
+
+#### Scenario: boundaries proposed and recorded
+- **WHEN** no `## State Design` section is available from governance
+- **THEN** the command proposes the default provider, stage, and management-layer boundaries for the user to confirm or extend
+- **AND** writes the agreed boundaries to a `## State Design` section of `memory/governance.md`, leaving other sections unchanged
+
+#### Scenario: user-defined state group
+- **WHEN** the user defines an additional named state group
+- **THEN** that group becomes its own independent Terraform root with the standard layout, and its name and owned tasks are recorded under `## State Design`
+
+#### Scenario: roots stay independent
+- **WHEN** the structure spans more than one root
+- **THEN** cross-root values are passed by manual tfvars handover and no `terraform_remote_state` coupling is introduced
+
 ### Requirement: define BTP directory-per-stage layer when directories are used
-The command SHALL define a dedicated directory-per-stage configuration (using the standard layout) only when governance or tasks indicate BTP **directories** are used for stages. That configuration's `outputs.tf` SHALL expose the directory ID, which is handed to the BTP configuration's `parent_id`. When BTP directories are not used for stages, no directory-per-stage layer is defined and subaccounts sit directly under the global account.
+The command SHALL define a dedicated directory-management configuration (using the standard layout) only when governance or tasks indicate BTP **directories** are used for stages or to group subaccounts. That configuration is an independent Terraform root; its `outputs.tf` SHALL expose the directory ID, which is handed to the BTP configuration's `parent_id`. When BTP directories are not used, no directory-management layer is defined and subaccounts sit directly under the global account.
 
 #### Scenario: directories used for stages
 - **WHEN** governance or tasks indicate BTP directories are used for stages

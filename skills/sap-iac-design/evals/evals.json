@@ -15,6 +15,24 @@
         {"id": "1.1", "text": "Annotates the APPLICATION_RUNTIME / MEMORY task to terraform/dev/btp/main.tf rather than the CF unit"},
         {"id": "1.2", "text": "Preserves amount = 1 in the task metadata"}
       ]
+    },
+    {
+      "id": 2,
+      "name": "state-design-guides-and-records-boundaries",
+      "description": "Design guides the user to split Terraform state into independent roots and records the decision in governance.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount dev-sa\n  - Task metadata: `resource_type = btp_subaccount`, `subaccount = dev-sa`\n- [ ] T-002 `[dev]` Create Cloud Foundry environment\n  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`\n- [ ] T-003 `[dev]` Create hana-cloud service instance\n  - Task metadata: `resource_type = btp_subaccount_service_instance`, `location = cf`, `subaccount = dev-sa`\n"},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n- Data residency: EU only\n- Compliance reason: GDPR\n- Preferred region: eu10\n\n## Naming\n- Subaccount pattern: acme-{env}\n- Pattern tokens: {env} = environment tier\n- Environments: dev\n- Directory structure: hierarchical\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Use per-stage directories, design the Terraform layout, and help me split the state into reasonable chunks including a user-defined 'networking' group.",
+      "assertions": [
+        {"id": "2.1", "text": "Proposes state boundaries that place BTP-provider and Cloud Foundry-provider resources in separate independent Terraform roots"},
+        {"id": "2.2", "text": "Treats directory management as a separate state/root from the subaccounts it parents when BTP directories are used"},
+        {"id": "2.3", "text": "Creates the requested user-defined 'networking' named state group as its own independent root with the standard layout"},
+        {"id": "2.4", "text": "Records the agreed state boundaries in a ## State Design section of memory/governance.md without removing the existing Regions or Naming sections"},
+        {"id": "2.5", "text": "Keeps roots independent via manual tfvars handover and does not introduce a terraform_remote_state coupling"}
+      ]
     }
   ]
 }
