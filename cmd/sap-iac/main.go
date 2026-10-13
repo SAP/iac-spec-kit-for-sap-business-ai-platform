@@ -246,7 +246,7 @@ func initCmd() *cobra.Command {
 				}
 			}
 			if backendType != "" {
-				if err := scaffold.WriteBackendFile(intent.dir, backendType); err != nil {
+				if err := scaffold.WriteBackendRecord(intent.dir, backendType); err != nil {
 					return err
 				}
 			}

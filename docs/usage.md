@@ -21,7 +21,7 @@ Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a direc
 | Flag | Description |
 |---|---|
 | `--agent` | Comma-separated list of AI agents to configure: `claude`, `codex`, `cursor`, `copilot`. When omitted **in a terminal**, `init` shows an interactive multi-select. When omitted **without a TTY**, `init` reports an error asking you to pass `--agent`. An unknown agent id is rejected. |
-| `--backend` | Terraform backend type for remote state. Accepted values: `local`, `remote`, `azurerm`, `consul`, `cos`, `gcs`, `http`, `kubernetes`, `oci`, `oss`, `pg`, `s3`. When omitted during a fresh or adopt init, `init` shows an interactive select with a skip option. Skipped or omitted for agent-only updates. If `terraform/backend.tf` already exists it is never overwritten. |
+| `--backend` | Terraform backend type for remote state. Accepted values: `local`, `remote`, `azurerm`, `consul`, `cos`, `gcs`, `http`, `kubernetes`, `oci`, `oss`, `pg`, `s3`. When omitted during a fresh or adopt init, `init` shows an interactive select with a skip option. Skipped or omitted for agent-only updates. If `memory/backend.md` already exists it is never overwritten. |
 
 ### Examples
 
@@ -51,14 +51,14 @@ my-iac-project/
 ├── specs/                # (empty) requirement specs the agent commands write
 ├── memory/               # project memory used by the generated commands
 │   ├── global-account.md # optional global-account subdomain entered at init
+│   ├── backend.md        # backend type + placeholder HCL (only if --backend chosen)
 │   └── service-params-catalogue.yaml # editable service-instance parameters
 ├── terraform/            # generated Terraform HCL lands here
-│   └── backend.tf        # placeholder backend config (only if --backend chosen)
 ├── .sap-iac/             # internal state (platform-validation.md)
 └── <agent command dir>/  # one per selected agent (see below)
 ```
 
-During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain** (recorded in `memory/global-account.md`) and an optional **Terraform backend type** (written to `terraform/backend.tf` as a placeholder with `# TODO` comments). When `git` is available, `init` runs `git init` in the new directory. `backend.tf` is never overwritten on subsequent runs — edit it freely.
+During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain** (recorded in `memory/global-account.md`) and an optional **Terraform backend type** (recorded in `memory/backend.md` as a type label and full placeholder HCL block with `# TODO` comments). When `git` is available, `init` runs `git init` in the new directory. `memory/backend.md` is never overwritten on subsequent runs — edit it freely. The `sap-iac.design` and `sap-iac.generate` commands read this file and copy the HCL block into each configuration unit's `backend.tf` at generation time.
 
 !!! warning "Existing projects are updated, not overwritten"
     Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` updates the selected agents' command files, refreshes `.sap-iac/platform-validation.md`, and ensures its managed `.gitignore` entries. Existing `specs/`, `memory/`, and `terraform/` content remains untouched. If it is some other existing directory, `init` offers to adopt it and scaffold the project structure in place.

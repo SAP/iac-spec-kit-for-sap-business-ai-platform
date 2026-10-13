@@ -164,22 +164,27 @@ func WriteCatalogueFile(dir string, commands embed.FS) error {
 	return nil
 }
 
-// WriteBackendFile writes terraform/backend.tf with placeholder values for the
-// given backendType.  It is a no-op when the file already exists, preserving
-// any edits the user has made.
-func WriteBackendFile(dir, backendType string) error {
+// BackendRecordFile is the project-local record of the chosen Terraform backend.
+const BackendRecordFile = "backend.md"
+
+// WriteBackendRecord writes memory/backend.md recording the chosen backend type
+// and the full placeholder HCL block. The agent reads this file at design/generate
+// time and copies the HCL block into each configuration unit's backend.tf.
+// It is a no-op when the file already exists, preserving any edits the user has made.
+func WriteBackendRecord(dir, backendType string) error {
 	tmpl, ok := backendTemplates[backendType]
 	if !ok {
 		return fmt.Errorf("unknown backend type %q; choose one of: %s", backendType, strings.Join(KnownBackends, ", "))
 	}
-	dest := filepath.Join(dir, "terraform", "backend.tf")
+	dest := filepath.Join(dir, "memory", BackendRecordFile)
 	if _, err := os.Stat(dest); err == nil {
 		return nil // already exists — preserve user edits
 	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("stat backend file: %w", err)
+		return fmt.Errorf("stat backend record: %w", err)
 	}
-	if err := os.WriteFile(dest, []byte(tmpl), 0o644); err != nil {
-		return fmt.Errorf("write backend file: %w", err)
+	content := fmt.Sprintf("# Backend\n\n- Type: %s\n\n## Configuration\n\n```hcl\n%s```\n", backendType, tmpl)
+	if err := os.WriteFile(dest, []byte(content), 0o644); err != nil {
+		return fmt.Errorf("write backend record: %w", err)
 	}
 	return nil
 }
