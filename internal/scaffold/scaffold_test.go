@@ -310,6 +310,87 @@ func TestApplyAgentOnly(t *testing.T) {
 	}
 }
 
+func TestWriteBackendRecord(t *testing.T) {
+	for _, bt := range KnownBackends {
+		t.Run(bt, func(t *testing.T) {
+			dir := t.TempDir()
+			if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := WriteBackendRecord(dir, bt); err != nil {
+				t.Fatalf("WriteBackendRecord(%s): %v", bt, err)
+			}
+			dest := filepath.Join(dir, "memory", BackendRecordFile)
+			data, err := os.ReadFile(dest)
+			if err != nil {
+				t.Fatalf("backend.md missing: %v", err)
+			}
+			if len(data) == 0 {
+				t.Error("backend.md is empty")
+			}
+			// Must not contain hardcoded secrets.
+			if strings.Contains(string(data), "AKIA") {
+				t.Error("backend.md appears to contain AWS credentials")
+			}
+			// Must record the type line and the HCL block.
+			if !strings.Contains(string(data), "- Type: "+bt) {
+				t.Errorf("backend.md missing type line for %q", bt)
+			}
+			if !strings.Contains(string(data), `backend "`+bt+`"`) {
+				t.Errorf("backend.md does not contain backend %q block", bt)
+			}
+
+			// Second call must be a no-op (preserve user edits).
+			sentinel := []byte("# user-edited\n")
+			if err := os.WriteFile(dest, sentinel, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := WriteBackendRecord(dir, bt); err != nil {
+				t.Fatalf("WriteBackendRecord(second call): %v", err)
+			}
+			got, err := os.ReadFile(dest)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != string(sentinel) {
+				t.Error("second WriteBackendRecord overwrote existing file")
+			}
+		})
+	}
+}
+
+func TestWriteBackendRecordUnknown(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := WriteBackendRecord(dir, "bogus"); err == nil {
+		t.Error("expected error for unknown backend type, got nil")
+	}
+}
+
+func TestScaffoldBackendCreated(t *testing.T) {
+	tmp := t.TempDir()
+	orig, _ := os.Getwd()
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(orig) //nolint:errcheck
+
+	agents := []Agent{KnownAgents["claude"]}
+	if _, err := Scaffold("proj", skills.Commands, agents); err != nil {
+		t.Fatalf("Scaffold: %v", err)
+	}
+	// WriteBackendRecord is called by the CLI, not Scaffold itself — but the
+	// memory/ dir must exist so it can be written into.
+	if err := WriteBackendRecord("proj", "s3"); err != nil {
+		t.Fatalf("WriteBackendRecord after Scaffold: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join("proj", "memory", BackendRecordFile)); err != nil {
+		t.Error("backend.md missing after WriteBackendRecord")
+	}
+}
+
 func TestWriteCatalogueFile(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.Mkdir(filepath.Join(dir, "memory"), 0o755); err != nil {
