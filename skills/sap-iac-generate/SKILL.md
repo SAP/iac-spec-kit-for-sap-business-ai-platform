@@ -11,7 +11,7 @@ metadata:
 
 Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the directory and file paths defined by `/sap-iac.design`.
 
-Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` (default local backend) — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
+Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
 
 ## Platform Name Normalization
 
@@ -375,7 +375,15 @@ This enforces `cloudfoundry_space -> all cloudfoundry_space_role resources for t
 
 ## File layout and cross-directory wiring
 
-Write each configuration unit using the standard layout defined by `/sap-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`; `backend.tf` defaults to a local backend.
+Write each configuration unit using the standard layout defined by `/sap-iac.design`: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`. `required_providers` goes in `providers.tf`.
+
+**Backend configuration**: read `memory/backend.md`. If the file is present and contains a fenced `hcl` block, copy that block verbatim as the entire content of each configuration unit's `backend.tf`. If the file is absent or contains no fenced block, write a local backend:
+
+```hcl
+terraform {
+  backend "local" {}
+}
+```
 
 ### BTP outputs for CF / Kyma
 
@@ -390,7 +398,7 @@ When `/sap-iac.design` defined a BTP directory-per-stage layer, emit that config
 
 ### Manual tfvars handover
 
-Separate directories are independent Terraform roots on the local backend, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
+Separate directories are independent Terraform roots, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
 
 When the producing BTP directory contains a Cloud Foundry environment, the consuming directory's `terraform.tfvars.example` **must list both `cf_api_url` and `cf_org_id`** as handover variables — never one without the other.
 
