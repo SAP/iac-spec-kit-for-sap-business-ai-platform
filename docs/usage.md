@@ -5,7 +5,7 @@ The CLI scaffolds projects with `sap-iac init`, reports its build with `sap-iac 
 ## `sap-iac init`
 
 ```
-sap-iac init [name] [--agent claude,codex,cursor,copilot]
+sap-iac init [name] [--agent claude,codex,cursor,copilot] [--backend <type>]
 ```
 
 Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a directory named `[name]`.
@@ -16,29 +16,30 @@ Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a direc
 |---|---|
 | `[name]` | Optional. The project directory to use. In an interactive terminal, omitting it opens a menu to create a new project, adopt the current directory, or add/update agents in an existing project. |
 
-### Flag
+### Flags
 
 | Flag | Description |
 |---|---|
 | `--agent` | Comma-separated list of AI agents to configure: `claude`, `codex`, `cursor`, `copilot`. When omitted **in a terminal**, `init` shows an interactive multi-select. When omitted **without a TTY**, `init` reports an error asking you to pass `--agent`. An unknown agent id is rejected. |
+| `--backend` | Terraform backend type for remote state. Accepted values: `local`, `remote`, `azurerm`, `consul`, `cos`, `gcs`, `http`, `kubernetes`, `oci`, `oss`, `pg`, `s3`. When omitted during a fresh or adopt init, `init` shows an interactive select with a skip option. Skipped or omitted for agent-only updates. If `memory/backend.md` already exists it is never overwritten. |
 
 ### Examples
 
 ```sh
-# Interactive: prompts for agents (and for the name if omitted)
+# Interactive: prompts for agents, backend, and name (if omitted)
 sap-iac init my-iac-project
 
-# Configure for Claude Code
-sap-iac init my-iac-project --agent claude
+# Configure for Claude Code with an S3 backend
+sap-iac init my-iac-project --agent claude --backend s3
 
-# Configure for multiple agents
+# Configure for multiple agents, skip backend
 sap-iac init my-iac-project --agent claude,cursor
 
 # Refresh an existing project without selecting agents interactively
 sap-iac init my-iac-project --agent claude,codex
 ```
 
-Fresh and adopt initialization still prompt for the optional global-account subdomain, and adoption asks for confirmation. They therefore require an interactive input stream even when `--agent` is supplied. A fully non-interactive invocation is currently limited to refreshing an existing sap-iac project by passing its directory name and `--agent`.
+Fresh and adopt initialization prompt for the optional global-account subdomain, the backend type, and adoption asks for confirmation. They therefore require an interactive input stream even when `--agent` is supplied. A fully non-interactive invocation requires both `--agent` and `--backend` (or pass `--backend` with a known type to skip the prompt).
 
 ## What `init` creates
 
@@ -50,13 +51,14 @@ my-iac-project/
 ├── specs/                # (empty) requirement specs the agent commands write
 ├── memory/               # project memory used by the generated commands
 │   ├── global-account.md # optional global-account subdomain entered at init
+│   ├── backend.md        # backend type + placeholder HCL (only if --backend chosen)
 │   └── service-params-catalogue.yaml # editable service-instance parameters
-├── terraform/            # (empty) generated Terraform HCL lands here
+├── terraform/            # generated Terraform HCL lands here
 ├── .sap-iac/             # internal state (platform-validation.md)
 └── <agent command dir>/  # one per selected agent (see below)
 ```
 
-During a fresh init (and when adopting an existing directory), `init` also prompts for an optional **global-account subdomain** and records it in `memory/global-account.md`. When `git` is available, `init` runs `git init` in the new directory.
+During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain** (recorded in `memory/global-account.md`) and an optional **Terraform backend type** (recorded in `memory/backend.md` as a type label and full placeholder HCL block with `# TODO` comments). When `git` is available, `init` runs `git init` in the new directory. `memory/backend.md` is never overwritten on subsequent runs — edit it freely. The `sap-iac.design` and `sap-iac.generate` commands read this file and copy the HCL block into each configuration unit's `backend.tf` at generation time.
 
 !!! warning "Existing projects are updated, not overwritten"
     Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` updates the selected agents' command files, refreshes `.sap-iac/platform-validation.md`, and ensures its managed `.gitignore` entries. Existing `specs/`, `memory/`, and `terraform/` content remains untouched. If it is some other existing directory, `init` offers to adopt it and scaffold the project structure in place.

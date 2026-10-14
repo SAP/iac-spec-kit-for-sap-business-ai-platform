@@ -31,7 +31,7 @@ Every configuration unit (a directory Terraform is run in) uses the standard lay
 - `variables.tf` — input variables
 - `outputs.tf` — output values
 - `providers.tf` — provider configuration and the `required_providers` block
-- `backend.tf` — backend configuration, defaulting to a **local** backend
+- `backend.tf` — backend configuration; read `memory/backend.md` to determine the type (see below)
 
 Do not reintroduce ad-hoc resource-type files. `required_providers` lives in `providers.tf`; there is no separate `versions.tf`.
 
@@ -70,7 +70,13 @@ terraform/
 
 BTP-only (no CF/Kyma): the standard five files plus `terraform.tfvars.example` directly in the unit directory, no `btp/`/`cf/`/`kyma/` split.
 
-The `btp/` `outputs.tf` carries the connection details the downstream provider needs (CF API URL, Kyma kubeconfig URL); the consuming `cf/`/`kyma/` directory receives them by manual tfvars handover (`/sap-iac.generate` emits a `terraform.tfvars.example` there). Directories are independent Terraform roots on the local backend — do not couple them with `terraform_remote_state`.
+The `btp/` `outputs.tf` carries the connection details the downstream provider needs (CF API URL, Kyma kubeconfig URL); the consuming `cf/`/`kyma/` directory receives them by manual tfvars handover (`/sap-iac.generate` emits a `terraform.tfvars.example` there). Directories are independent Terraform roots — do not couple them with `terraform_remote_state`.
+
+## Backend configuration
+
+Read `memory/backend.md`. If the file is present, extract the `- Type:` value and note the fenced `hcl` block — `/sap-iac.generate` will copy it verbatim into each configuration unit's `backend.tf`. Annotate your design with the backend type so the generate step uses the correct block.
+
+If `memory/backend.md` is absent or contains no type, each configuration unit's `backend.tf` will default to a local backend — no action needed in the design step.
 
 ## BTP directory-per-stage layer
 
