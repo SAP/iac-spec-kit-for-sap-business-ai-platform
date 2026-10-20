@@ -14,6 +14,8 @@ sap-iac init my-project --agent claude
 
 In a non-interactive context you must also pass the directory name. Only agent-only refresh of an existing sap-iac project is fully non-interactive; fresh and adopt initialization still collect interactive input.
 
+Passing `--backend` skips the backend chooser only; it does not suppress the global-account prompt.
+
 ### `unknown agent "<id>" — supported: claude, codex, cursor, copilot`
 
 `--agent` accepts only `claude`, `codex`, `cursor`, and `copilot`, comma-separated. Check for typos and stray spaces — for example, `--agent claude,cursor`.
@@ -30,6 +32,18 @@ The interactive multi-select was dismissed without a choice. Select at least one
 
 The project name is validated before any scaffolding runs. Names containing a path separator (e.g. `sap-iac init foo/bar`) or starting with a dot (e.g. `sap-iac init .foo`) are rejected to prevent directory traversal and hidden-directory confusion. Choose a plain name: `sap-iac init my-project`.
 
+### `cannot derive project name from URL "<url>"`
+
+The remote URL selected during the interactive fresh-project flow did not contain a usable repository name. Use a Git URL with a final repository component, for example `https://github.com/acme/orders.git` or `git@github.com:acme/orders.git`. The local directory name is derived from that component.
+
+### `invalid branch name "<name>"`
+
+The selected default or working branch does not satisfy Git's branch-name rules. Use a normal branch name such as `main` or `feature/iac-setup`; names with empty components, consecutive dots, spaces, or other Git-invalid characters are rejected before project files are created.
+
+### `checking remote: git ls-remote ...`, `git clone ...`, or `git remote setup ...`
+
+Remote setup needs Git, a reachable repository URL, and any required credentials or SSH configuration. Confirm that `git ls-remote <url>` succeeds in your terminal, then retry. If cloning or remote setup failed after a directory was created, inspect that directory before retrying or choose a different target name; the CLI does not remove a cloned or locally scaffolded repository after a later remote-configuration failure.
+
 ## Warnings (`init` still succeeds)
 
 !!! info "Warnings do not stop `init`"
@@ -41,7 +55,7 @@ The `terraform` executable is not installed. You can scaffold now, but the gener
 
 ### `Warning: "git" was not found on $PATH — run "git init" manually in the project directory.`
 
-Git is not installed, so `init` skipped repository initialisation. The project is fine; run `git init` inside it once Git is available.
+Git is not installed, so local `init` skipped repository initialisation. The project is fine; run `git init` inside it once Git is available. This warning applies to local scaffolding; optional remote-repository setup requires Git and stops if Git cannot query the remote.
 
 ### `Warning: [<agent>] No Terraform or OpenTofu MCP server detected. Terraform operations in your AI agent may not work.`
 

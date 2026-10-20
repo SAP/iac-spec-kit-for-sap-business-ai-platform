@@ -10,6 +10,9 @@ sap-iac init [name] [--agent claude,codex,cursor,copilot] [--backend <type>]
 
 Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a directory named `[name]`.
 
+When the target already exists, `init` updates its configured agent files if it is
+already a sap-iac project, or offers to adopt it otherwise.
+
 ### Argument
 
 | Argument | Description |
@@ -33,13 +36,25 @@ sap-iac init my-iac-project
 sap-iac init my-iac-project --agent claude --backend s3
 
 # Configure for multiple agents, skip backend
+# The backend chooser is still shown; select "skip (no backend.tf)".
 sap-iac init my-iac-project --agent claude,cursor
 
 # Refresh an existing project without selecting agents interactively
 sap-iac init my-iac-project --agent claude,codex
 ```
 
-Fresh and adopt initialization prompt for the optional global-account subdomain, the backend type, and adoption asks for confirmation. They therefore require an interactive input stream even when `--agent` is supplied. A fully non-interactive invocation requires both `--agent` and `--backend` (or pass `--backend` with a known type to skip the prompt).
+Fresh and adopt initialization prompt for the optional global-account subdomain; adoption also asks for confirmation. Omitting `--backend` adds the backend chooser, and a fresh project may prompt for optional remote Git setup. `--backend` skips only the backend chooser. Fresh and adopt modes therefore require an interactive input stream even when `--agent` and `--backend` are supplied. Only an agent-only refresh of an existing sap-iac project is fully non-interactive.
+
+### Optional remote repository setup
+
+For a fresh project, `init` can optionally connect a remote Git repository. In the interactive **Create a new project** flow, choosing a remote URL derives the local project directory from the repository name (for example, `https://github.com/acme/orders.git` creates `orders/`). A trailing slash and `.git` suffix are ignored for this purpose.
+
+The CLI checks whether the remote has branches before creating files:
+
+- For an existing remote, it clones the repository into the derived directory, creates and checks out the chosen working branch, then adds sap-iac files.
+- For an empty remote, it scaffolds locally, adds `origin`, renames the initial branch to the chosen default branch, and creates the chosen working branch. Commit and push the generated files when you are ready.
+
+The default working branch is `feature/iac-setup`; an empty remote also prompts for a default branch, `main` by default. Both inputs must be valid Git branch names. Remote setup is currently interactive; `init` has no remote URL or branch flags. Git and access to the remote are required when this option is selected.
 
 ## What `init` creates
 
@@ -50,7 +65,7 @@ my-iac-project/
 │                         # and memory/global-account.md
 ├── specs/                # (empty) requirement specs the agent commands write
 ├── memory/               # project memory used by the generated commands
-│   ├── global-account.md # optional global-account subdomain entered at init
+│   ├── global-account.md # created at init; its global-account subdomain is optional
 │   ├── backend.md        # backend type + placeholder HCL (only if --backend chosen)
 │   └── service-params-catalogue.yaml # editable service-instance parameters
 ├── terraform/            # generated Terraform HCL lands here
@@ -58,7 +73,7 @@ my-iac-project/
 └── <agent command dir>/  # one per selected agent (see below)
 ```
 
-During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain** (recorded in `memory/global-account.md`) and an optional **Terraform backend type** (recorded in `memory/backend.md` as a type label and full placeholder HCL block with `# TODO` comments). When `git` is available, `init` runs `git init` in the new directory. `memory/backend.md` is never overwritten on subsequent runs — edit it freely. The `sap-iac.design` and `sap-iac.generate` commands read this file and copy the HCL block into each configuration unit's `backend.tf` at generation time.
+During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain**. It always creates `memory/global-account.md` for these modes, with a blank subdomain when none was supplied. It also prompts for an optional **Terraform backend type** (recorded in `memory/backend.md` as a type label and full placeholder HCL block with `# TODO` comments). For a local fresh project, `init` runs `git init` when Git is available. When remote setup is selected, it instead clones an existing remote or configures an empty one as described above. `memory/backend.md` is never overwritten on subsequent runs — edit it freely. The `sap-iac.design` and `sap-iac.generate` commands read this file and copy the HCL block into each configuration unit's `backend.tf` at generation time.
 
 !!! warning "Existing projects are updated, not overwritten"
     Running `init` against an existing directory does not error. If the directory is already a sap-iac project (it has `specs/` or `memory/`), `init` updates the selected agents' command files, refreshes `.sap-iac/platform-validation.md`, and ensures its managed `.gitignore` entries. Existing `specs/`, `memory/`, and `terraform/` content remains untouched. If it is some other existing directory, `init` offers to adopt it and scaffold the project structure in place.
@@ -116,5 +131,10 @@ Each command reads and writes files under `specs/`, `memory/`, and `terraform/`.
 
 ## Other CLI commands
 
-- `sap-iac version` prints the binary version.
-- `sap-iac catalogue convert` converts a JSON Schema into a service-parameter catalogue entry. See [Service-parameter catalogue](catalogue.md).
+| Command | Purpose | Output / effect |
+|---|---|---|
+| `sap-iac version` | Print the binary version. | Writes the version to standard output. |
+| `sap-iac catalogue convert <schema.json> --service <offering> --plans <plan[,plan]>` | Convert a JSON Schema into a service-parameter catalogue entry. | Writes YAML to standard output by default. |
+| `sap-iac catalogue convert ... --append` | Add the converted entry to a project catalogue. | Walks upward from the current directory to the nearest directory containing `specs/` or `memory/`, then appends to `memory/service-params-catalogue.yaml`; it fails when no project is found. |
+
+See [Service-parameter catalogue](catalogue.md) for conversion rules and examples.

@@ -10,7 +10,16 @@ The `sap-iac.services` command matches entries by `service` and plan name. For a
 sap-iac catalogue convert schema.json --service <offering> --plans <plan[,plan]>
 ```
 
-The command converts top-level required and optional JSON Schema properties into a catalogue YAML entry and writes it to standard output. Generated entries use `source: user-defined`. Internal `$ref` values are resolved; external references are not followed.
+The command requires a valid JSON file and converts top-level required and optional JSON Schema properties into a catalogue YAML entry. Generated entries use `source: user-defined` and are written to standard output unless `--append` is supplied. The `--service` and `--plans` values name the output entry; they are required and `--plans` accepts a comma-separated list.
+
+Conversion preserves useful schema information as catalogue examples:
+
+- A property's `default` is preferred; otherwise the first `enum` value is used, followed by a placeholder.
+- Nested objects become nested example maps and arrays receive a one-item placeholder example.
+- `oneOf` and `anyOf` use their first branch and are marked with a YAML comment.
+- Internal `$ref` values under `$defs` or `definitions` are resolved. External or unresolvable references remain explicit placeholders and are not fetched.
+
+The converter also accepts a BTP service-catalog wrapper containing `servicePlans`. In that form, it reads the first service plan's `service_instance.create.parameters` schema. Choose the output `--plans` values deliberately: they are not inferred from that wrapper.
 
 To append the entry to the nearest sap-iac project's catalogue:
 
