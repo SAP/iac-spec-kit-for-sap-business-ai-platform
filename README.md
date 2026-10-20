@@ -1,4 +1,5 @@
 ![Golang](https://img.shields.io/badge/Go-1.27-informational)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SAP_iac-spec-kit-for-sap-business-ai-platform&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SAP_iac-spec-kit-for-sap-business-ai-platform)
 [![CodeQL](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SAP/iac-spec-kit-for-sap-business-ai-platform/actions/workflows/github-code-scanning/codeql)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/iac-spec-kit-for-sap-business-ai-platform)](https://api.reuse.software/info/github.com/SAP/iac-spec-kit-for-sap-business-ai-platform)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15169/badge)](https://www.bestpractices.dev/projects/15169)
