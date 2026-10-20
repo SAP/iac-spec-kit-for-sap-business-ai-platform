@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -73,7 +74,8 @@ func validProjectName(name string) error {
 // projectNameFromURL derives a local directory name from a remote URL by taking
 // the last path segment and stripping a trailing ".git" suffix.
 func projectNameFromURL(rawURL string) (string, error) {
-	name := path.Base(strings.TrimSuffix(strings.TrimSpace(rawURL), ".git"))
+	url := strings.TrimRight(strings.TrimSpace(rawURL), "/")
+	name := path.Base(strings.TrimSuffix(url, ".git"))
 	if name == "" || name == "." || name == "/" {
 		return "", fmt.Errorf("cannot derive project name from URL %q", rawURL)
 	}
@@ -81,6 +83,17 @@ func projectNameFromURL(rawURL string) (string, error) {
 		return "", fmt.Errorf("name derived from remote URL: %w", err)
 	}
 	return name, nil
+}
+
+// validBranchName verifies that name is accepted by Git as a branch name.
+func validBranchName(name string) error {
+	if name == "" {
+		return fmt.Errorf("branch name must not be empty")
+	}
+	if err := exec.Command("git", "check-ref-format", "--branch", name).Run(); err != nil {
+		return fmt.Errorf("invalid branch name %q", name)
+	}
+	return nil
 }
 
 // collectGlobalAccountSubdomain offers the optional initialization-only input.
@@ -138,6 +151,9 @@ func collectRemoteSetup(prefilledURL string) (remoteSetup, error) {
 		return remoteSetup{}, fmt.Errorf("prompt: %w", err)
 	}
 	workingBranch = strings.TrimSpace(workingBranch)
+	if err := validBranchName(workingBranch); err != nil {
+		return remoteSetup{}, err
+	}
 
 	rs := remoteSetup{url: url, workingBranch: workingBranch, isExisting: !isEmpty}
 
@@ -154,6 +170,9 @@ func collectRemoteSetup(prefilledURL string) (remoteSetup, error) {
 		return remoteSetup{}, fmt.Errorf("prompt: %w", err)
 	}
 	rs.defaultBranch = strings.TrimSpace(defaultBranch)
+	if err := validBranchName(rs.defaultBranch); err != nil {
+		return remoteSetup{}, err
+	}
 	return rs, nil
 }
 
