@@ -14,6 +14,8 @@ cd hr-leave
 
 This creates the `specs/`, `memory/`, `terraform/`, and `.sap-iac/` (internal state) directories, a `.gitignore`, and the `sap-iac.*` command files for your agent (here, under `.claude/commands/`). It also creates the editable `memory/service-params-catalogue.yaml` and prompts for an optional global-account subdomain, saved to `memory/global-account.md`. Missing Terraform, Git, or MCP servers produce warnings only — the scaffold still succeeds. If anything looks off, see [Troubleshooting](troubleshooting.md).
 
+To start from a remote repository instead, run `sap-iac init` without a name, choose **Create a new project**, then choose remote setup. The repository URL supplies the local directory name; existing remotes are cloned and empty remotes are configured after scaffolding. This optional path requires Git and remote access.
+
 ## 2 · Open the project in your agent
 
 ```sh

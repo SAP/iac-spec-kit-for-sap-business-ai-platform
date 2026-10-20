@@ -106,6 +106,15 @@ zensical build --clean --strict   # one-off build into ./site
 
 It is published to GitHub Pages by the [`create-gh-page`](.github/workflows/create-gh-page.yml) workflow, which runs `zensical build` and deploys via the GitHub Actions Pages artifact flow. (`mkdocs build` still works too, as a reversible fallback.)
 
+For a strict MkDocs validation that neither relies on a globally installed `mkdocs` executable nor writes the generated site into the repository, use the project virtual environment explicitly and write to a temporary directory:
+
+```sh
+python -m pip install mkdocs-material
+.venv/bin/python -m mkdocs build --strict --site-dir /private/tmp/sap-iac-docs-check
+```
+
+This requires `mkdocs` and `mkdocs-material` to be installed in `.venv`. Using `python -m mkdocs` ensures the Material theme is resolved from that environment instead of a system-level MkDocs installation.
+
 ## How to Commit
 
 Once you're done, ensure the tests still pass (`make test`) and the code is linted and formatted (`make lint`, `make fmt`). Then open a pull request. We follow the [conventional commits specification](https://www.conventionalcommits.org/en/v1.0.0/) — enforced on PR titles by the [Semantic PR Check](.github/workflows/semantic-pr.yml) workflow — so the pull-request title has to be structured like:

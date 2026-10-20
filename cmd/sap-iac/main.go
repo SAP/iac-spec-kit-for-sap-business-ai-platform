@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -54,8 +56,10 @@ func versionCmd() *cobra.Command {
 
 // initIntent holds the resolved decision before any scaffold work runs.
 type initIntent struct {
-	dir  string
-	mode scaffold.Mode
+	dir         string
+	mode        scaffold.Mode
+	remoteURL   string // non-empty when URL was collected during fresh interactive flow
+	remoteAsked bool   // true when the remote question was already presented interactively
 }
 
 // validProjectName rejects names with path separators or leading dots to
@@ -63,6 +67,31 @@ type initIntent struct {
 func validProjectName(name string) error {
 	if strings.ContainsAny(name, `/\`) || strings.HasPrefix(name, ".") {
 		return fmt.Errorf("invalid project name %q: must not contain path separators or start with '.'", name)
+	}
+	return nil
+}
+
+// projectNameFromURL derives a local directory name from a remote URL by taking
+// the last path segment and stripping a trailing ".git" suffix.
+func projectNameFromURL(rawURL string) (string, error) {
+	url := strings.TrimRight(strings.TrimSpace(rawURL), "/")
+	name := path.Base(strings.TrimSuffix(url, ".git"))
+	if name == "" || name == "." || name == "/" {
+		return "", fmt.Errorf("cannot derive project name from URL %q", rawURL)
+	}
+	if err := validProjectName(name); err != nil {
+		return "", fmt.Errorf("name derived from remote URL: %w", err)
+	}
+	return name, nil
+}
+
+// validBranchName verifies that name is accepted by Git as a branch name.
+func validBranchName(name string) error {
+	if name == "" {
+		return fmt.Errorf("branch name must not be empty")
+	}
+	if err := exec.Command("git", "check-ref-format", "--branch", name).Run(); err != nil {
+		return fmt.Errorf("invalid branch name %q", name)
 	}
 	return nil
 }
@@ -77,6 +106,74 @@ func collectGlobalAccountSubdomain() (string, error) {
 		return "", fmt.Errorf("prompt: %w", err)
 	}
 	return strings.TrimSpace(subdomain), nil
+}
+
+// remoteSetup holds the optional remote git configuration collected during init.
+type remoteSetup struct {
+	url           string
+	defaultBranch string // only set for empty repos
+	workingBranch string
+	isExisting    bool // true when the remote already has commits
+}
+
+func collectRemoteSetup(prefilledURL string) (remoteSetup, error) {
+	url := prefilledURL
+	if url == "" {
+		var addRemote bool
+		if err := survey.AskOne(&survey.Confirm{
+			Message: "Wire up a remote git repository? (optional)",
+			Default: false,
+		}, &addRemote); err != nil {
+			return remoteSetup{}, fmt.Errorf("prompt: %w", err)
+		}
+		if !addRemote {
+			return remoteSetup{}, nil
+		}
+
+		if err := survey.AskOne(&survey.Input{
+			Message: "Remote repository URL:",
+		}, &url, survey.WithValidator(survey.Required)); err != nil {
+			return remoteSetup{}, fmt.Errorf("prompt: %w", err)
+		}
+		url = strings.TrimSpace(url)
+	}
+
+	isEmpty, err := scaffold.IsEmptyRemote(url)
+	if err != nil {
+		return remoteSetup{}, fmt.Errorf("checking remote: %w", err)
+	}
+
+	var workingBranch string
+	if err := survey.AskOne(&survey.Input{
+		Message: "Working branch name:",
+		Default: "feature/iac-setup",
+	}, &workingBranch, survey.WithValidator(survey.Required)); err != nil {
+		return remoteSetup{}, fmt.Errorf("prompt: %w", err)
+	}
+	workingBranch = strings.TrimSpace(workingBranch)
+	if err := validBranchName(workingBranch); err != nil {
+		return remoteSetup{}, err
+	}
+
+	rs := remoteSetup{url: url, workingBranch: workingBranch, isExisting: !isEmpty}
+
+	if !isEmpty {
+		return rs, nil
+	}
+
+	// Empty repo: ask for the default branch name.
+	var defaultBranch string
+	if err := survey.AskOne(&survey.Input{
+		Message: "Default branch name:",
+		Default: "main",
+	}, &defaultBranch, survey.WithValidator(survey.Required)); err != nil {
+		return remoteSetup{}, fmt.Errorf("prompt: %w", err)
+	}
+	rs.defaultBranch = strings.TrimSpace(defaultBranch)
+	if err := validBranchName(rs.defaultBranch); err != nil {
+		return remoteSetup{}, err
+	}
+	return rs, nil
 }
 
 func existingDirIntent(dir string) initIntent {
@@ -118,6 +215,27 @@ func resolveIntent(name string) (initIntent, error) {
 
 	switch choice {
 	case optFresh:
+		var wantRemote bool
+		if err := survey.AskOne(&survey.Confirm{
+			Message: "Wire up a remote git repository? (optional)",
+			Default: false,
+		}, &wantRemote); err != nil {
+			return initIntent{}, fmt.Errorf("prompt: %w", err)
+		}
+		if wantRemote {
+			var remoteURL string
+			if err := survey.AskOne(&survey.Input{
+				Message: "Remote repository URL:",
+			}, &remoteURL, survey.WithValidator(survey.Required)); err != nil {
+				return initIntent{}, fmt.Errorf("prompt: %w", err)
+			}
+			remoteURL = strings.TrimSpace(remoteURL)
+			name, err := projectNameFromURL(remoteURL)
+			if err != nil {
+				return initIntent{}, err
+			}
+			return initIntent{dir: name, mode: scaffold.ModeFresh, remoteURL: remoteURL, remoteAsked: true}, nil
+		}
 		var projectName string
 		if err := survey.AskOne(
 			&survey.Input{Message: "Project name:"},
@@ -129,7 +247,7 @@ func resolveIntent(name string) (initIntent, error) {
 		); err != nil {
 			return initIntent{}, fmt.Errorf("prompt: %w", err)
 		}
-		return initIntent{dir: projectName, mode: scaffold.ModeFresh}, nil
+		return initIntent{dir: projectName, mode: scaffold.ModeFresh, remoteAsked: true}, nil
 
 	case optAdopt:
 		cwd, err := os.Getwd()
@@ -225,8 +343,35 @@ func initCmd() *cobra.Command {
 				}
 			}
 
-			var warning string
+			// Collect optional remote setup before scaffolding so we can clone
+			// instead of git-init when the remote already has commits.
+			var remote remoteSetup
 			if intent.mode == scaffold.ModeFresh {
+				if intent.remoteAsked {
+					// Remote question already answered interactively; collect branch
+					// details only if the user said yes (remoteURL non-empty).
+					if intent.remoteURL != "" {
+						remote, err = collectRemoteSetup(intent.remoteURL)
+						if err != nil {
+							return err
+						}
+					}
+				} else {
+					remote, err = collectRemoteSetup("")
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			var warning string
+			if intent.mode == scaffold.ModeFresh && remote.url != "" && remote.isExisting {
+				// Existing remote: clone into the target dir, then apply agent files.
+				if err := scaffold.CloneAndBranch(remote.url, intent.dir, remote.workingBranch); err != nil {
+					return err
+				}
+				warning, err = scaffold.Apply(intent.dir, scaffold.ModeAdopt, skills.Commands, agents)
+			} else if intent.mode == scaffold.ModeFresh {
 				warning, err = scaffold.Scaffold(intent.dir, skills.Commands, agents)
 			} else {
 				warning, err = scaffold.Apply(intent.dir, intent.mode, skills.Commands, agents)
@@ -236,6 +381,12 @@ func initCmd() *cobra.Command {
 			}
 			if warning != "" {
 				cmd.PrintErrln(ui.Warn(warning))
+			}
+			// Wire empty remote after git init.
+			if intent.mode == scaffold.ModeFresh && remote.url != "" && !remote.isExisting {
+				if err := scaffold.SetRemote(intent.dir, remote.url, remote.defaultBranch, remote.workingBranch); err != nil {
+					return fmt.Errorf("git remote setup: %w", err)
+				}
 			}
 			if err := capabilities.Write(intent.dir); err != nil {
 				return err
