@@ -8,10 +8,10 @@ This page describes the prerequisites for the `sap-iac` CLI and the supported wa
 |---|---|---|
 | AI agent | Always | [Claude Code](https://www.anthropic.com/claude-code), [Codex](https://openai.com/codex/), [Cursor](https://cursor.com/), or [GitHub Copilot](https://github.com/features/copilot). The agent runs the generated `sap-iac.*` commands. |
 | [Terraform](https://developer.hashicorp.com/terraform/install) | Recommended | The generation skill invokes the `terraform` CLI to initialise, format, and validate generated configuration. The resulting HCL may also be used with [OpenTofu](https://opentofu.org/), but the automated generation workflow currently calls Terraform. |
-| [Git](https://git-scm.com/downloads) | Optional | When present, `init` initialises a repository in the new project automatically. |
+| [Git](https://git-scm.com/downloads) | Optional for local scaffolding; required for remote setup | When present, local fresh `init` initialises a repository automatically. Choosing the optional remote-repository flow also requires Git and access to that remote. |
 
-!!! note "Missing Terraform or Git is not blocking"
-    `sap-iac init` does not hard-fail when Terraform or Git is missing. It surfaces a warning and continues, so you can scaffold first and install them when convenient.
+!!! note "Missing Terraform or Git is not blocking for local scaffolding"
+    `sap-iac init` warns and continues when Terraform or Git is missing during ordinary local scaffolding. If you choose optional remote-repository setup, Git is required to query, clone, and configure the remote.
 
 ## Install
 
