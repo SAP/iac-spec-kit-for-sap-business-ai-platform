@@ -106,3 +106,19 @@ The governance file MAY contain a top-level `- Override: true` entry that downst
 #### Scenario: override present
 - **WHEN** `memory/governance.md` contains `- Override: true`
 - **THEN** downstream commands warn about violations but do not block
+
+### Requirement: deprecated services section
+The governance file SHALL contain a Deprecated Services section listing the service/plan combinations explicitly approved for use despite being deprecated. Each approved combination suppresses the deprecation warning for that exact combination across the whole workflow. The global `- Override: true` flag does not cover deprecation; only this list does.
+
+#### Scenario: deprecated services section present
+- **WHEN** `memory/governance.md` is read by a downstream command
+- **THEN** it contains a `## Deprecated Services` section with:
+  - `- Approved:` — comma-separated list of `<service> / <plan>` combinations approved despite deprecation, or `none`
+
+#### Scenario: approved combination suppresses warning
+- **WHEN** a `<service> / <plan>` combination appears in `## Deprecated Services → Approved`
+- **THEN** downstream commands use that combination without any deprecation warning and without recording a `deprecated:` marker
+
+#### Scenario: override flag does not cover deprecation
+- **WHEN** `memory/governance.md` contains `- Override: true` but the deprecated combination is not in `## Deprecated Services → Approved`
+- **THEN** the services command still warns and requires explicit user confirmation for that combination

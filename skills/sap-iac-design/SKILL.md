@@ -88,6 +88,10 @@ Annotate every task in `specs/tasks.md` with the directory and file path it will
 
 When a created CF space has `cloudfoundry_space_role` tasks and other tasks scoped to that space, annotate the space, all of its role tasks, and those same-space tasks into the same CF configuration unit and `main.tf`. Do not reorder, remove, or weaken the per-space role barrier (`space -> roles -> scoped resource`). Keep role barriers for different spaces independent; do not introduce cross-space dependencies.
 
+For every task whose metadata carries `deprecated = true`, preserve the flag unchanged and print a deprecation warning while annotating it:
+
+> "DEPRECATION WARNING: `<service-name>` / plan `<plan-name>` is deprecated (confirmed in specs/services.md)."
+
 ## BTP platform validation
 
 ### BTP operation safety boundary
