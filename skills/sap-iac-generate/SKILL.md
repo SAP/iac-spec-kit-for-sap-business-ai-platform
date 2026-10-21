@@ -179,6 +179,14 @@ Each service task carries a `resource_type` set by `/sap-iac.tasks` from the ser
 
 Kyma-provider resources use the `hashicorp/kubernetes` provider. Include whichever providers the resolved resource types require in `providers.tf`'s `required_providers`.
 
+### Deprecation warning
+
+Before generating a resource whose task metadata carries `deprecated = true`, print a deprecation warning identifying the service/plan:
+
+> "DEPRECATION WARNING: `<service-name>` / plan `<plan-name>` is deprecated (confirmed in specs/services.md)."
+
+Generate the resource as specified — the user already confirmed the deprecated combination in `/sap-iac.services`. Do **not** block or skip generation on this warning.
+
 ### Service instance parameters
 
 When a `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task in `specs/tasks.md` has a `parameters` field in its task metadata block, emit a `parameters = jsonencode({...})` attribute on the generated resource using those key-value pairs. When the `parameters` field is absent from the task metadata, omit the `parameters` attribute entirely — do not emit an empty `parameters` attribute or a placeholder.

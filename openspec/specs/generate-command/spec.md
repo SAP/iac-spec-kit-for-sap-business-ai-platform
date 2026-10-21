@@ -547,3 +547,10 @@ For a `btp_subaccount_entitlement` task representing `APPLICATION_RUNTIME` / `ME
 #### Scenario: calculated amount is emitted
 - **WHEN** a runtime-memory entitlement task has calculated amount `2`
 - **THEN** the generated `btp_subaccount_entitlement` resource sets `amount = 2`
+
+### Requirement: warn on deprecated resource
+Before generating a resource whose task metadata carries `deprecated = true`, the command SHALL print a deprecation warning identifying the service/plan. It SHALL generate the resource as specified and SHALL NOT block or skip generation on this warning.
+
+#### Scenario: deprecated resource generated with warning
+- **WHEN** a task in `specs/tasks.md` has `deprecated = true` in its metadata
+- **THEN** the command prints a deprecation warning identifying the service/plan and generates the resource as specified without blocking

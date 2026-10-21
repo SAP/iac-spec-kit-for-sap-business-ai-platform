@@ -14,8 +14,8 @@ Before `sap-iac.scenario`, at the start of a project — or any time you want to
 | | |
 |---|---|
 | **Reads** | `memory/governance.md`, if it already exists, so it can summarise and edit it; and `memory/global-account.md` for the global-account subdomain set at `init`. |
-| **Writes** | `memory/governance.md`, with six sections: Regions (including preferred infrastructure provider), Account Setup, Naming, Service Plans, Security, and Cost Controls. |
-| **Asks** | One question at a time, in a fixed order, for each of the seven categories your prompt has not already covered: Preferred Infrastructure → Region → Environments → Naming → Service Plans → Security → Cost Controls. On an existing file, it asks what to change. |
+| **Writes** | `memory/governance.md`, with seven sections: Regions (including preferred infrastructure provider), Account Setup, Naming, Service Plans, Deprecated Services, Security, and Cost Controls. |
+| **Asks** | One question at a time, in a fixed order, for each of the eight categories your prompt has not already covered: Preferred Infrastructure → Region → Environments → Naming → Service Plans → Deprecated Services → Security → Cost Controls. On an existing file, it asks what to change. |
 
 ## Behaviour
 
@@ -26,7 +26,7 @@ Before `sap-iac.scenario`, at the start of a project — or any time you want to
 - When present, `accounts`, `services`, `security`, and `generate` enforce these rules and stop on violations — except an infrastructure-provider mismatch, which is advisory only.
 
 !!! tip "Set guardrails once, enforce everywhere"
-    Add `- Override: true` to `memory/governance.md` to turn hard blocks into warnings — useful when you deliberately need an exception.
+    Add `- Override: true` to `memory/governance.md` to turn hard blocks into warnings — useful when you deliberately need an exception. Deprecation warnings are the exception: `- Override: true` does not suppress them. To pre-approve a deprecated service/plan combination and silence its warning everywhere, list it under `## Deprecated Services → Approved`.
 
 ## Example
 

@@ -88,6 +88,8 @@ For each service entry in `specs/services.md`, read its `consumption_type` and m
 
 When a service entry in `specs/services.md` has `quota_required: true`, copy that flag into the task metadata of the task created for that service entry, regardless of its `resource_type`. When the field is absent, do not add it.
 
+When a service entry in `specs/services.md` has `deprecated: true`, copy that flag as `deprecated = true` into the task metadata of the task created for that service entry, regardless of its `resource_type`, so `/sap-iac.design` and `/sap-iac.generate` can re-issue the deprecation warning. When the field is absent, do not add it. A confirmed-deprecated combination also triggers a terminal warning in Step 4.
+
 When an entitlement-only service entry has an `amount`, copy it unchanged into its `btp_subaccount_entitlement` task metadata. A derived `APPLICATION_RUNTIME` / `MEMORY` entitlement task MUST depend on its subaccount task and retain `service_offering_name = APPLICATION_RUNTIME`, `service_plan_name = MEMORY`, and its calculated `amount`; do not create an instance or subscription task for it.
 
 When a service entry in `specs/services.md` has a `parameters:` block (placed there by `/sap-iac.services` after catalogue lookup), copy the entire `parameters:` block verbatim into the task metadata block for the corresponding `btp_subaccount_service_instance` or `cloudfoundry_service_instance` task. When the field is absent, do not add it. This is the only mechanism by which `/sap-iac.generate` receives service instance parameters — `specs/tasks.md` is its sole input.
@@ -161,7 +163,7 @@ Write the full task list to `specs/tasks.md` using this structure:
 - [ ] T-001 `[dev]` <title>
   - Task metadata: `resource_type = btp_subaccount`, `subaccount = <name>`, `subdomain = <subdomain>`, `region = <region>`, `usage = <USED_FOR_PRODUCTION|NOT_USED_FOR_PRODUCTION>` _(when available)_, `beta_enabled = <true|false>` _(when available)_
 - [ ] T-002 `[dev, test]` <title>
-  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`, `parameters = <parameters block when present>`
+  - Task metadata: `resource_type = <resource type>`, `<resource-specific field> = <value>`, `parameters = <parameters block when present>`, `deprecated = true` _(only when the service was confirmed deprecated in specs/services.md)_
 - [ ] T-003 `[all]` Create Cloud Foundry environment in subaccount "dev-sa"
   - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`, `name = <cf-org-name>`
 - [ ] T-004 `[all]` Create Kyma environment in subaccount "dev-sa"
@@ -190,6 +192,10 @@ Task list written to specs/tasks.md (<N> tasks across <K> groups):
 
 Open specs/tasks.md to review or update completion state.
 ```
+
+For every task carrying `deprecated = true` in its metadata, also print a deprecation warning identifying the service/plan, regardless of whether the full list or the summary was shown:
+
+> "DEPRECATION WARNING: `<service-name>` / plan `<plan-name>` is deprecated (confirmed in specs/services.md)."
 
 ## Next step
 

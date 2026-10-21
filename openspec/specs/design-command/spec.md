@@ -91,3 +91,10 @@ The command SHALL annotate a derived `APPLICATION_RUNTIME` / `MEMORY` entitlemen
 #### Scenario: CF runtime entitlement is annotated for BTP
 - **WHEN** a CF-enabled subaccount has an `APPLICATION_RUNTIME` / `MEMORY` entitlement task with amount `1`
 - **THEN** the task is annotated to the subaccount's BTP configuration unit and retains amount `1`
+
+### Requirement: surface deprecation warning
+For every task whose metadata carries `deprecated = true`, the command SHALL preserve the flag unchanged and print a deprecation warning identifying the service/plan while annotating the task.
+
+#### Scenario: deprecated task annotated
+- **WHEN** a task in `specs/tasks.md` has `deprecated = true` in its metadata
+- **THEN** the command keeps the flag unchanged and prints a deprecation warning identifying the service/plan
