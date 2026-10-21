@@ -26,6 +26,7 @@ After `sap-iac.accounts`, once the account topology exists.
 - Records `quota_required: true` for plans in the `SERVICE` or `QUOTA_BASED_APPLICATION` categories.
 - For every Cloud Foundry-enabled subaccount with structured application sizing, derives one entitlement-only `APPLICATION_RUNTIME` / `MEMORY` entry. Its amount is `max(1, ceil(total memory_mb / 1024))`; it is never converted into an instance or subscription.
 - Resolves the dependency ordering between services so they can be created in a valid sequence.
+- Checks each requested service/plan combination for deprecation against SAP documentation (preferring the `sap-docs` MCP server). A deprecated combination raises a warning with the supported alternative and requires your explicit confirmation; if confirmed it is recorded with `deprecated: true`, if declined you pick an alternative.
 - Prefers the `sap-docs` MCP server over web fetches for SAP documentation.
 
 !!! note "Governance enforcement"
