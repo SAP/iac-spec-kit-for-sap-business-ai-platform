@@ -61,6 +61,32 @@ For each user-requested service instance you are about to define, identify its e
 
 ---
 
+## Deprecation Check
+
+**For each user-requested service/application and plan combination**, check whether that exact service/plan combination is deprecated before recording it in `specs/services.md`. The derived `APPLICATION_RUNTIME` / `MEMORY` entitlement is mandatory and is **exempt** from this check — never deprecation-check it.
+
+### Step 1 — Governance approval short-circuit
+
+Read `<project-root>/memory/governance.md` if it exists and look for a `## Deprecated Services` section with an `- Approved:` list. If the exact `<service> / <plan>` combination appears there, the deprecation check is **bypassed**: do not look it up, do not warn, do not record a `deprecated:` marker, and continue processing normally. The global `- Override: true` flag does **not** suppress deprecation warnings — only an explicit `## Deprecated Services → Approved` entry does.
+
+### Step 2 — Determine deprecation status
+
+For combinations that are not governance-approved, determine whether the service/plan is deprecated from SAP documentation. Before using `WebFetch`, check if the `sap-docs` MCP server is available (tools prefixed `mcp__sap-docs__*`); if yes, use it, otherwise fall back to `WebFetch`. Look up the service offering and plan and read whether the combination is documented as deprecated and, where documented, the supported successor/alternative service or plan. If the lookup is inconclusive or unavailable, treat the combination as **not deprecated** and continue without warning — do not block on unavailable documentation.
+
+### Step 3 — Warn and confirm
+
+If the combination is deprecated and not governance-approved:
+
+1. Display a clear warning identifying the deprecated service/application and plan, and the supported alternative when one was found:
+   > "DEPRECATION WARNING: `<service-name>` / plan `<plan-name>` is deprecated. Supported alternative: `<alternative>` [or "no supported alternative was found in SAP documentation"]."
+2. Ask the user to explicitly confirm (one question for this combination):
+   > "Continue with the deprecated combination `<service-name>` / `<plan-name>`? Reply **yes** to use it, or **no** to choose an alternative."
+
+- **If the user explicitly confirms:** record `deprecated: true` on that service entry when writing `specs/services.md` (see Workflow) and continue using the combination.
+- **If the user declines or does not explicitly confirm:** do **not** add or use the deprecated combination. Ask the user to select an alternative service or plan (offer the documented alternative when one was found), then re-run this Deprecation Check on the new choice. Never record the declined combination and never mark it `deprecated:`.
+
+---
+
 ## Service Type Classification
 
 **Before writing `specs/services.md`**, determine how each service will be consumed. This drives both the output structure and which Terraform provider downstream commands use.
@@ -179,6 +205,8 @@ After the user confirms `consumption_type: instance` for a service, check whethe
 Write `specs/services.md` with the full dependency-ordered list. Each service entry **must** record `consumption_type` (`instance` | `subscription` | `entitlement-only`). For each user-requested service/plan combination, the summary **must** also record the derived type as `service instance` (from `SERVICE`, `ELASTIC_SERVICE`, or `ELASTIC_LIMITED`) or `subscription` (from `APPLICATION` or `QUOTA_BASED_APPLICATION`). Each `instance` entry **must** also record `location` (`btp` | `cf`) and, when `location: cf`, `cf_space: <name>`. When a `parameters:` block was collected, include it on the entry. A derived `APPLICATION_RUNTIME` / `MEMORY` entry MUST include its calculated `amount`. This file is the direct input to `/sap-iac.tasks`.
 
 When the resolved plan `category` is `SERVICE` or `QUOTA_BASED_APPLICATION`, add `quota_required: true` to that service entry. Omit the field for all other categories. When the category was not available (fallback path — neither CLI nor MCP, or plan not found), do not record the field.
+
+When the user explicitly confirmed a deprecated combination in the Deprecation Check, add `deprecated: true` to that service entry so downstream commands (`/sap-iac.tasks`, `/sap-iac.design`, `/sap-iac.generate`) can re-issue the deprecation warning. Omit the field for every combination that is not deprecated or that was governance-approved.
 
 ## Next step
 

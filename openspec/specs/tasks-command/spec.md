@@ -204,3 +204,15 @@ When `specs/services.md` contains a derived `APPLICATION_RUNTIME` / `MEMORY` ent
 #### Scenario: runtime-memory entitlement becomes a BTP task
 - **WHEN** a subaccount's services entry defines `APPLICATION_RUNTIME` / `MEMORY` with amount `2`
 - **THEN** `specs/tasks.md` contains one dependent `btp_subaccount_entitlement` task with service name `APPLICATION_RUNTIME`, plan name `MEMORY`, and amount `2`
+
+### Requirement: propagate deprecation marker
+When a service entry in `specs/services.md` has `deprecated: true`, the command SHALL copy it as `deprecated = true` into the task metadata of the task created for that service entry, regardless of `resource_type`, and SHALL print a deprecation warning identifying the service/plan in the terminal report. When the field is absent, the command SHALL NOT add it.
+
+#### Scenario: deprecated service entry propagated
+- **WHEN** a service entry in `specs/services.md` has `deprecated: true`
+- **THEN** the created task's metadata contains `deprecated = true`
+- **AND** the terminal report prints a deprecation warning identifying the service/plan
+
+#### Scenario: non-deprecated service entry
+- **WHEN** a service entry in `specs/services.md` has no `deprecated` field
+- **THEN** the created task's metadata does not contain a `deprecated` field and no deprecation warning is printed for it

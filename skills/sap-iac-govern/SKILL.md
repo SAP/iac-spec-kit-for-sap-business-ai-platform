@@ -9,7 +9,7 @@ metadata:
 
 # BTP IaC — Govern
 
-Establishes governance guardrails for the project. Reads the optional global-account subdomain from `memory/global-account.md` and records approved regions and infrastructure-provider preference, naming conventions, permitted runtime environments, service plans, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
+Establishes governance guardrails for the project. Reads the optional global-account subdomain from `memory/global-account.md` and records approved regions and infrastructure-provider preference, naming conventions, permitted runtime environments, service plans, approved deprecated service/plan combinations, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
 
 ---
 
@@ -83,10 +83,11 @@ Assess whether the user's invocation message already covers the required governa
 | **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma)|
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
+| **Deprecated Services** | service/plan combinations explicitly approved for use despite deprecation |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming →  Service Plans → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming →  Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
@@ -95,6 +96,7 @@ Keep each question to a single short prompt. The details to gather for each ques
 - **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
+- **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
 
@@ -151,6 +153,10 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Forbidden reason: <why these plans are not allowed, or omit if none forbidden>
 - Default plan: <plan to use when multiple are permitted and none is specified>
 
+## Deprecated Services
+
+- Approved: <comma-separated `<service> / <plan>` combinations approved for use despite deprecation, or "none">
+
 ## Security
 
 - Custom IdP: <required / optional / not required>
@@ -182,6 +188,7 @@ The following rules are now in effect:
   Account Setup:  <summary>
   Naming:         <summary>
   Service Plans:  <summary>
+  Deprecated Services: <summary>
   Security:       <summary>
   Cost Controls:  <summary>
 

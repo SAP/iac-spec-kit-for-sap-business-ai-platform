@@ -38,7 +38,7 @@ Before collecting any other missing governance details, the command SHALL determ
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
 ### Requirement: fixed governance-question order
-The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
+The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Deprecated Services covers service/plan combinations approved for use despite deprecation. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
 #### Scenario: all required details covered in prompt
 - **WHEN** the user's prompt contains every required governance detail and states a valid preferred infrastructure provider
@@ -46,12 +46,12 @@ The command SHALL assess whether the user's invocation prompt covers all require
 
 #### Scenario: some required details missing from prompt
 - **WHEN** the user's prompt covers only some required details
-- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control
+- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control
 - **AND** does not re-ask about details already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks the seven questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Security, Cost Control
+- **THEN** the command asks the eight questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control
 
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.

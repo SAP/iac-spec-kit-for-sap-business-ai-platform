@@ -181,3 +181,30 @@ The entry's entitlement amount SHALL equal the ceiling of the sum of all Cloud F
 #### Scenario: no applicable sizing does not add an entitlement
 - **WHEN** a subaccount has no Cloud Foundry environment or has no Cloud Foundry sizing data
 - **THEN** the command does not add an `APPLICATION_RUNTIME` / `MEMORY` entitlement for that subaccount
+
+### Requirement: check service/plan deprecation
+Before recording a user-requested service/application and plan combination in `specs/services.md`, the command SHALL check whether that exact combination is deprecated. The derived `APPLICATION_RUNTIME` / `MEMORY` entitlement is exempt and SHALL NOT be deprecation-checked. The command SHALL determine deprecation status, and any supported alternative, from SAP documentation, preferring the `sap-docs` MCP server (tools prefixed `mcp__sap-docs__*`) and falling back to `WebFetch`. An inconclusive or unavailable lookup SHALL be treated as not deprecated and SHALL NOT block.
+
+A combination whose `<service> / <plan>` appears in the governance `## Deprecated Services → Approved` list SHALL bypass the check entirely: no lookup, no warning, and no `deprecated:` marker. The global `- Override: true` flag SHALL NOT suppress deprecation warnings.
+
+For a deprecated, non-approved combination the command SHALL display a warning identifying the service/plan and any supported alternative, and SHALL require explicit user confirmation before using it. On confirmation the command SHALL record `deprecated: true` on that service entry. On decline the command SHALL NOT add or record the combination and SHALL let the user choose an alternative, re-running the check on the new choice.
+
+#### Scenario: combination not deprecated
+- **WHEN** the SAP documentation lookup shows the service/plan combination is not deprecated
+- **THEN** the command records the service without a `deprecated:` marker and continues normally
+
+#### Scenario: governance pre-approves a deprecated combination
+- **WHEN** the `<service> / <plan>` appears in `memory/governance.md` `## Deprecated Services → Approved`
+- **THEN** the command uses the combination without looking up deprecation, without any warning, and without recording a `deprecated:` marker
+
+#### Scenario: deprecated combination confirmed by user
+- **WHEN** a combination is deprecated and not governance-approved and the user explicitly confirms its use
+- **THEN** the command records `deprecated: true` on that service entry in `specs/services.md`
+
+#### Scenario: deprecated combination declined by user
+- **WHEN** a combination is deprecated and not governance-approved and the user declines or does not explicitly confirm
+- **THEN** the command does not add or record the combination and asks the user to select an alternative service or plan
+
+#### Scenario: deprecation lookup unavailable
+- **WHEN** neither the `sap-docs` MCP server nor `WebFetch` can determine deprecation status
+- **THEN** the command treats the combination as not deprecated and continues without warning or blocking

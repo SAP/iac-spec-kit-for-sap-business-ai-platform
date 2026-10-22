@@ -136,6 +136,19 @@
         {"id": "8.2", "text": "Does not ask a Region, Naming, Environments, Service Plans, or Security question"},
         {"id": "8.3", "text": "Does not create or overwrite memory/governance.md before the Cost Controls answer is supplied"}
       ]
+    },
+    {
+      "id": 9,
+      "name": "writes-deprecated-services-approved-section",
+      "description": "A fully specified policy that approves a deprecated service/plan combination writes a Deprecated Services section without further questions.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Approve the deprecated combination sap-alert-notification / standard for use despite deprecation. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope. Warn on metered services hana-cloud and ai-core and require a cost_center tag.",
+      "trap": "Approving a deprecated combination must populate ## Deprecated Services -> Approved, not set the global - Override: true flag, and must not trigger extra questions since every category is covered.",
+      "assertions": [
+        {"id": "9.1", "text": "Writes memory/governance.md without asking any follow-up question, since every category including Deprecated Services is covered in the prompt"},
+        {"id": "9.2", "text": "The written file contains a `## Deprecated Services` section whose `- Approved:` line lists `sap-alert-notification / standard`"},
+        {"id": "9.3", "text": "Does not add `- Override: true` (approving a deprecated combination is not the same as the global override)"}
+      ]
     }
   ]
 }
