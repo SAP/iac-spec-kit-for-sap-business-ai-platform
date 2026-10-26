@@ -150,6 +150,17 @@ Because separate directories are independent Terraform roots on a local backend,
 - **WHEN** the producing BTP directory contains a Cloud Foundry environment
 - **THEN** the consuming directory's `terraform.tfvars.example` lists both `cf_api_url` and `cf_org_id` as handover variables
 
+### Requirement: emit cross-stage dependency comments and never automate cross-stage execution
+For every cross-stage dependency (a variable in a consuming root fed by an output of a producing root), the command SHALL emit a comment in the consuming root — above the variable's declaration in `variables.tf` and above its entry in `terraform.tfvars.example` — that identifies the producing stage/root and the exact output, states that the producing stage must be applied first, and explains how to supply the value (via `terraform.tfvars`, a `-var` flag, or CI/CD variable injection). The command SHALL NOT generate `terraform_remote_state` coupling, nor any script or wrapper that applies stages in sequence; the user remains responsible for orchestrating stage execution manually.
+
+#### Scenario: dependency comment names producer and handover
+- **WHEN** a consuming root declares a handover variable fed by a producing root's output
+- **THEN** that variable carries a comment in `variables.tf` and `terraform.tfvars.example` naming the producing stage and output, stating the producer must be applied first, and describing how to pass the value
+
+#### Scenario: no cross-stage automation
+- **WHEN** the command wires a cross-stage dependency
+- **THEN** it emits no `terraform_remote_state` data source and no script that applies the producing and consuming stages in sequence
+
 ### Requirement: emit provider-initialization tfvars example
 For each configuration unit that contains a `provider "btp"` block, the command SHALL emit a `terraform.tfvars.example` file listing the variables referenced by the `provider "btp"` block in that unit as placeholder entries. The file SHALL be named `terraform.tfvars.example` (never `terraform.tfvars`) so Terraform does not load it automatically. If `memory/global-account.md` exists in the project root and contains a non-empty `- Subdomain: <value>` line, the command SHALL use that value as the pre-filled entry for `globalaccount_subdomain`; a blank `- Subdomain:` record or an absent file SHALL produce the sentinel `<your-globalaccount-subdomain>`. When both this requirement and the handover requirement apply to the same directory (e.g. a BTP configuration unit that also consumes a directory ID), the command SHALL emit a single `terraform.tfvars.example` containing the union of all entries from both requirements.
 

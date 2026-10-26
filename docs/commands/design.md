@@ -1,9 +1,9 @@
 # `sap-iac.design`
 
 !!! abstract "Summary"
-    **Role:** Required. · **Reads:** `specs/tasks.md` · **Writes:** `specs/tasks.md` (in place)
+    **Role:** Required. · **Reads:** `specs/tasks.md` (+ `specs/state-architecture.md`, governance) · **Writes:** `specs/state-architecture.md`, `specs/tasks.md` (in place)
 
-Translates the task list into a concrete Terraform folder structure and annotates each task with the file it will be written to.
+Guides the Terraform state-chunking architecture, persists it to `specs/state-architecture.md`, and annotates each task with the file it will be written to.
 
 ## When to run it
 
@@ -13,11 +13,14 @@ After `sap-iac.tasks`, and before `sap-iac.generate`.
 
 | | |
 |---|---|
-| **Reads** | `specs/tasks.md`. |
-| **Writes** | `specs/tasks.md`, updated in place. It does not create a separate output file. |
+| **Reads** | `specs/tasks.md`; `specs/state-architecture.md` and `memory/governance.md` when present. |
+| **Writes** | `specs/state-architecture.md` (the approved state-chunking decision) and `specs/tasks.md`, updated in place. |
 
 ## Behaviour
 
+- Guides the user through the **state-chunking architecture** first: presents the mandatory BTP / CF / Kyma provider split as fixed, recommends optional finer-grained boundaries (global account & directory, subaccount, entitlements/instances/subscriptions, CF org & space, team/app), and states each boundary's trade-offs (deployment independence, ownership, blast radius, lifecycle, operational overhead).
+- Lets the user **accept, refine, or override** the recommendation in free text, and respects that structure for the rest of the run. An override that conflicts with the fixed BTP/CF/Kyma split is flagged for the user to resolve.
+- **Persists** the approved architecture to `specs/state-architecture.md` — stage-modelling mode, per-chunk boundary/root/backend/ownership/dependencies, stage ordering, rationale, and assumptions. On a re-run it summarizes the existing file, lets the user revise it, and rewrites it.
 - Emits a standard file layout per configuration unit: `main.tf` (resources), `variables.tf` (input variables), `outputs.tf` (output values), `providers.tf` (provider config and `required_providers`), and `backend.tf` (defaulting to a **local** backend).
 - Chooses how stages are modelled by reading `memory/governance.md`; when governance records no choice, it prompts the user. Two modes: **per-stage directories** (one directory per stage, each with the standard layout) or **single configuration** (one directory handling all stages via stage variables in `variables.tf`, with values in `<stage>.tfvars` files).
 - When a unit contains a Cloud Foundry or Kyma environment, splits it into a `btp/` subdirectory (all BTP-provider resources) plus a sibling `cf/` or `kyma/` subdirectory. In per-stage-directory mode the split sits inside each stage directory. A BTP-only unit is not split.

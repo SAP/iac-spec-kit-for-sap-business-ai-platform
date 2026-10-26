@@ -6,6 +6,42 @@ Defines the behaviour of `/sap-iac.design`: translating the task list into a con
 
 ## Requirements
 
+### Requirement: guide state-chunking boundaries with trade-offs
+Before defining the folder structure, the command SHALL guide the user through the Terraform state-chunking architecture. It SHALL present the BTP / Cloud Foundry / Kyma provider split as a fixed, non-negotiable boundary, and SHALL recommend optional finer-grained state boundaries — global account and directory configuration; subaccount provisioning and configuration; entitlements, service instances, and subscriptions; Cloud Foundry organization and space setup; and environment-, team-, or application-specific resources. For each recommended boundary the command SHALL state its trade-offs across deployment independence, ownership boundaries, blast radius, lifecycle differences, and operational overhead.
+
+#### Scenario: boundaries presented with trade-offs
+- **WHEN** the command runs on a task set spanning more than one candidate boundary
+- **THEN** it presents the fixed BTP/CF/Kyma split plus the recommended finer-grained boundaries, each with its trade-offs (deployment independence, ownership, blast radius, lifecycle, operational overhead)
+
+### Requirement: accept, refine, or override boundaries via free text
+The command SHALL let the user accept, refine, or override the recommended state architecture through free-text input, and SHALL respect the resulting structure for the rest of the run and in the persisted decision. It SHALL NOT silently discard or alter a user-chosen boundary. When an override conflicts with the fixed BTP/CF/Kyma split, the command SHALL explain the conflict and ask the user to resolve it rather than overriding their intent.
+
+#### Scenario: free-text override respected
+- **WHEN** the user overrides a recommended boundary in free text (e.g. "keep subaccount and services in one state")
+- **THEN** the command adopts that structure for the run and records it in `specs/state-architecture.md`
+
+#### Scenario: override conflicts with fixed split
+- **WHEN** a user override would merge BTP-provider and Cloud Foundry/Kyma-provider resources into one root
+- **THEN** the command explains the conflict and asks the user to resolve it instead of applying the override
+
+### Requirement: persist the approved state architecture
+The command SHALL persist the approved state architecture to `specs/state-architecture.md`, recording the stage-modelling mode, one entry per state chunk (its boundary, Terraform root, backend/state type, ownership, provided outputs, and dependencies), the stage ordering (producers before consumers), the rationale and trade-offs, and any assumptions or user overrides. On a re-run the command SHALL read the existing file, summarize it, allow revision, and rewrite it.
+
+#### Scenario: architecture persisted
+- **WHEN** the user approves a state architecture
+- **THEN** the command writes `specs/state-architecture.md` containing the stage-modelling mode, the state chunks with their boundaries/roots/ownership/dependencies, the stage ordering, and the rationale
+
+#### Scenario: architecture revised on re-run
+- **WHEN** `specs/state-architecture.md` already exists and the command is re-run
+- **THEN** the command summarizes the existing architecture, lets the user revise it, and rewrites the file
+
+### Requirement: reorganize task annotations around the approved chunks
+When the state architecture is created or revised, the command SHALL annotate each task in `specs/tasks.md` with the directory and file path of its chunk/root under the approved architecture, preserving all task metadata, dependencies, and existing Cloud Foundry space-role barriers.
+
+#### Scenario: tasks annotated to approved chunks
+- **WHEN** the state architecture is approved or revised
+- **THEN** every task's path annotation targets its chunk's Terraform root, and all task metadata and dependencies are preserved
+
 ### Requirement: translate task list into Terraform folder structure
 The command SHALL read `specs/tasks.md` and define a concrete Terraform folder structure using a standard file layout per configuration unit: `main.tf` (resources), `variables.tf` (input variables), `outputs.tf` (output values), `providers.tf` (provider configuration and `required_providers`), and `backend.tf` (defaulting to a local backend). It SHALL decide how resources are split across these files and how the units are organised across directories according to the selected stage-modelling mode.
 
