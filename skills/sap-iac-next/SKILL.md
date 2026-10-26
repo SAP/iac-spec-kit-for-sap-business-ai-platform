@@ -52,7 +52,8 @@ Check for the existence of each of the following, in order:
 | 5 | `specs/trust.md` | `/sap-iac.security` |
 | 6 | `specs/connectivity.md` | `/sap-iac.connectivity` |
 | 7 | `specs/tasks.md` | `/sap-iac.tasks` |
-| 8 | `terraform/**/*.tf` (any file) | `/sap-iac.generate` |
+| 8 | `specs/state-architecture.md` | `/sap-iac.design` |
+| 9 | `terraform/**/*.tf` (any file) | `/sap-iac.generate` |
 
 ### Step 3 — Determine recommendation
 
@@ -67,7 +68,8 @@ Apply the following decision table (first matching rule wins):
 | `specs/trust.md` missing | **Run `/sap-iac.security`** — set up IdP trust, roles, and role collection assignments. |
 | `specs/tasks.md` missing and `specs/connectivity.md` missing | **Run `/sap-iac.connectivity`** — define destinations and certificates. |
 | `specs/tasks.md` missing and `specs/connectivity.md` exists | **Run `/sap-iac.tasks`** — build a dependency-ordered execution plan. |
-| `terraform/**/*.tf` missing | **Run `/sap-iac.design`** — plan the Terraform file and module layout, then `/sap-iac.generate`. |
+| `specs/state-architecture.md` missing | **Run `/sap-iac.design`** — guide the state-chunking architecture and plan the Terraform file and module layout. |
+| `terraform/**/*.tf` missing | **Run `/sap-iac.generate`** — write and validate the Terraform HCL. |
 | `terraform/**/*.tf` exists | **Done** — Terraform code is in `terraform/`. Review, commit, and apply. |
 
 ### Step 4 — Output
@@ -84,9 +86,10 @@ BTP IaC — Project State
 ✗ specs/trust.md
 ✗ specs/connectivity.md
 ✗ specs/tasks.md
+✗ specs/state-architecture.md
 ✗ terraform/**/*.tf
 
 Next: /sap-iac.services — resolve which BTP services each subaccount needs.
 ```
 
-Use `✓` for files that exist and `✗` for files that do not. Always print all eight rows so the user can see their full position in the flow.
+Use `✓` for files that exist and `✗` for files that do not. Always print all nine rows so the user can see their full position in the flow.

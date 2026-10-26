@@ -75,6 +75,21 @@
         {"id": "5.1", "text": "Generates one btp_subaccount_entitlement resource with APPLICATION_RUNTIME and MEMORY"},
         {"id": "5.2", "text": "The entitlement resource sets amount = 2 and no service instance or subscription resource is generated"}
       ]
+    },
+    {
+      "id": 6,
+      "name": "cross-stage-dependency-comment-names-producer-and-run-order",
+      "description": "Handover variables carry comments identifying the producing stage, output, and manual run order.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount dev\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount`, `subaccount = dev`, `subdomain = dev`, `region = eu10`\n- [ ] T-002 `[dev]` Create Cloud Foundry environment in subaccount \"dev\"\n  - Depends on: T-001\n  - Path: terraform/dev/btp/main.tf\n  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev`, `name = dev-org`\n- [ ] T-003 `[dev]` Create space dev-apps\n  - Depends on: T-002\n  - Path: terraform/dev/cf/main.tf\n  - Task metadata: `resource_type = cloudfoundry_space`, `name = dev-apps`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Generate Terraform for dev. Use SSO/token authentication if prompted.",
+      "assertions": [
+        {"id": "6.1", "text": "The consuming terraform/dev/cf directory's variables.tf or terraform.tfvars.example contains a comment identifying the producing stage terraform/dev/btp and the handover output (cf_api_url and/or cf_org_id)"},
+        {"id": "6.2", "text": "That comment states the producing stage must be applied with terraform before the consuming stage"}
+      ]
     }
   ]
 }
