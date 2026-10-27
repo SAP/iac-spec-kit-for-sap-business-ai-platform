@@ -4,14 +4,14 @@ description: Generates complete, validated Terraform HCL by executing each task 
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.6"
+  version: "1.7"
 ---
 
 # BTP IaC — Generate
 
 Generates the complete, validated Terraform HCL by executing each task in dependency order and writing resources to the directory and file paths defined by `/sap-iac.design`.
 
-Reads `specs/tasks.md` (with path annotations and task metadata). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
+Reads `specs/tasks.md` (with path annotations and task metadata) and, when present, `specs/state-architecture.md` (the approved state-chunking decision from `/sap-iac.design`). Writes each configuration unit using the standard layout — `main.tf` (resources), `variables.tf`, `outputs.tf`, `providers.tf` (`required_providers`), and `backend.tf` — under the `terraform/` directory. Runs `terraform init`, `terraform fmt --recursive`, and `terraform validate` on each generated directory, fixing any issues and retrying until they pass.
 
 ## Platform Name Normalization
 
@@ -409,6 +409,35 @@ When `/sap-iac.design` defined a BTP directory-per-stage layer, emit that config
 Separate directories are independent Terraform roots, so cross-directory values move by **manual tfvars handover** — never `terraform_remote_state`. For each consuming directory (a `cf/`/`kyma/` directory consuming BTP outputs, or a BTP configuration consuming a directory ID), emit the producing directory's `outputs.tf` and a `terraform.tfvars.example` placeholder in the consuming directory that names the variables to copy across. The user runs the producer, copies the output values into the consumer's tfvars, then runs the consumer.
 
 When the producing BTP directory contains a Cloud Foundry environment, the consuming directory's `terraform.tfvars.example` **must list both `cf_api_url` and `cf_org_id`** as handover variables — never one without the other.
+
+### Cross-stage dependency comments
+
+Each handover is a **cross-stage dependency**: a variable in the consuming root is fed by an output of a producing root. The tooling never automates cross-stage execution or dependency resolution — the user orchestrates the apply order manually (see `specs/state-architecture.md` → `## Stage ordering`). To make that manual step unambiguous, for **every** such dependency emit a comment in the consuming root, both above the variable's declaration in `variables.tf` and above its entry in `terraform.tfvars.example`, that:
+
+1. Identifies the **producing stage/root and the exact output** that supplies the value.
+2. States that the user must **`terraform apply` the producing stage first**.
+3. Explains **how to supply the value** to this stage — via its `terraform.tfvars` file, a `-var` flag on the CLI, or CI/CD variable injection.
+
+Example (`variables.tf` in the consuming `cf/` directory):
+
+```hcl
+# Cross-stage dependency: value is output `cf_api_url` of the `dev/btp` stage.
+# Run `terraform apply` in terraform/dev/btp first, then pass this value here via
+# terraform.tfvars, a `-var 'cf_api_url=...'` flag, or a CI/CD variable.
+variable "cf_api_url" {
+  type        = string
+  description = "Cloud Foundry API endpoint, handed over from the dev/btp stage output cf_api_url."
+}
+```
+
+Corresponding `terraform.tfvars.example` entry:
+
+```hcl
+# Produced by stage dev/btp (output: cf_api_url). Apply dev/btp first, then set this value.
+cf_api_url = "<cf-api-url-from-dev-btp>"
+```
+
+Do not couple directories with `terraform_remote_state`, and do not generate any script or wrapper that applies stages in sequence — the comments are the handover mechanism.
 
 ### Provider-initialization tfvars example
 

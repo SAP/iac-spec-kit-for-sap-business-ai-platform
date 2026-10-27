@@ -15,6 +15,37 @@
         {"id": "1.1", "text": "Annotates the APPLICATION_RUNTIME / MEMORY task to terraform/dev/btp/main.tf rather than the CF unit"},
         {"id": "1.2", "text": "Preserves amount = 1 in the task metadata"}
       ]
+    },
+    {
+      "id": 2,
+      "name": "persists-state-architecture-with-chunks-and-rationale",
+      "description": "Design records the approved state-chunking decision in specs/state-architecture.md.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount dev-sa\n  - Task metadata: `resource_type = btp_subaccount`, `subaccount = dev-sa`, `subdomain = dev-sa`, `region = eu10`\n- [ ] T-002 `[dev]` Create Cloud Foundry environment in subaccount \"dev-sa\"\n  - Depends on: T-001\n  - Task metadata: `resource_type = btp_subaccount_environment_instance`, `environment_type = cloudfoundry`, `subaccount = dev-sa`, `name = dev-org`\n- [ ] T-003 `[dev]` Create xsuaa service instance in subaccount \"dev-sa\"\n  - Depends on: T-002\n  - Task metadata: `resource_type = cloudfoundry_service_instance`, `cf_space = dev-apps`, `service_offering_name = xsuaa`, `service_plan_name = application`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Design the Terraform state architecture using per-stage directories, and accept the recommended state boundaries.",
+      "assertions": [
+        {"id": "2.1", "text": "Writes specs/state-architecture.md"},
+        {"id": "2.2", "text": "specs/state-architecture.md places BTP-provider resources and Cloud Foundry-provider resources in separate state chunks (separate Terraform roots)"},
+        {"id": "2.3", "text": "specs/state-architecture.md includes a stage ordering listing producers before consumers and a rationale or trade-offs section"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "respects-free-text-boundary-override",
+      "description": "A user override keeping subaccount and services in one chunk is persisted and reflected in task annotations.",
+      "files": [
+        {"path": "specs/tasks.md", "content": "# Task List\n\n- [ ] T-001 `[dev]` Create subaccount dev-sa\n  - Task metadata: `resource_type = btp_subaccount`, `subaccount = dev-sa`, `subdomain = dev-sa`, `region = eu10`\n- [ ] T-002 `[dev]` Create alert-notification service instance in subaccount \"dev-sa\"\n  - Depends on: T-001\n  - Task metadata: `resource_type = btp_subaccount_service_instance`, `subaccount = dev-sa`, `service_offering_name = alert-notification`, `service_plan_name = standard`\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Design the Terraform state architecture. Override the recommendation: keep subaccount provisioning and its service instances in a single state chunk — do not split the service layer into its own state.",
+      "assertions": [
+        {"id": "3.1", "text": "specs/state-architecture.md records the override: the subaccount and its service instances are in the same state chunk (same Terraform root)"},
+        {"id": "3.2", "text": "In specs/tasks.md the subaccount task T-001 and the service instance task T-002 are annotated to the same Terraform root/directory"}
+      ]
     }
   ]
 }
