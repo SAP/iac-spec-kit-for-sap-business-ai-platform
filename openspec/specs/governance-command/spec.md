@@ -38,7 +38,7 @@ Before collecting any other missing governance details, the command SHALL determ
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
 ### Requirement: fixed governance-question order
-The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Deprecated Services covers service/plan combinations approved for use despite deprecation. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
+The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Deprecated Services covers service/plan combinations approved for use despite deprecation. Service Restrictions covers org-wide service and service-plan allowlists and denylists. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
 #### Scenario: all required details covered in prompt
 - **WHEN** the user's prompt contains every required governance detail and states a valid preferred infrastructure provider
@@ -46,12 +46,37 @@ The command SHALL assess whether the user's invocation prompt covers all require
 
 #### Scenario: some required details missing from prompt
 - **WHEN** the user's prompt covers only some required details
-- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
 - **AND** does not re-ask about details already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks the eight questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks the nine questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
+
+### Requirement: collect service restrictions
+The command SHALL ask the user whether org-wide service and service-plan restrictions apply, as part of the fixed governance question sequence immediately before the per-tier Service Plans question.
+
+#### Scenario: user declines restrictions
+- **WHEN** the user answers no to the service-restrictions question
+- **THEN** the command omits the `## Service Restrictions` section from `governance.md`
+- **AND** proceeds to the per-tier Service Plans question
+
+#### Scenario: user provides a document link
+- **WHEN** the user answers yes and supplies a URL to a Markdown document
+- **THEN** the command records only the URL under `## Service Restrictions` in `governance.md`
+- **AND** does not fetch or copy the document contents
+
+#### Scenario: user provides free-text restrictions
+- **WHEN** the user answers yes and enters restrictions as free text
+- **THEN** the command records the supplied text inline under `## Service Restrictions` in `governance.md`
+
+#### Scenario: user provides both a link and free-text
+- **WHEN** the user answers yes and supplies both a URL and additional free-text
+- **THEN** the command records both under `## Service Restrictions`, with the URL in `Policy document` and the text in `Inline policy`
+
+#### Scenario: service restrictions already covered in prompt
+- **WHEN** the user's invocation prompt already states whether service restrictions apply
+- **THEN** the command skips the service-restrictions question and records the supplied information directly
 
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.
@@ -62,7 +87,7 @@ The command SHALL write the collected rules to `<project-root>/memory/governance
 - **AND** the command confirms the file was saved and lists the rules that will be enforced
 
 ### Requirement: validate explicitly specified platform values
-When the input identifies named service offerings, subscriptions, service-plan pairs, or regions, the command SHALL validate them against the platform using the shared platform-validation capability before writing governance. CLI checks SHALL target the global account configured in `memory/global-account.md` when one is present; region checks SHALL exclude NEO entries.
+When the input identifies named service offerings, subscriptions, service-plan pairs, or regions supplied through the per-tier Service Plans or region questions, the command SHALL validate them against the platform using the shared platform-validation capability before writing governance. Service names and plan names provided via the Service Restrictions input path (document link or free-text) are explicitly exempt from this validation. CLI checks SHALL target the global account configured in `memory/global-account.md` when one is present; region checks SHALL exclude NEO entries.
 
 #### Scenario: no global-account target supplied
 - **WHEN** `memory/global-account.md` has no configured subdomain
@@ -72,3 +97,8 @@ When the input identifies named service offerings, subscriptions, service-plan p
 - **WHEN** a requested region has unambiguous provider metadata that differs from the preferred infrastructure provider
 - **THEN** the command warns with the region and both providers
 - **AND** continues writing governance
+
+#### Scenario: service restrictions values exempt from validation
+- **WHEN** the user supplies service names or service-plan pairs via the Service Restrictions path (link or free-text)
+- **THEN** the command does not issue a BTP CLI entitlement lookup or MCP check for those values
+- **AND** records them in governance.md without modification
