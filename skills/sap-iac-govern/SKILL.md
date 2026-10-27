@@ -82,12 +82,13 @@ Assess whether the user's invocation message already covers the required governa
 | **Region** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
 | **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma)|
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length |
+| **Service Restrictions** | whether org-wide service/plan restrictions apply; link to policy doc or free-text allowlist/denylist |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Deprecated Services** | service/plan combinations explicitly approved for use despite deprecation |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming →  Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
@@ -95,6 +96,7 @@ Keep each question to a single short prompt. The details to gather for each ques
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
 - **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
+- **Service Restrictions** — ask: "Do org-wide service or service-plan restrictions apply?" If yes, ask whether the user wants to provide a link to a Markdown policy document, enter the restrictions as free text, or both. Collect an allowlist of permitted BTP services and service-plan pairs, and a denylist of prohibited ones. For a linked document store only the URL — do not fetch or copy its content. For free-text record the supplied content inline. Do **not** validate service or plan names against BTP; accept them as-is.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
@@ -157,6 +159,19 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 
 - Approved: <comma-separated `<service> / <plan>` combinations approved for use despite deprecation, or "none">
 
+## Service Restrictions
+
+<!-- Omit this section entirely if the user answered no to the service-restrictions question -->
+- Policy source: <link | inline | both>
+- Policy document: <URL to external Markdown document, or "N/A" if inline only>
+- Allowed services: <comma-separated BTP service names, or "all">
+- Allowed service-plan pairs: <service/plan pairs e.g. hana-cloud/hana, or "all">
+- Denied services: <comma-separated BTP service names, or "none">
+- Denied service-plan pairs: <service/plan pairs, or "none">
+<!-- Include the Inline policy block only when Policy source is inline or both -->
+- Inline policy: |
+    <free-text policy content supplied by the user>
+
 ## Security
 
 - Custom IdP: <required / optional / not required>
@@ -189,6 +204,7 @@ The following rules are now in effect:
   Naming:         <summary>
   Service Plans:  <summary>
   Deprecated Services: <summary>
+  Service Restrictions: <summary, or "none declared">
   Security:       <summary>
   Cost Controls:  <summary>
 

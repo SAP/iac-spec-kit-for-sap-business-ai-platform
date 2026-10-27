@@ -100,6 +100,40 @@ The governance file SHALL contain a Cost Controls section specifying which meter
   - `- Cost centre tag:` — `required`, `optional`, or `not required`
   - `- Tag key name:` — the Terraform resource attribute name for the cost centre tag (e.g. `cost_center`, `labels`)
 
+### Requirement: service restrictions section
+The governance file MAY contain an optional `## Service Restrictions` section. Its presence indicates org-wide service and service-plan restrictions were declared during `govern`. Its absence indicates no org-wide restrictions were specified.
+
+#### Scenario: service restrictions section absent
+- **WHEN** `memory/governance.md` does not contain `## Service Restrictions`
+- **THEN** downstream commands apply no org-wide service or plan filtering beyond the per-tier `## Service Plans` rules
+
+#### Scenario: service restrictions section present with link
+- **WHEN** `memory/governance.md` contains `## Service Restrictions` with `Policy source: link`
+- **THEN** it contains:
+  - `- Policy source: link`
+  - `- Policy document:` — a URL to the external Markdown restrictions document
+  - `- Allowed services:` — comma-separated BTP service names, or `all`
+  - `- Allowed service-plan pairs:` — service/plan pairs (e.g. `hana-cloud/hana`), or `all`
+  - `- Denied services:` — comma-separated BTP service names, or `none`
+  - `- Denied service-plan pairs:` — service/plan pairs, or `none`
+- **AND** downstream commands fetch the linked document when they need the full policy content
+
+#### Scenario: service restrictions section present with inline policy
+- **WHEN** `memory/governance.md` contains `## Service Restrictions` with `Policy source: inline`
+- **THEN** it contains:
+  - `- Policy source: inline`
+  - `- Policy document: N/A`
+  - `- Allowed services:` — comma-separated BTP service names, or `all`
+  - `- Allowed service-plan pairs:` — service/plan pairs, or `all`
+  - `- Denied services:` — comma-separated BTP service names, or `none`
+  - `- Denied service-plan pairs:` — service/plan pairs, or `none`
+  - `- Inline policy:` — block scalar containing the free-text policy content
+
+#### Scenario: service restrictions section present with both link and inline
+- **WHEN** `memory/governance.md` contains `## Service Restrictions` with `Policy source: both`
+- **THEN** it contains all fields from both the link and inline scenarios
+- **AND** `Policy document` holds the URL and `Inline policy` holds the free-text content
+
 ### Requirement: override flag
 The governance file MAY contain a top-level `- Override: true` entry that downstream commands treat as explicit user permission to bypass hard blocks.
 
