@@ -5,7 +5,7 @@ The CLI scaffolds projects with `sap-iac init`, reports its build with `sap-iac 
 ## `sap-iac init`
 
 ```
-sap-iac init [name] [--agent claude,codex,cursor,copilot] [--backend <type>]
+sap-iac init [name] [--agent claude,codex,cursor,copilot,gemini] [--backend <type>]
 ```
 
 Bootstraps a new Infrastructure-as-Code Specification Toolkit project in a directory named `[name]`.
@@ -23,7 +23,7 @@ already a sap-iac project, or offers to adopt it otherwise.
 
 | Flag | Description |
 |---|---|
-| `--agent` | Comma-separated list of AI agents to configure: `claude`, `codex`, `cursor`, `copilot`. When omitted **in a terminal**, `init` shows an interactive multi-select. When omitted **without a TTY**, `init` reports an error asking you to pass `--agent`. An unknown agent id is rejected. |
+| `--agent` | Comma-separated list of AI agents to configure: `claude`, `codex`, `cursor`, `copilot`, `gemini`. When omitted **in a terminal**, `init` shows an interactive multi-select. When omitted **without a TTY**, `init` reports an error asking you to pass `--agent`. An unknown agent id is rejected. |
 | `--backend` | Terraform backend type for remote state. Accepted values: `local`, `remote`, `azurerm`, `consul`, `cos`, `gcs`, `http`, `kubernetes`, `oci`, `oss`, `pg`, `s3`. When omitted during a fresh or adopt init, `init` shows an interactive select with a skip option. Skipped or omitted for agent-only updates. If `memory/backend.md` already exists it is never overwritten. |
 
 ### Examples
@@ -34,6 +34,12 @@ sap-iac init my-iac-project
 
 # Configure for Claude Code with an S3 backend
 sap-iac init my-iac-project --agent claude --backend s3
+
+# Configure Gemini CLI commands and native skills
+sap-iac init my-iac-project --agent gemini
+
+# Configure Gemini CLI alongside Claude Code
+sap-iac init my-iac-project --agent claude,gemini
 
 # Configure for multiple agents, skip backend
 # The backend chooser is still shown; select "skip (no backend.tf)".
@@ -70,7 +76,7 @@ my-iac-project/
 │   └── service-params-catalogue.yaml # editable service-instance parameters
 ├── terraform/            # generated Terraform HCL lands here
 ├── .sap-iac/             # internal state (platform-validation.md)
-└── <agent command dir>/  # one per selected agent (see below)
+└── <agent integration>/  # selected agent commands; Gemini also receives skills
 ```
 
 During a fresh init (and when adopting an existing directory), `init` prompts for an optional **global-account subdomain**. It always creates `memory/global-account.md` for these modes, with a blank subdomain when none was supplied. It also prompts for an optional **Terraform backend type** (recorded in `memory/backend.md` as a type label and full placeholder HCL block with `# TODO` comments). For a local fresh project, `init` runs `git init` when Git is available. When remote setup is selected, it instead clones an existing remote or configures an empty one as described above. `memory/backend.md` is never overwritten on subsequent runs — edit it freely. The `sap-iac.design` and `sap-iac.generate` commands read this file and copy the HCL block into each configuration unit's `backend.tf` at generation time.
@@ -90,12 +96,30 @@ Each selected agent receives a directory of `sap-iac.<skill>` command files — 
 | `codex` | `.codex/prompts/` | `.md` |
 | `cursor` | `.cursor/rules/` | `.mdc` |
 | `copilot` | `.github/instructions/` | `.instructions.md` |
+| `gemini` | `.gemini/commands/` | `.toml` |
 
 For example, `--agent claude` produces `.claude/commands/sap-iac.scenario.md`, `.claude/commands/sap-iac.generate.md`, and so on.
+
+### Gemini CLI integration
+
+Selecting `gemini` installs both integration forms for all eleven workflows:
+
+| Integration | Example file | How to use it |
+|---|---|---|
+| Slash command | `.gemini/commands/sap-iac.scenario.toml` | Run `/sap-iac.scenario` inside Gemini CLI. |
+| Native skill | `.gemini/skills/sap-iac-scenario/SKILL.md` | Gemini discovers its name and description and can activate it when your request matches. |
+
+The command TOML contains a description and the workflow prompt. Native skills retain their metadata and bundled runtime resources, including the services catalogue. Both forms use the same workflow instructions, adapted for Gemini tools. The editable service-parameter catalogue remains in `memory/service-params-catalogue.yaml`.
+
+Start `gemini` from the project directory. Use `/commands list` to inspect slash commands and `/skills list` to inspect native skills. After refreshing files, run `/commands reload` and `/skills reload`, or start a new session. Native skills complement the explicit `/sap-iac.*` workflow; they do not replace its slash commands.
+
+Files are installed only within the selected project. Gemini also supports `.agents/skills/` as an alias, which takes precedence over `.gemini/skills/` for a same-named workspace skill. See the official [custom command](https://geminicli.com/docs/cli/custom-commands/) and [skill discovery](https://geminicli.com/docs/cli/skills/) documentation.
 
 ## MCP and platform-validation checks
 
 During `init`, the CLI checks whether your agent has an MCP server configured for **Terraform/OpenTofu**, and whether a **BTP CLI or BTP MCP** route is available for platform validation. Each missing capability prints an advisory warning, for example:
+
+For Gemini, configuration discovery reads `mcpServers` in user `~/.gemini/settings.json` and the initialized project's `.gemini/settings.json`, including when you launch `init` from its parent directory. Server names containing `terraform`, `opentofu`, or `btp` are matched case-insensitively. Detection inspects configuration; it does not connect to servers. Missing, unreadable, or malformed files do not block initialization. Configure servers using the official [Gemini MCP guide](https://geminicli.com/docs/tools/mcp-server/).
 
 ```
 [claude] No Terraform or OpenTofu MCP server detected.

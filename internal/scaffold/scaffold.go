@@ -47,6 +47,7 @@ var KnownAgents = map[string]Agent{
 	"codex":   {ID: "codex", Dir: filepath.Join(".codex", "prompts"), Ext: ".md", Prefix: "sap-iac."},
 	"cursor":  {ID: "cursor", Dir: filepath.Join(".cursor", "rules"), Ext: ".mdc", Prefix: "sap-iac."},
 	"copilot": {ID: "copilot", Dir: filepath.Join(".github", "instructions"), Ext: ".instructions.md", Prefix: "sap-iac."},
+	"gemini":  {ID: "gemini", Dir: filepath.Join(".gemini", "commands"), Ext: ".toml", Prefix: "sap-iac."},
 }
 
 var baseDirs = []string{"specs", "memory", "terraform"}
@@ -279,6 +280,9 @@ func ensureGitignoreEntry(dir, entry string) error {
 }
 
 func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) error {
+	if agent.ID == "gemini" {
+		return installGemini(projectDir, commands, agent)
+	}
 	destDir := filepath.Join(projectDir, agent.Dir)
 	return fs.WalkDir(commands, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -295,12 +299,16 @@ func copyCommandsForAgent(projectDir string, commands embed.FS, agent Agent) err
 		if err != nil {
 			return fmt.Errorf("read embedded file %s: %w", path, err)
 		}
-		// Extract command name from the skill directory (e.g. "sap-iac-govern" → "govern").
-		base := strings.TrimPrefix(filepath.Base(filepath.Dir(path)), "sap-iac-")
-		dest := filepath.Join(destDir, agent.Prefix+base+agent.Ext)
+		skillName := filepath.Base(filepath.Dir(path))
+		dest := filepath.Join(destDir, commandFileName(agent, skillName))
 		if err := os.WriteFile(dest, data, 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", dest, err)
 		}
 		return nil
 	})
+}
+
+// commandFileName maps a skill directory name to its agent command filename.
+func commandFileName(agent Agent, skillName string) string {
+	return agent.Prefix + strings.TrimPrefix(skillName, "sap-iac-") + agent.Ext
 }

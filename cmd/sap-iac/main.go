@@ -301,16 +301,6 @@ func initCmd() *cobra.Command {
 			for i, a := range agents {
 				agentIDs[i] = a.ID
 			}
-			// Terraform MCP remains an independent advisory check. BTP validation
-			// is satisfied by either the CLI or a per-agent BTP MCP server.
-			for _, w := range mcpcheck.Run(mcpcheck.NonBTPChecks, agentIDs) {
-				cmd.PrintErrln(ui.Warn(w))
-			}
-			capabilities := platformvalidation.Detect(agentIDs)
-			for _, w := range capabilities.Warnings(agentIDs) {
-				cmd.PrintErrln(ui.Warn(w))
-			}
-
 			if intent.mode == scaffold.ModeAdopt {
 				var ok bool
 				if err := survey.AskOne(&survey.Confirm{
@@ -388,6 +378,15 @@ func initCmd() *cobra.Command {
 					return fmt.Errorf("git remote setup: %w", err)
 				}
 			}
+			// Inspect the resolved target after scaffolding or cloning so Gemini
+			// project settings are available even for remote initialization.
+			for _, w := range mcpcheck.Run(mcpcheck.NonBTPChecks, agentIDs, intent.dir) {
+				cmd.PrintErrln(ui.Warn(w))
+			}
+			capabilities := platformvalidation.Detect(agentIDs, intent.dir)
+			for _, w := range capabilities.Warnings(agentIDs) {
+				cmd.PrintErrln(ui.Warn(w))
+			}
 			if err := capabilities.Write(intent.dir); err != nil {
 				return err
 			}
@@ -407,7 +406,7 @@ func initCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, codex, cursor, copilot)")
+	cmd.Flags().StringVar(&agentFlag, "agent", "", "comma-separated list of agents to configure (claude, codex, cursor, copilot, gemini)")
 	cmd.Flags().StringVar(&backendFlag, "backend", "", "terraform backend type (local, remote, azurerm, consul, cos, gcs, http, kubernetes, oci, oss, pg, s3); omit to be prompted")
 	return cmd
 }

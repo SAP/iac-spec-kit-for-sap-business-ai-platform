@@ -4,7 +4,7 @@ This page lists the errors and warnings `sap-iac init` can emit, and how to reso
 
 ## Errors (`init` stops)
 
-### `no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot)`
+### `no TTY detected: use --agent to specify agents (e.g. --agent claude,codex,cursor,copilot,gemini)`
 
 You ran `init` without `--agent` in a non-interactive context (CI, a pipe, or some IDE terminals). Without a terminal, the interactive picker cannot be shown, so pass the agents explicitly:
 
@@ -16,11 +16,11 @@ In a non-interactive context you must also pass the directory name. Only agent-o
 
 Passing `--backend` skips the backend chooser only; it does not suppress the global-account prompt.
 
-### `unknown agent "<id>" — supported: claude, codex, cursor, copilot`
+### `unknown agent "<id>" — supported: claude, codex, cursor, copilot, gemini`
 
-`--agent` accepts only `claude`, `codex`, `cursor`, and `copilot`, comma-separated. Check for typos and stray spaces — for example, `--agent claude,cursor`.
+`--agent` accepts `claude`, `codex`, `cursor`, `copilot`, and `gemini`, comma-separated. Check for typos and stray spaces — for example, `--agent claude,gemini`.
 
-### `--agent value is empty — supported: claude, codex, cursor, copilot`
+### `--agent value is empty — supported: claude, codex, cursor, copilot, gemini`
 
 You passed `--agent` with only whitespace (e.g. `--agent " "`). Provide at least one agent ID, comma-separated: `--agent claude`.
 
@@ -73,4 +73,14 @@ If Git **is** installed but `git init` fails, `init` treats this as a hard error
 
 ### The agent does not recognise the `sap-iac.*` commands
 
-Confirm you scaffolded for the agent you are using and that its command directory exists (`.claude/commands/`, `.codex/prompts/`, `.cursor/rules/`, or `.github/instructions/`). If you recently updated the CLI, see [Updating](updating.md) to refresh the command files.
+Confirm you scaffolded for the agent you are using and that its command directory exists (`.claude/commands/`, `.codex/prompts/`, `.cursor/rules/`, `.github/instructions/`, or `.gemini/commands/`). If you recently updated the CLI, see [Updating](updating.md) to refresh the command files.
+
+For Gemini CLI, command files must be TOML, such as `.gemini/commands/sap-iac.scenario.toml`. Run `/commands reload`, then `/commands list`, from a session started in the project directory. Native `SKILL.md` files alone do not define `/sap-iac.*` slash commands.
+
+### Gemini CLI does not discover a native skill
+
+Confirm `.gemini/skills/sap-iac-<command>/SKILL.md` exists, then run `/skills reload` and `/skills list`. Check for a same-named skill under `.agents/skills/`, which takes precedence, or a disabled skill in Gemini settings.
+
+### Gemini MCP warning despite configured servers
+
+`init` reads `mcpServers` in `~/.gemini/settings.json` and the initialized project's `.gemini/settings.json`. Check that the JSON is readable and valid and that server names contain `terraform`, `opentofu`, or `btp` as appropriate (case-insensitive). System settings, extension-managed servers, and Docker gateway profiles are not inspected for Gemini. Detection does not establish connectivity or modify your settings; see the [Gemini MCP guide](https://geminicli.com/docs/tools/mcp-server/) for configuration.

@@ -54,3 +54,16 @@ The CLI SHALL print a human-readable success summary after initialization comple
 #### Scenario: init succeeds
 - **WHEN** initialization completes without error
 - **THEN** the CLI reports whether the project was created or updated, lists the configured agents, and prints the workflow guide
+
+### Requirement: Gemini integration structure
+Projects initialized with Gemini selected SHALL contain populated `.gemini/commands/` and `.gemini/skills/` directories. Fresh and adopted projects SHALL retain the canonical infrastructure directory structure. Agent-only updates SHALL preserve infrastructure content and unrelated files within `.gemini/`.
+
+#### Scenario: fresh Gemini structure
+- **WHEN** fresh initialization with Gemini selected completes successfully
+- **THEN** `specs/`, `memory/`, `terraform/`, `.sap-iac/`, `.gemini/commands/`, and `.gemini/skills/` exist
+- **AND** both Gemini integration directories contain the required workflow outputs
+
+#### Scenario: existing Gemini configuration preserved
+- **WHEN** Gemini integration files are refreshed in an existing project
+- **THEN** unrelated custom commands, custom skills, and `.gemini/settings.json` are preserved
+- **AND** only the selected integration's managed workflow assets are overwritten

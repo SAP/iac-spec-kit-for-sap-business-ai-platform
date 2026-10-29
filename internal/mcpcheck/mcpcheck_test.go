@@ -55,20 +55,20 @@ func TestApplies(t *testing.T) {
 
 func TestRun_allPresent(t *testing.T) {
 	checks := []Check{
-		{Name: "A", Agents: nil, Probe: func(string) bool { return true }, Warning: "warn-a"},
-		{Name: "B", Agents: nil, Probe: func(string) bool { return true }, Warning: "warn-b"},
+		{Name: "A", Agents: nil, Probe: func(string, string) bool { return true }, Warning: "warn-a"},
+		{Name: "B", Agents: nil, Probe: func(string, string) bool { return true }, Warning: "warn-b"},
 	}
-	if got := Run(checks, []string{"claude"}); len(got) != 0 {
+	if got := Run(checks, []string{"claude"}, ""); len(got) != 0 {
 		t.Errorf("expected no warnings, got %v", got)
 	}
 }
 
 func TestRun_missingServer(t *testing.T) {
 	checks := []Check{
-		{Name: "A", Agents: nil, Probe: func(string) bool { return false }, Warning: "warn-a"},
-		{Name: "B", Agents: nil, Probe: func(string) bool { return true }, Warning: "warn-b"},
+		{Name: "A", Agents: nil, Probe: func(string, string) bool { return false }, Warning: "warn-a"},
+		{Name: "B", Agents: nil, Probe: func(string, string) bool { return true }, Warning: "warn-b"},
 	}
-	got := Run(checks, []string{"claude"})
+	got := Run(checks, []string{"claude"}, "")
 	if len(got) != 1 || got[0] != "[claude] warn-a" {
 		t.Errorf("expected [[claude] warn-a], got %v", got)
 	}
@@ -76,14 +76,14 @@ func TestRun_missingServer(t *testing.T) {
 
 func TestRun_agentFilter(t *testing.T) {
 	checks := []Check{
-		{Name: "cursor-only", Agents: []string{"cursor"}, Probe: func(string) bool { return false }, Warning: "cursor-warn"},
+		{Name: "cursor-only", Agents: []string{"cursor"}, Probe: func(string, string) bool { return false }, Warning: "cursor-warn"},
 	}
 	// claude selected → check doesn't apply → no warning
-	if got := Run(checks, []string{"claude"}); len(got) != 0 {
+	if got := Run(checks, []string{"claude"}, ""); len(got) != 0 {
 		t.Errorf("expected no warnings for non-matching agent, got %v", got)
 	}
 	// cursor selected → check applies → warning emitted with agent prefix
-	got := Run(checks, []string{"cursor"})
+	got := Run(checks, []string{"cursor"}, "")
 	if len(got) != 1 || got[0] != "[cursor] cursor-warn" {
 		t.Errorf("expected [[cursor] cursor-warn], got %v", got)
 	}
@@ -96,13 +96,13 @@ func TestRun_perAgentIndependent(t *testing.T) {
 		{
 			Name:   "terraform",
 			Agents: nil,
-			Probe: func(agent string) bool {
+			Probe: func(agent, _ string) bool {
 				return agent == "claude" // only claude has it configured
 			},
 			Warning: "no terraform mcp",
 		},
 	}
-	got := Run(checks, []string{"claude", "cursor"})
+	got := Run(checks, []string{"claude", "cursor"}, "")
 	if len(got) != 1 {
 		t.Fatalf("expected exactly 1 warning, got %v", got)
 	}
@@ -113,9 +113,9 @@ func TestRun_perAgentIndependent(t *testing.T) {
 
 func TestRun_multiAgentBothMissing(t *testing.T) {
 	checks := []Check{
-		{Name: "X", Agents: nil, Probe: func(string) bool { return false }, Warning: "missing"},
+		{Name: "X", Agents: nil, Probe: func(string, string) bool { return false }, Warning: "missing"},
 	}
-	got := Run(checks, []string{"claude", "cursor"})
+	got := Run(checks, []string{"claude", "cursor"}, "")
 	if len(got) != 2 {
 		t.Fatalf("expected 2 warnings (one per agent), got %v", got)
 	}
@@ -155,7 +155,7 @@ func TestTerraformCheck_claudeUserConfig(t *testing.T) {
 
 	writeMCPConfig(t, home, ".claude.json", "mcpServers", []string{"terraform-mcp"})
 
-	if !terraformCheck.Probe("claude") {
+	if !terraformCheck.Probe("claude", "") {
 		t.Error("expected terraform check to pass with terraform-mcp in ~/.claude.json")
 	}
 }
@@ -173,7 +173,7 @@ func TestTerraformCheck_claudeProjectConfig(t *testing.T) {
 
 	writeMCPConfig(t, dir, ".mcp.json", "mcpServers", []string{"terraform-mcp"})
 
-	if !terraformCheck.Probe("claude") {
+	if !terraformCheck.Probe("claude", "") {
 		t.Error("expected terraform check to pass with terraform-mcp in .mcp.json")
 	}
 }
@@ -184,7 +184,7 @@ func TestTerraformCheck_cursorConfig(t *testing.T) {
 
 	writeMCPConfig(t, filepath.Join(home, ".cursor"), "mcp.json", "mcpServers", []string{"opentofu-server"})
 
-	if !terraformCheck.Probe("cursor") {
+	if !terraformCheck.Probe("cursor", "") {
 		t.Error("expected terraform check to pass with opentofu-server in cursor config")
 	}
 }
@@ -202,7 +202,7 @@ func TestTerraformCheck_cursorProjectConfig(t *testing.T) {
 
 	writeMCPConfig(t, filepath.Join(dir, ".cursor"), "mcp.json", "mcpServers", []string{"opentofu-server"})
 
-	if !terraformCheck.Probe("cursor") {
+	if !terraformCheck.Probe("cursor", "") {
 		t.Error("expected terraform check to pass with opentofu-server in .cursor/mcp.json")
 	}
 }
@@ -213,7 +213,7 @@ func TestTerraformCheck_codexUserConfig(t *testing.T) {
 
 	writeCodexMCPConfig(t, filepath.Join(home, ".codex", "config.toml"), []string{"terraform-mcp"})
 
-	if !terraformCheck.Probe("codex") {
+	if !terraformCheck.Probe("codex", "") {
 		t.Error("expected terraform check to pass with terraform-mcp in ~/.codex/config.toml")
 	}
 }
@@ -231,7 +231,7 @@ func TestTerraformCheck_codexProjectConfig(t *testing.T) {
 
 	writeCodexMCPConfig(t, filepath.Join(dir, ".codex", "config.toml"), []string{"opentofu-server"})
 
-	if !terraformCheck.Probe("codex") {
+	if !terraformCheck.Probe("codex", "") {
 		t.Error("expected terraform check to pass with opentofu-server in .codex/config.toml")
 	}
 }
@@ -246,7 +246,7 @@ func TestTerraformCheck_copilotVSCode(t *testing.T) {
 
 	writeMCPConfig(t, filepath.Join(dir, ".vscode"), "mcp.json", "servers", []string{"terraform-mcp"})
 
-	if !terraformCheck.Probe("copilot") {
+	if !terraformCheck.Probe("copilot", "") {
 		t.Error("expected terraform check to pass with terraform-mcp in .vscode/mcp.json")
 	}
 }
@@ -262,7 +262,7 @@ func TestTerraformCheck_copilotVSCodeUserLevel(t *testing.T) {
 	}
 	writeMCPConfig(t, filepath.Dir(path), filepath.Base(path), "servers", []string{"opentofu-server"})
 
-	if !terraformCheck.Probe("copilot") {
+	if !terraformCheck.Probe("copilot", "") {
 		t.Error("expected terraform check to pass with opentofu-server in VS Code user mcp.json")
 	}
 }
@@ -275,7 +275,7 @@ func TestTerraformCheck_mcpDockerNoProfile(t *testing.T) {
 	writeClaudeDockerGateway(t, home, nil) // no --profile arg
 	writeRegistryYAML(t, home, []string{"terraform-mcp", "fetch"})
 
-	if !terraformCheck.Probe("claude") {
+	if !terraformCheck.Probe("claude", "") {
 		t.Error("expected terraform check to pass via registry.yaml when no --profile is set")
 	}
 }
@@ -288,7 +288,7 @@ func TestTerraformCheck_mcpDockerWithProfile(t *testing.T) {
 	writeClaudeDockerGateway(t, home, []string{"--profile", "myprofile"})
 	createDockerMCPDB(t, home, "myprofile", []string{"terraform-mcp", "fetch"})
 
-	if !terraformCheck.Probe("claude") {
+	if !terraformCheck.Probe("claude", "") {
 		t.Error("expected terraform check to pass via working_set for active profile")
 	}
 }
@@ -300,7 +300,7 @@ func TestTerraformCheck_mcpDockerWithEqualsProfile(t *testing.T) {
 	writeClaudeDockerGateway(t, home, []string{"--profile=prod"})
 	createDockerMCPDB(t, home, "prod", []string{"terraform-mcp"})
 
-	if !terraformCheck.Probe("claude") {
+	if !terraformCheck.Probe("claude", "") {
 		t.Error("expected terraform check to pass via --profile=prod")
 	}
 }
@@ -315,7 +315,7 @@ func TestTerraformCheck_mcpDockerInactiveProfileNotSufficient(t *testing.T) {
 	createDockerMCPDB(t, home, "active", []string{"fetch"})
 	createDockerMCPDB(t, home, "inactive", []string{"terraform-mcp"})
 
-	if terraformCheck.Probe("claude") {
+	if terraformCheck.Probe("claude", "") {
 		t.Error("server in inactive profile must not suppress warning for active profile")
 	}
 }
@@ -329,7 +329,7 @@ func TestTerraformCheck_mcpDockerRegistryWithoutGatewayEntry(t *testing.T) {
 	// No gateway entry written to ~/.claude.json.
 	writeRegistryYAML(t, home, []string{"terraform"})
 
-	if terraformCheck.Probe("claude") {
+	if terraformCheck.Probe("claude", "") {
 		t.Error("registry.yaml without a gateway client entry must not suppress the warning")
 	}
 }
@@ -344,7 +344,7 @@ func TestBTPAdminCheck_missing(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(orig) })
 
 	for _, agent := range []string{"claude", "codex", "cursor", "copilot"} {
-		if btpAdminCheck.Probe(agent) {
+		if btpAdminCheck.Probe(agent, "") {
 			t.Errorf("expected btp check to fail for agent %q when nothing is configured", agent)
 		}
 	}
@@ -356,7 +356,7 @@ func TestBTPAdminCheck_present(t *testing.T) {
 
 	writeMCPConfig(t, home, ".claude.json", "mcpServers", []string{"btp-administration"})
 
-	if !btpAdminCheck.Probe("claude") {
+	if !btpAdminCheck.Probe("claude", "") {
 		t.Error("expected btp check to pass with btp-administration in claude settings")
 	}
 }
@@ -394,7 +394,7 @@ func TestBTPAdminCheck_claudeProjectScoped(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !btpAdminCheck.Probe("claude") {
+	if !btpAdminCheck.Probe("claude", "") {
 		t.Error("expected btp check to pass with BTP-Administration in ~/.claude.json projects scope")
 	}
 }
@@ -411,7 +411,7 @@ func TestBTPAdminCheck_claudeOnlyDoesNotSatisfyCursor(t *testing.T) {
 
 	writeMCPConfig(t, home, ".claude.json", "mcpServers", []string{"btp-administration"})
 
-	got := Run([]Check{btpAdminCheck}, []string{"claude", "cursor"})
+	got := Run([]Check{btpAdminCheck}, []string{"claude", "cursor"}, "")
 	if len(got) != 1 {
 		t.Fatalf("expected exactly 1 warning (for cursor), got %v", got)
 	}
@@ -426,7 +426,7 @@ func TestBTPAdminCheck_codexPresent(t *testing.T) {
 
 	writeCodexMCPConfig(t, filepath.Join(home, ".codex", "config.toml"), []string{"btp-administration"})
 
-	if !btpAdminCheck.Probe("codex") {
+	if !btpAdminCheck.Probe("codex", "") {
 		t.Error("expected btp check to pass with btp-administration in ~/.codex/config.toml")
 	}
 }

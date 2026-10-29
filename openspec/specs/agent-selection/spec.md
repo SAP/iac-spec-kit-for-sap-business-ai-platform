@@ -26,7 +26,7 @@ The CLI SHALL display an interactive multi-select prompt when `--agent` is not p
 
 #### Scenario: user selects agents interactively
 - **WHEN** `sap-iac init my-project` is run without `--agent` in a TTY
-- **THEN** a multi-select prompt lists `claude`, `codex`, `cursor`, and `copilot`
+- **THEN** a multi-select prompt lists `claude`, `codex`, `cursor`, `copilot`, and `gemini`
 - **AND** the user may select one or more agents with space and confirm with enter
 - **AND** init proceeds with the selected agents
 
@@ -37,10 +37,24 @@ The CLI SHALL display an interactive multi-select prompt when `--agent` is not p
 #### Scenario: no TTY detected
 - **WHEN** `sap-iac init my-project` is run without `--agent` and stdin is not a TTY
 - **THEN** the CLI exits with a non-zero status directing the user to use `--agent`
+- **AND** any example listing all supported agents includes `gemini`
 
 ### Requirement: supported agent IDs
-The CLI SHALL recognise exactly four agent IDs: `claude`, `codex`, `cursor`, `copilot`.
+The CLI SHALL recognise exactly five agent IDs: `claude`, `codex`, `cursor`, `copilot`, `gemini`. Flag help and supported-agent error messages SHALL include `gemini`.
 
 #### Scenario: complete supported set
-- **WHEN** `sap-iac init --agent claude,codex,cursor,copilot` is run
-- **THEN** all four agents are configured in the new project
+- **WHEN** `sap-iac init my-project --agent claude,codex,cursor,copilot,gemini` completes successfully
+- **THEN** all five agents are configured in the project
+
+#### Scenario: Gemini selected alone
+- **WHEN** `sap-iac init my-project --agent gemini` completes successfully
+- **THEN** Gemini commands and native skills are installed
+- **AND** other agent integrations are not installed
+
+#### Scenario: Gemini selected with another agent
+- **WHEN** `sap-iac init my-project --agent claude,gemini` completes successfully
+- **THEN** Claude Code command files and both Gemini outputs are installed
+
+#### Scenario: invalid agent identifies the supported set
+- **WHEN** an unknown agent ID is supplied
+- **THEN** initialization exits non-zero and the supported-agent list includes `gemini`

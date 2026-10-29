@@ -16,8 +16,9 @@ type Check struct {
 	// Agents lists the agent IDs this check applies to (nil = all agents).
 	Agents []string
 	// Probe returns true if the MCP server (or an acceptable alternative) is
-	// present for the given single agent. Run calls it once per selected agent.
-	Probe func(agent string) bool
+	// present for the given agent and target project. An empty projectDir uses
+	// the current directory. Run calls it once per selected agent.
+	Probe func(agent, projectDir string) bool
 	// Warning is emitted when Probe returns false.
 	// Run prepends "[agentname] " so the caller knows which agent is affected.
 	Warning string
@@ -30,14 +31,14 @@ var NonBTPChecks = []Check{terraformCheck}
 // Run executes every check that applies to at least one of the selected agents.
 // Probe is called once per (check, agent) pair; a warning is emitted for each
 // agent that fails, prefixed with "[agentname] ".
-func Run(checks []Check, selectedAgents []string) []string {
+func Run(checks []Check, selectedAgents []string, projectDir string) []string {
 	var warnings []string
 	for _, c := range checks {
 		for _, agent := range selectedAgents {
 			if !applies(c.Agents, agent) {
 				continue
 			}
-			if !c.Probe(agent) {
+			if !c.Probe(agent, projectDir) {
 				warnings = append(warnings, "["+agent+"] "+c.Warning)
 			}
 		}

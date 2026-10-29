@@ -6,7 +6,7 @@ This page describes the prerequisites for the `sap-iac` CLI and the supported wa
 
 | Dependency | When you need it | Notes |
 |---|---|---|
-| AI agent | Always | [Claude Code](https://www.anthropic.com/claude-code), [Codex](https://openai.com/codex/), [Cursor](https://cursor.com/), or [GitHub Copilot](https://github.com/features/copilot). The agent runs the generated `sap-iac.*` commands. |
+| AI agent | Always | [Claude Code](https://www.anthropic.com/claude-code), [Codex](https://openai.com/codex/), [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot), or [Gemini CLI](https://geminicli.com/). The agent runs the generated `sap-iac.*` commands. |
 | [Terraform](https://developer.hashicorp.com/terraform/install) | Recommended | The generation skill invokes the `terraform` CLI to initialise, format, and validate generated configuration. The resulting HCL may also be used with [OpenTofu](https://opentofu.org/), but the automated generation workflow currently calls Terraform. |
 | [Git](https://git-scm.com/downloads) | Optional for local scaffolding; required for remote setup | When present, local fresh `init` initialises a repository automatically. Choosing the optional remote-repository flow also requires Git and access to that remote. |
 
@@ -95,3 +95,5 @@ sap-iac --help
 ```
 
 Continue to [Usage](usage.md).
+
+For Gemini CLI, run `sap-iac init my-project --agent gemini` and open the project with `gemini`. Initialization installs both project-local slash commands and native skills; see [Gemini CLI integration](usage.md#gemini-cli-integration) for their locations and discovery commands.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -78,6 +79,9 @@ func printSuccess(w io.Writer, name string, agentIDs []string, mode scaffold.Mod
 		body.WriteString("II. Open your AI agent and run these in order\n\n")
 	} else {
 		body.WriteString("I. Open your AI agent and run these in order\n\n")
+	}
+	if slices.Contains(agentIDs, "gemini") {
+		body.WriteString("Gemini CLI: invoke commands with /, for example /sap-iac.scenario.\n\n")
 	}
 
 	section(&body, "Define your guardrails", []stepRow{

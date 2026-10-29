@@ -3,7 +3,7 @@
 This walkthrough is a complete end-to-end run: install the CLI, scaffold a project, drive the AI agent through the command workflow, and finish with generated Terraform. It uses the single-application scenario from the [scenario examples](scenarios.md); substitute any other scenario description to build something larger.
 
 !!! note "Prerequisites"
-    The `sap-iac` CLI (see [Setup](setup.md)) and an AI agent — Claude Code, Codex, Cursor, or GitHub Copilot. Terraform and Git are recommended but optional.
+    The `sap-iac` CLI (see [Setup](setup.md)) and an AI agent — Claude Code, Codex, Cursor, GitHub Copilot, or Gemini CLI. Terraform and Git are recommended but optional.
 
 ## 1 · Scaffold the project
 
@@ -23,6 +23,8 @@ claude
 ```
 
 Run the commands below as slash commands inside the agent (`/sap-iac.govern`, `/sap-iac.scenario`, and so on), in order.
+
+For Gemini CLI, use `sap-iac init hr-leave --agent gemini` in step 1 and launch `gemini` in this step. The scaffold includes `.gemini/commands/sap-iac.<command>.toml` and `.gemini/skills/sap-iac-<command>/SKILL.md` for all eleven workflows. Run the same `/sap-iac.*` slash commands below; inspect their availability with `/commands list`. Native skills are also available through Gemini's skill discovery (`/skills list`).
 
 ## 3 · Run the command workflow
 

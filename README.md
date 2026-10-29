@@ -10,7 +10,7 @@
 
 The Infrastructure-as-Code Specification Toolkit for SAP Business AI Platform is an open-source CLI tool that will help SAP Business AI Platform administrators and practitioners. The utility is a scaffolding templater that will be used to generate the necessary project structure and skills used by AI agents to help generate IaC (Terraform) configurations for a given account using best practices as recommended by SAP. Users will be able to use the generated skill to create and enhance their IaC scripts for managing their accounts. It will provide an easy entry point for new administrators who may be new to SAP best practices and to following the right approaches when using IaC (Terraform) scripts.
 
-The `sap-iac init` workflow currently scaffolds agent integrations for Claude Code, Codex, Cursor, and GitHub Copilot.
+The `sap-iac init` workflow scaffolds agent integrations for Claude Code, Codex, Cursor, GitHub Copilot, and Gemini CLI. Select Gemini with `--agent gemini` to install both `/sap-iac.*` slash commands and native skills.
 
 ## Requirements and Setup
 
