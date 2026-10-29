@@ -4,6 +4,7 @@ package backendselect
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -29,10 +30,8 @@ func Select(flagValue string) (string, error) {
 
 func fromFlag(flagValue string) (string, error) {
 	bt := strings.TrimSpace(flagValue)
-	for _, known := range scaffold.KnownBackends {
-		if bt == known {
-			return bt, nil
-		}
+	if slices.Contains(scaffold.KnownBackends, bt) {
+		return bt, nil
 	}
 	return "", fmt.Errorf("unknown backend type %q — supported: %s", bt, strings.Join(scaffold.KnownBackends, ", "))
 }
