@@ -33,3 +33,27 @@ CLI region checks SHALL target the global account subdomain and use `btp list ac
 #### Scenario: NEO region returned
 - **WHEN** a region lookup returns an entry labelled NEO
 - **THEN** the command excludes it from its validation result
+
+### Requirement: Gemini BTP MCP discovery
+For selected Gemini projects, initialization SHALL discover BTP MCP servers under `mcpServers` in `~/.gemini/settings.json` and the target project's `.gemini/settings.json`. BTP server identification SHALL use the existing case-insensitive server-name matching convention. Gemini availability SHALL be recorded per agent in `.sap-iac/platform-validation.md` under the existing CLI-first routing contract, without persisting settings or credentials.
+
+#### Scenario: user-scoped Gemini BTP server
+- **WHEN** user Gemini settings contain a discoverable BTP MCP server and the BTP CLI is unavailable
+- **THEN** the record marks Gemini MCP available and supports the MCP validation route
+
+#### Scenario: target-project Gemini BTP server
+- **WHEN** Gemini settings in the initialized target project contain a discoverable BTP MCP server
+- **THEN** Gemini availability is detected from that target project even when initialization was launched from its parent directory
+
+#### Scenario: CLI takes precedence
+- **WHEN** both the BTP CLI and Gemini BTP MCP are detected
+- **THEN** the record marks both available and selects the CLI as the preferred route
+
+#### Scenario: missing Gemini BTP route
+- **WHEN** neither the BTP CLI nor a Gemini BTP MCP server is detected
+- **THEN** the record marks Gemini MCP unavailable
+- **AND** Gemini workflows retain user input without blocking under the existing fallback contract
+
+#### Scenario: configuration remains private
+- **WHEN** Gemini settings include credentials, environment variables, or server endpoints
+- **THEN** the capability record contains route availability only and does not copy those settings

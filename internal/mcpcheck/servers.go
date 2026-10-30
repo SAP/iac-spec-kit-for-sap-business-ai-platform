@@ -408,7 +408,7 @@ func vsCodeMCPPath() string {
 }
 
 // serverNamesForAgent returns MCP server names configured for a single agent.
-func serverNamesForAgent(agent string) []string {
+func serverNamesForAgent(agent, projectDir string) []string {
 	switch agent {
 	case "claude":
 		names := claudeServerNames()
@@ -426,9 +426,21 @@ func serverNamesForAgent(agent string) []string {
 		return names
 	case "copilot":
 		return copilotServerNames()
+	case "gemini":
+		return geminiServerNames(projectDir)
 	default:
 		return nil
 	}
+}
+
+// geminiServerNames reads user and target-project MCP server definitions.
+// Discovery inspects configuration only; it does not connect to servers.
+func geminiServerNames(projectDir string) []string {
+	var names []string
+	if home, err := os.UserHomeDir(); err == nil {
+		names = append(names, serverKeysFromFile(filepath.Join(home, ".gemini", "settings.json"))...)
+	}
+	return append(names, serverKeysFromFile(filepath.Join(projectDir, ".gemini", "settings.json"))...)
 }
 
 // hasMatch returns true if any name contains any of the substrings (case-insensitive).

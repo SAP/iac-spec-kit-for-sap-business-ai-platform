@@ -24,6 +24,16 @@ func TestPrintSuccessContainsCommands(t *testing.T) {
 	}
 }
 
+func TestGeminiSuccessShowsSlashInvocation(t *testing.T) {
+	for _, mode := range []scaffold.Mode{scaffold.ModeFresh, scaffold.ModeAdopt, scaffold.ModeAgentOnly} {
+		var buf strings.Builder
+		printSuccess(&buf, "my-project", []string{"gemini"}, mode, false)
+		if !strings.Contains(buf.String(), "gemini configured") || !strings.Contains(buf.String(), "/sap-iac.scenario") {
+			t.Fatalf("Gemini guide missing invocation instructions: %s", &buf)
+		}
+	}
+}
+
 func TestPrintSuccessAlignsUtilityCommand(t *testing.T) {
 	var buf strings.Builder
 	printSuccess(&buf, "my-project", []string{"claude"}, scaffold.ModeFresh, true)

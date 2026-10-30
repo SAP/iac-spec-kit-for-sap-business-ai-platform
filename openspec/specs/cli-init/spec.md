@@ -111,3 +111,37 @@ When a named directory already exists, the CLI SHALL update it instead of refusi
 #### Scenario: adopt another existing directory
 - **WHEN** the supplied directory exists but contains neither `specs/` nor `memory/`
 - **THEN** the CLI asks for confirmation before creating the sap-iac project structure in that directory
+
+### Requirement: Gemini initialization lifecycle
+Fresh, adopt, and agent-only initialization with Gemini selected SHALL install or refresh both Gemini command definitions and native skills, including bundled embedded runtime resources. Existing infrastructure and memory preservation rules SHALL apply. Successful output SHALL identify Gemini and provide the existing workflow guide with usable slash-command names.
+
+#### Scenario: fresh Gemini project
+- **WHEN** fresh initialization with `--agent gemini` completes successfully
+- **THEN** both Gemini outputs and the normal project scaffold exist
+- **AND** the summary lists Gemini and the `/sap-iac.*` workflow commands
+
+#### Scenario: adopted Gemini project
+- **WHEN** adoption of an existing directory with Gemini selected is confirmed and completes
+- **THEN** both Gemini outputs are installed
+- **AND** an existing service-parameter catalogue is preserved
+
+#### Scenario: Gemini agent-only refresh
+- **WHEN** agent-only initialization selects Gemini in an existing sap-iac project
+- **THEN** Gemini command definitions, native skill entry points, and bundled embedded resources are refreshed
+- **AND** `.sap-iac/platform-validation.md` and managed ignore entries are refreshed as usual
+- **AND** existing `specs/`, `memory/`, and `terraform/` content is preserved
+
+### Requirement: Gemini advisory MCP checks
+Initialization SHALL inspect Gemini user and project settings for configured Terraform/OpenTofu and BTP MCP servers when Gemini is selected. Missing or unreadable configuration SHALL retain the existing non-blocking advisory behavior. Initialization SHALL NOT install MCP servers or rewrite Gemini settings.
+
+#### Scenario: Terraform server configured
+- **WHEN** Gemini user or project settings contain a Terraform or OpenTofu MCP server matching the existing discovery convention
+- **THEN** initialization does not emit the missing Terraform/OpenTofu MCP warning for Gemini
+
+#### Scenario: Gemini capabilities absent
+- **WHEN** Gemini has no detected Terraform/OpenTofu MCP server and neither a BTP CLI nor a Gemini BTP MCP route
+- **THEN** initialization emits Gemini-specific advisory warnings and completes normally
+
+#### Scenario: malformed configuration
+- **WHEN** a Gemini settings file is absent, unreadable, or malformed
+- **THEN** initialization treats that file as providing no discoverable MCP servers and continues using other available sources

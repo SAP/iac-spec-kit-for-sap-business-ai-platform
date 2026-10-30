@@ -28,10 +28,10 @@ type Capabilities struct {
 }
 
 // Detect determines the optional BTP validation routes available to agents.
-func Detect(agentIDs []string) Capabilities {
+func Detect(agentIDs []string, projectDir string) Capabilities {
 	c := Capabilities{CLIAvailable: preflight.Available("btp"), MCPAgents: make(map[string]bool, len(agentIDs))}
 	for _, agent := range agentIDs {
-		c.MCPAgents[agent] = mcpcheck.BTPMCPAvailable(agent)
+		c.MCPAgents[agent] = mcpcheck.BTPMCPAvailable(agent, projectDir)
 	}
 	return c
 }

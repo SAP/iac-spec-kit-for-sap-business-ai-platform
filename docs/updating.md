@@ -32,3 +32,13 @@ To pick up updated commands in an existing project:
    Alternatively, run `sap-iac init` from inside the project and choose **Add / update AI agent in current project** from the interactive menu.
 
 Your `specs/`, `memory/`, and `terraform/` content is untouched. The selected agent command files and `.sap-iac/platform-validation.md` are refreshed, and the managed `.gitignore` entries are ensured.
+
+To add or refresh Gemini CLI, run:
+
+```sh
+sap-iac init my-project --agent gemini
+```
+
+This refreshes both `.gemini/commands/sap-iac.<command>.toml` and `.gemini/skills/sap-iac-<command>/SKILL.md`, including embedded runtime resources. Managed toolkit files are overwritten with the current CLI version. Unrelated custom commands, custom skills, Gemini settings, and unselected agent files are preserved.
+
+Inside Gemini CLI, run `/commands reload` and `/skills reload` after refreshing, or start a new session. Check `/commands list` and `/skills list` to confirm discovery. A same-named skill under `.agents/skills/` takes precedence over the refreshed `.gemini/skills/` copy.

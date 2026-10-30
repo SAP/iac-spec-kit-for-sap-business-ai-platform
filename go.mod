@@ -5,6 +5,7 @@ go 1.27.0
 require (
 	charm.land/lipgloss/v2 v2.0.6
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/term v0.47.0
 	gopkg.in/yaml.v3 v3.0.1
