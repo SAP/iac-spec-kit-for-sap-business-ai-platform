@@ -81,7 +81,7 @@ Assess whether the user's invocation message already covers the required governa
 |---|---|
 | **Region** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
 | **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma)|
-| **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length |
+| **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length; subaccount subdomain convention; additional naming conventions |
 | **Service Restrictions** | whether org-wide service/plan restrictions apply; link to policy doc or free-text allowlist/denylist |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Deprecated Services** | service/plan combinations explicitly approved for use despite deprecation |
@@ -95,7 +95,7 @@ Keep each question to a single short prompt. The details to gather for each ques
 - **Preferred Infrastructure** — one of AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none.
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
 - **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
-- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
+- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length. Optionally: free-text guidance for the subaccount subdomain convention (e.g. "lowercase, hyphens only, max 20 chars before UUID suffix") and any other resource naming conventions. Both optional fields are skipped if the user has no input — do not write a placeholder.
 - **Service Restrictions** — ask: "Do org-wide service or service-plan restrictions apply?" If yes, ask whether the user wants to provide a link to a Markdown policy document, enter the restrictions as free text, or both. Collect an allowlist of permitted BTP services and service-plan pairs, and a denylist of prohibited ones. For a linked document store only the URL — do not fetch or copy its content. For free-text record the supplied content inline. Do **not** validate service or plan names against BTP; accept them as-is.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
@@ -138,6 +138,10 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Cloud Foundry space pattern: <pattern for CF space names>
 - Directory structure: <none or hierarchical>
 - Max name length: <character limit, e.g. 60>
+<!-- Omit the two lines below if the user provided no input for them -->
+- Subaccount subdomain convention: <free-text guidance, e.g. "lowercase, hyphens only, max 20 chars before UUID suffix">
+- Additional naming conventions: |
+    <free-text for any other resource naming guidance>
 
 ## Service Plans
 
@@ -201,7 +205,7 @@ Governance rules saved to memory/governance.md.
 The following rules are now in effect:
   Regions:        <summary>
   Account Setup:  <summary>
-  Naming:         <summary>
+  Naming:         <subaccount pattern, subdomain convention if set, additional conventions if set>
   Service Plans:  <summary>
   Deprecated Services: <summary>
   Service Restrictions: <summary, or "none declared">

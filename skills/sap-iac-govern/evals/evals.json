@@ -149,6 +149,32 @@
         {"id": "9.2", "text": "The written file contains a `## Deprecated Services` section whose `- Approved:` line lists `sap-alert-notification / standard`"},
         {"id": "9.3", "text": "Does not add `- Override: true` (approving a deprecated combination is not the same as the global override)"}
       ]
+    },
+    {
+      "id": 10,
+      "name": "subdomain-convention-written-verbatim",
+      "description": "A subdomain convention supplied in the Naming group is written verbatim to ## Naming; neither field is written when skipped.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. Subaccount subdomain convention: lowercase, hyphens only, max 20 characters before UUID suffix. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "trap": "The subdomain convention must be written exactly as supplied under ## Naming as '- Subaccount subdomain convention:'. No Additional naming conventions field must appear because the user did not supply one.",
+      "assertions": [
+        {"id": "10.1", "text": "Does not ask any follow-up question since all governance categories are covered"},
+        {"id": "10.2", "text": "The written memory/governance.md contains '- Subaccount subdomain convention: lowercase, hyphens only, max 20 characters before UUID suffix' verbatim under ## Naming"},
+        {"id": "10.3", "text": "The written memory/governance.md does NOT contain '- Additional naming conventions:' because the user did not provide one"}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "optional-naming-convention-fields-absent-when-skipped",
+      "description": "When the user provides no input for either optional naming convention field, neither field appears in the written governance file.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. No subdomain convention. No additional naming conventions. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "trap": "Absence of user input for optional fields must produce absence in the file — no placeholder, no 'none' value, and no empty line.",
+      "assertions": [
+        {"id": "11.1", "text": "Does not ask any follow-up question since all governance categories are covered"},
+        {"id": "11.2", "text": "The written memory/governance.md does NOT contain '- Subaccount subdomain convention:'"},
+        {"id": "11.3", "text": "The written memory/governance.md does NOT contain '- Additional naming conventions:'"}
+      ]
     }
   ]
 }
