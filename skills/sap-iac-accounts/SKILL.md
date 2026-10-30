@@ -65,6 +65,10 @@ For each subaccount name you are about to generate:
 - If the environment tier used is not in `## Naming → Environments`: **STOP**
   > "GOVERNANCE VIOLATION: Environment tier `<tier>` is not defined in governance (defined: `<environments>`). Add the tier to governance or use a defined one."
 
+When proposing a subdomain for each subaccount, check `## Naming → Subaccount subdomain convention`. If the field is present, display it as advisory context alongside the proposed subdomain:
+> "Note: governance subdomain convention — `<convention text>`"
+This is informational only — it does not block and does not require `- Override: true`.
+
 ### Account environment validation
 
 For each account environment you are about to define:
