@@ -77,6 +77,19 @@ For each account environment you are about to define:
 - If a required pattern or allowed-environment rule is absent from an older governance file, collect the missing decision from the user instead of inventing one.
 - **STOP** on a governed violation and identify the selected type or name, the expected rule, and the `- Override: true` escape hatch.
 
+### Project setup model validation
+
+Read `## Account Setup → Project setup model` from governance. If the field is absent (legacy file), ask the user to choose before defining any topology.
+
+The two valid values and their topology implications:
+
+**Option 1 — Subaccount per project**: each project receives a dedicated subaccount per stage. Naming, region, and runtime environment decisions apply independently to each subaccount. There is no structural constraint on Cloud Foundry spaces beyond the governed pattern.
+
+**Option 2 — Space per project**: one shared subaccount exists per stage (e.g. `acme-dev`, `acme-prod`). Each project is represented as a Cloud Foundry space inside that subaccount. Cloud Foundry must be an allowed environment; if it is not, **STOP**:
+> "GOVERNANCE VIOLATION: Project setup model is Option 2 (Space per project) but Cloud Foundry is not in the allowed environments list. Add Cloud Foundry to governance or switch to Option 1."
+
+When Option 2 is in effect, the Workflow section below collects stage-level subaccounts (one per environment tier) and then collects the full list of projects as Cloud Foundry spaces within each subaccount's CF org.
+
 **If `- Override: true` is set in `<project-root>/memory/governance.md`:** log a warning for each violation and continue instead of stopping.
 
 ---
@@ -144,15 +157,35 @@ The user may accept all rows or correct individual rows inline. Apply any correc
 
 Read `specs/scenario.md` and `memory/global-account.md` to understand the application's environment, deployment requirements, and configured global account.
 
-Define the account topology:
-- Global account subdomain. Use the value in `memory/global-account.md`. If it is blank or the file is absent, leave it unspecified and do not ask for one.
-- Directory groupings (if applicable)
-- Subaccounts per environment tier — name, region, description, subdomain
-- Per subaccount, determine whether to create no runtime environment, Cloud Foundry, Kyma, or both. Respect any decision already supplied in the scenario or governance. If it is not known, ask the user.
-- For each selected Cloud Foundry environment, collect its organization name. Ask whether Cloud Foundry spaces should be created; if yes, collect their concrete names and validate them against governance when a space pattern exists.
-- For each selected Kyma environment, collect its environment name.
+Determine the project setup model from governance (see Project setup model validation above) before proceeding. The topology structure depends on which option applies.
 
-Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
+### Option 1 — Subaccount per project
+
+Each project gets its own subaccounts, one per stage. Collect:
+
+- Global account subdomain (from `memory/global-account.md`; leave unspecified if blank/absent — do not ask)
+- Directory groupings (if applicable)
+- For each project × stage combination — subaccount name, region, description, subdomain
+- Per subaccount: whether to create no runtime environment, Cloud Foundry, Kyma, or both. Respect any decision already supplied in the scenario or governance; otherwise ask.
+- For each Cloud Foundry environment: org name; ask whether CF spaces should be created and, if yes, their concrete names (validate against the governed space pattern when one exists)
+- For each Kyma environment: environment name
+
+### Option 2 — Space per project
+
+One subaccount per stage, projects as Cloud Foundry spaces. Collect:
+
+- Global account subdomain (from `memory/global-account.md`; leave unspecified if blank/absent — do not ask)
+- Directory groupings (if applicable)
+- For each stage — one subaccount name, region, description, subdomain
+- Per stage subaccount: Cloud Foundry must be enabled (enforced by governance validation). Optionally Kyma as well.
+- For each Cloud Foundry environment: org name; collect the full list of projects that will become CF spaces. Validate each space name against the governed space pattern when one exists.
+- For each Kyma environment: environment name
+
+Note: in Option 2 the `specs/landscape.md` output must make clear that each project is a CF space, not a subaccount. Use a `## Projects (CF Spaces)` subsection or equivalent to list the spaces per CF org.
+
+---
+
+Write `specs/landscape.md` with the complete account structure, including the global account subdomain, the project setup model, and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
 
 ## Next step
 
