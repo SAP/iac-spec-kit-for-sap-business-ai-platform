@@ -131,3 +131,31 @@ The command SHALL present a single summary table of all subaccounts with their i
 #### Scenario: user overrides a row
 - **WHEN** the user specifies a correction for one or more rows in the confirmation table
 - **THEN** the command applies those corrections and writes the updated values into `specs/landscape.md`
+
+### Requirement: define directory topology and shared subaccounts
+When `memory/governance.md` does not already define an account-topology fact, the command SHALL conduct a guided discussion to define it and record the outcome in `specs/landscape.md`. Where governance defines a fact, that definition is authoritative and the command SHALL NOT re-ask it or duplicate it in `specs/landscape.md`. The governed source for whether directories are used is `## Naming → Directory structure` (`hierarchical` means used, `none` means not used); when this field is absent the command asks the user.
+
+#### Scenario: directory usage governed
+- **WHEN** `## Naming → Directory structure` is `hierarchical` or `none`
+- **THEN** the command uses that definition without asking whether directories should be used
+
+#### Scenario: directory usage not governed
+- **WHEN** `## Naming → Directory structure` is absent
+- **THEN** the command asks the user whether directories should be used
+
+#### Scenario: managed-directory feature set
+- **WHEN** directories are used and the user selects managed directories
+- **THEN** the command asks which managed-directory feature set to enable, offering exactly `Entitlement` and `Entitlement and authorization`
+
+#### Scenario: subaccount-to-directory assignment
+- **WHEN** directories are used
+- **THEN** the command gathers the intended assignment of subaccounts to directories, including the agreed grouping or mapping approach
+
+#### Scenario: shared subaccounts
+- **WHEN** the command defines the topology
+- **THEN** it asks whether shared subaccounts should be created and records the use or non-use in `specs/landscape.md`
+
+#### Scenario: landscape describes the topology
+- **WHEN** `specs/landscape.md` is written
+- **THEN** it clearly describes the selected directory model, the enabled managed-directory capabilities where relevant, the directory-to-subaccount assignments, and whether shared subaccounts are used
+- **AND** contains only the decisions governance does not already define
