@@ -81,6 +81,7 @@ Assess whether the user's invocation message already covers the required governa
 |---|---|
 | **Region** | specific BTP region codes, data residency, geographic restrictions, compliance reason |
 | **Environments** | permitted runtime environments (Cloud Foundry and/or Kyma)|
+| **Project setup model** | whether new projects each get a dedicated subaccount per stage (Option 1) or share a subaccount per stage and use Cloud Foundry spaces to isolate projects (Option 2) |
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length; subaccount subdomain convention; additional naming conventions |
 | **Service Restrictions** | whether org-wide service/plan restrictions apply; link to policy doc or free-text allowlist/denylist |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
@@ -88,13 +89,17 @@ Assess whether the user's invocation message already covers the required governa
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Project setup model → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
 - **Preferred Infrastructure** — one of AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none.
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
 - **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
+- **Project setup model** — how new projects are isolated on BTP. Exactly two options:
+  - **Option 1 — Subaccount per project**: each new project receives a dedicated subaccount per stage (e.g. `acme-billing-dev`, `acme-billing-prod`, `acme-payments-dev`, …). Project boundaries are enforced at the subaccount level.
+  - **Option 2 — Space per project**: one shared subaccount exists per stage; each new project is a Cloud Foundry space within it (e.g. subaccount `acme-dev` has spaces `billing`, `payments`). Requires Cloud Foundry to be an allowed environment.
+  Ask the user to choose Option 1 or Option 2 (or describe their preference). If Option 2 is chosen and Cloud Foundry is not already included in allowed environments, add Cloud Foundry automatically and note the addition.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length. Optionally: free-text guidance for the subaccount subdomain convention (e.g. "lowercase, hyphens only, max 20 chars before UUID suffix") and any other resource naming conventions. Both optional fields are skipped if the user has no input — do not write a placeholder.
 - **Service Restrictions** — ask: "Do org-wide service or service-plan restrictions apply?" If yes, ask whether the user wants to provide a link to a Markdown policy document, enter the restrictions as free text, or both. Collect an allowlist of permitted BTP services and service-plan pairs, and a denylist of prohibited ones. For a linked document store only the URL — do not fetch or copy its content. For free-text record the supplied content inline. Do **not** validate service or plan names against BTP; accept them as-is.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
@@ -125,6 +130,7 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 
 ## Account Setup
 - Allowed environments: <Cloud Foundry, Kyma, or both>
+- Project setup model: <Option 1 — Subaccount per project | Option 2 — Space per project>
 <!-- Optional exact tier classifications; add one line per tier when needed.
 - Tier classifications:
   - <tier>: usage = <USED_FOR_PRODUCTION or NOT_USED_FOR_PRODUCTION>, beta_enabled = <true or false>

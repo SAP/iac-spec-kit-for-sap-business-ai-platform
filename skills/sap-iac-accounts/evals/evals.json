@@ -79,6 +79,84 @@
       ]
     },
     {
+      "id": 6,
+      "name": "option1-subaccount-per-project",
+      "description": "Option 1: each project gets a dedicated subaccount per stage. Two projects produce four subaccounts.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nDeploy the billing and payments services on BTP with dev and prod stages."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n- Data residency: unrestricted\n- Compliance reason: none\n- Preferred region: eu10\n\n## Account Setup\n- Allowed environments: Cloud Foundry\n- Project setup model: Option 1 — Subaccount per project\n\n## Naming\n- Subaccount pattern: acme-{project}-{env}\n- Pattern tokens: {project} = project short code, {env} = environment tier\n- Cloud Foundry org pattern: acme-{project}-{env}\n- Kyma environment pattern: acme-{project}-{env}-kyma\n- Cloud Foundry space pattern: acme-{project}-{env}-{space}\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology."},
+        {"role": "user", "content": "Create subaccounts acme-billing-dev, acme-billing-prod, acme-payments-dev, acme-payments-prod all in eu10. No runtime environments needed."},
+        {"role": "user", "content": "Accept."}
+      ],
+      "assertions": [
+        {"id": "6.1", "text": "Recognises project setup model as Option 1 and creates four subaccounts (two projects × two stages) without asking for the model"},
+        {"id": "6.2", "text": "Writes specs/landscape.md with all four subaccounts, each with correct name, region eu10, and no runtime environment"},
+        {"id": "6.3", "text": "Records project setup model as Option 1 in specs/landscape.md"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "option2-space-per-project",
+      "description": "Option 2: shared subaccounts per stage, projects as CF spaces. Two projects produce two subaccounts each with two CF spaces.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nDeploy the billing and payments services on BTP with dev and prod stages."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n- Data residency: unrestricted\n- Compliance reason: none\n- Preferred region: eu10\n\n## Account Setup\n- Allowed environments: Cloud Foundry\n- Project setup model: Option 2 — Space per project\n\n## Naming\n- Subaccount pattern: acme-{env}\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}\n- Kyma environment pattern: acme-{env}-kyma\n- Cloud Foundry space pattern: {project}\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology."},
+        {"role": "user", "content": "Subaccounts are acme-dev and acme-prod in eu10. CF org is acme-dev / acme-prod respectively. Projects billing and payments become spaces in each org."},
+        {"role": "user", "content": "Accept."}
+      ],
+      "assertions": [
+        {"id": "7.1", "text": "Recognises project setup model as Option 2 and creates two stage-level subaccounts (acme-dev, acme-prod), not four project × stage subaccounts"},
+        {"id": "7.2", "text": "Creates CF spaces billing and payments within each CF org, not additional subaccounts"},
+        {"id": "7.3", "text": "Writes specs/landscape.md with a Projects (CF Spaces) subsection listing billing and payments under each subaccount's CF org"},
+        {"id": "7.4", "text": "Records project setup model as Option 2 in specs/landscape.md"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "option2-missing-cf-hard-block",
+      "description": "Option 2 with Cloud Foundry not in allowed environments produces a governance violation.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nDeploy the billing service on BTP with dev and prod stages."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Allowed environments: Kyma\n- Project setup model: Option 2 — Space per project\n\n## Naming\n- Subaccount pattern: acme-{env}\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}\n- Kyma environment pattern: acme-{env}-kyma\n- Cloud Foundry space pattern: {project}\n- Environments: dev, prod\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "prompt": "Define the account topology.",
+      "assertions": [
+        {"id": "8.1", "text": "Stops with a GOVERNANCE VIOLATION naming Option 2 and the missing Cloud Foundry allowed environment"},
+        {"id": "8.2", "text": "Does not write specs/landscape.md before the violation is resolved or Override is explicitly enabled"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "no-model-in-governance-asks-user",
+      "description": "When the project setup model is absent from governance the skill asks the user before defining topology.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate a dev subaccount for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology."},
+        {"role": "user", "content": "Option 1 — each project gets its own subaccounts."},
+        {"role": "user", "content": "Create acme-dev-billing in eu10 with no runtime environment."},
+        {"role": "user", "content": "Accept."}
+      ],
+      "assertions": [
+        {"id": "9.1", "text": "Asks the user to choose Option 1 or Option 2 before defining any topology because the field is absent from governance"},
+        {"id": "9.2", "text": "Proceeds with Option 1 topology after the user answers, creating a single subaccount acme-dev-billing"}
+      ]
+    },
+    {
       "id": 5,
       "name": "confirmation-row-correction",
       "description": "A user can correct an inferred value in the confirmation table before landscape is written.",
