@@ -1,10 +1,10 @@
 ---
 name: sap-iac-accounts
-description: Defines the BTP account topology — subaccounts, regions, and directory groupings.
+description: Defines the BTP account topology — subaccounts, regions, directory groupings (managed vs. unmanaged), subaccount-to-directory assignment, and shared subaccounts.
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Accounts
@@ -136,19 +136,86 @@ The user may accept all rows or correct individual rows inline. Apply any correc
 
 ---
 
+## Directory setup
+
+BTP directories are optional containers that group subaccounts inside the global account (up to five nesting levels; subaccounts may also sit directly under the global account). Resolve the directory setup **before** writing `specs/landscape.md`.
+
+**Governance is authoritative.** For each decision below, first check `memory/governance.md`: if it defines the fact, apply it **without asking** and **do not restate it in `specs/landscape.md`** (see **Recording decisions**). Only when governance is silent do you ask the user. Never invent a posture, feature set, assignment, or shared list that neither governance nor the user supplied.
+
+### Whether to use directories
+
+Read `memory/governance.md → ## Naming → Directory structure`:
+
+- `hierarchical`: governed — directories are in use; resolve the three aspects below.
+- `none` or `flat`: governed — create no directories; parent every subaccount to the global account and skip the rest of this section.
+- **absent / not defined**: not governed — **ask the user whether directories should be used.** If they say no, create no directories and skip the rest of this section. If yes, resolve the three aspects below.
+
+### 1. Managed vs. unmanaged (governance: `Directory management`, `Directory features`)
+
+When governance defines `Directory management`, apply it. Otherwise ask the user whether directories should be **managed** or **unmanaged**, explaining the trade-offs:
+
+- **Unmanaged** — a plain organisational folder (`btp_directory` with only the implicit `DEFAULT` feature): groups subaccounts for reporting, cost monitoring, and labels, but distributes no entitlements and manages no users. No subdomain. Lowest overhead.
+- **Managed** — a `btp_directory` with features enabled. When the user chooses managed (and `Directory features` is not governed), ask which feature set to enable, offering **exactly these two options**:
+  - **Entitlement** — the `ENTITLEMENTS` feature: distribute entitlement quota from the global account to the subaccounts under this directory. Recorded features: `[DEFAULT, ENTITLEMENTS]`.
+  - **Entitlement and authorization** — the `ENTITLEMENTS` and `AUTHORIZATIONS` features: additionally assign users as directory administrators or viewers. Requires a directory subdomain (unique within the region). Recorded features: `[DEFAULT, ENTITLEMENTS, AUTHORIZATIONS]`.
+
+  A managed directory always carries `DEFAULT` (the BTP platform keeps it enabled), so list it to keep the Terraform plan stable. A single directory path may contain only **one** directory with `ENTITLEMENTS`/`AUTHORIZATIONS`; any other directory on that path must stay unmanaged (`DEFAULT` only) — flag this if the user's choice would violate it.
+
+### 2. Subaccount-to-directory assignment (governance: `Subaccount directory assignment`)
+
+When governance defines an assignment policy (e.g. "one directory per environment tier"), apply it without asking. Otherwise ask the user how to group the subaccounts you are about to define — which directory each belongs under (or the global account, for none).
+
+### 3. Shared subaccounts (governance: `Shared subaccounts`)
+
+When governance defines shared subaccounts, apply that list. Otherwise ask whether any **shared subaccounts** should be created — subaccounts not tied to a single stage, used as a common home for services shared across multiple subaccounts (e.g. a central connectivity or shared-services subaccount). For each, capture which subaccounts/services it serves and its owner. This is descriptive metadata for ownership and blast-radius reasoning — it does not change which BTP resources are produced.
+
+### Recording decisions
+
+Write to `specs/landscape.md` **only the decisions governance did not already define** — governance stays the authoritative source and must not be duplicated. In the `## Directories` section and per-subaccount fields, record:
+
+- the concrete entities governance does not contain: each directory's **name** and its **subdomain** (when it uses `AUTHORIZATIONS`), plus a description;
+- `Management`/`Features` per directory **only when** `Directory management`/`Directory features` were absent from governance;
+- a per-subaccount `Directory` assignment **only when** `Subaccount directory assignment` was absent from governance;
+- `Shared`/`Shared with`/`Owner` **only when** `Shared subaccounts` was absent from governance.
+
+For any aspect governance already defines, omit it from `specs/landscape.md` (you may add a `# see memory/governance.md` pointer). When no directories are used, write no `## Directories` section and parent every subaccount to the global account.
+
+---
+
 ## Workflow
 
 Read `specs/scenario.md` and `memory/global-account.md` to understand the application's environment, deployment requirements, and configured global account.
 
 Define the account topology:
 - Global account subdomain. Use the value in `memory/global-account.md`. If it is blank or the file is absent, leave it unspecified and do not ask for one.
-- Directory groupings (if applicable)
-- Subaccounts per environment tier — name, region, description, subdomain
+- Directories and their management posture, features, and assignment — resolved per **Directory setup** above.
+- Subaccounts per environment tier — name, region, description, subdomain; each subaccount's directory assignment (or global account) and shared metadata.
 - Per subaccount, determine whether to create no runtime environment, Cloud Foundry, Kyma, or both. Respect any decision already supplied in the scenario or governance. If it is not known, ask the user.
 - For each selected Cloud Foundry environment, collect its organization name. Ask whether Cloud Foundry spaces should be created; if yes, collect their concrete names and validate them against governance when a space pattern exists.
 - For each selected Kyma environment, collect its environment name.
 
-Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
+Write `specs/landscape.md` with the complete account structure: the global account subdomain; each subaccount (name, region, description, subdomain), its runtime environment types, names, and Cloud Foundry spaces, and the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. Add directory information per **Directory setup → Recording decisions** above — a `## Directories` section and per-subaccount directory/shared fields for the **non-governed** decisions only, never duplicating what governance already defines. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
+
+Example `## Directories` entry and an assigned subaccount, for a project where none of the directory aspects were governed (so all are recorded here). Had, say, `Directory management` and `Directory features` been governed, the `Management` and `Features` lines would be omitted and left to `memory/governance.md`:
+
+```markdown
+## Directories
+- Name: acme-prod-dir
+  Management: managed
+  Features: [DEFAULT, ENTITLEMENTS, AUTHORIZATIONS]
+  Subdomain: acme-prod-dir
+  Description: Production directory with entitlement distribution and directory admins.
+
+## Subaccounts
+- Name: acme-prod-billing
+  Directory: acme-prod-dir
+  Shared: true
+  Shared with: billing team, analytics team
+  Owner: platform team
+  Region: eu10
+  Subdomain: acme-prod-billing
+  Description: Shared billing subaccount
+```
 
 ## Next step
 

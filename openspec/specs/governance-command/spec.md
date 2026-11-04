@@ -78,6 +78,17 @@ The command SHALL ask the user whether org-wide service and service-plan restric
 - **WHEN** the user's invocation prompt already states whether service restrictions apply
 - **THEN** the command skips the service-restrictions question and records the supplied information directly
 
+### Requirement: collect directory policy
+As part of the Naming question group, the command MAY collect an optional directory policy: the default directory management posture (`managed` or `unmanaged`), the features applied to managed directories (`ENTITLEMENTS`, `AUTHORIZATIONS`), the subaccount-to-directory assignment policy, and any shared subaccounts with their owners. Each answer is optional. The command SHALL write the supplied answers to `## Account Setup` as `Directory management`, `Directory features`, `Subaccount directory assignment`, and `Shared subaccounts`, and SHALL omit any field the user leaves unspecified so that `/sap-iac.accounts` resolves it interactively.
+
+#### Scenario: directory policy supplied
+- **WHEN** the user supplies a directory management posture, assignment policy, or shared-subaccount list during the Naming question group
+- **THEN** the command writes the supplied values under `## Account Setup` as the corresponding directory-policy fields
+
+#### Scenario: directory policy not supplied
+- **WHEN** the user leaves one or more directory-policy aspects unspecified
+- **THEN** the command omits those fields from `## Account Setup` so that `/sap-iac.accounts` discusses them
+
 ### Requirement: write governance file
 The command SHALL write the collected rules to `<project-root>/memory/governance.md` in the structured markdown format defined by the governance-format spec.
 

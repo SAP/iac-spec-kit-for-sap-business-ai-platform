@@ -4,7 +4,7 @@ description: Establishes governance guardrails — infrastructure, regions, nami
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Govern
@@ -95,7 +95,7 @@ Keep each question to a single short prompt. The details to gather for each ques
 - **Preferred Infrastructure** — one of AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, or none.
 - **Region** — approved region codes (e.g. eu10, eu20); any forbidden regions; data residency requirement (e.g. EU only) and its compliance reason (e.g. GDPR); preferred default region.
 - **Environments** — allowed runtime environments (Cloud Foundry, Kyma, or both). The global account subdomain is set only during `sap-iac init` and is read from `memory/global-account.md`; never ask for it here.
-- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length.
+- **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length. When the directory structure is hierarchical, you MAY also capture an optional **directory policy**: the default management posture (`managed` folders carrying features, or `unmanaged` plain folders); the features for managed directories (`ENTITLEMENTS` to distribute entitlement quota to child subaccounts, `AUTHORIZATIONS` to manage directory admins/viewers — `AUTHORIZATIONS` implies `ENTITLEMENTS` and needs a subdomain); the policy for assigning subaccounts to directories; and any shared subaccounts with their owners. Every directory-policy answer is optional — leave a field out and `/sap-iac.accounts` discusses it. Write directory structure to `## Naming` and the directory-policy answers to `## Account Setup` (see Step 3).
 - **Service Restrictions** — ask: "Do org-wide service or service-plan restrictions apply?" If yes, ask whether the user wants to provide a link to a Markdown policy document, enter the restrictions as free text, or both. Collect an allowlist of permitted BTP services and service-plan pairs, and a denylist of prohibited ones. For a linked document store only the URL — do not fetch or copy its content. For free-text record the supplied content inline. Do **not** validate service or plan names against BTP; accept them as-is.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
@@ -128,6 +128,12 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 <!-- Optional exact tier classifications; add one line per tier when needed.
 - Tier classifications:
   - <tier>: usage = <USED_FOR_PRODUCTION or NOT_USED_FOR_PRODUCTION>, beta_enabled = <true or false>
+-->
+<!-- Optional directory policy; include only the fields the user specified, omit the rest so /sap-iac.accounts discusses them.
+- Directory management: <managed or unmanaged>
+- Directory features: <comma-separated ENTITLEMENTS, AUTHORIZATIONS, or N/A when unmanaged>
+- Subaccount directory assignment: <policy text, e.g. one directory per environment tier>
+- Shared subaccounts: <name → owner, comma-separated, or none>
 -->
 
 ## Naming

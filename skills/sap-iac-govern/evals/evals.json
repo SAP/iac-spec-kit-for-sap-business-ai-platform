@@ -149,6 +149,19 @@
         {"id": "9.2", "text": "The written file contains a `## Deprecated Services` section whose `- Approved:` line lists `sap-alert-notification / standard`"},
         {"id": "9.3", "text": "Does not add `- Override: true` (approving a deprecated combination is not the same as the global override)"}
       ]
+    },
+    {
+      "id": 10,
+      "name": "writes-directory-policy-under-account-setup",
+      "description": "Supplied directory-policy details are written as Account Setup directory fields; omitted aspects are left out.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with AWS as the preferred infrastructure provider: allow eu10, forbid none, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; use a hierarchical directory structure and names at most 60 characters. Directories should be managed with the ENTITLEMENTS and AUTHORIZATIONS features, and assign one directory per environment tier. Do not specify any shared subaccounts. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. No service restrictions and no deprecated approvals. Require a SAML 2.0 custom IdP; assign BTP_OPERATOR to platform-admins at platform scope. Warn on hana-cloud and require a cost_center tag.",
+      "trap": "The prompt supplies directory management, features, and assignment but no shared-subaccount policy. The skill must write the supplied directory fields under ## Account Setup and must omit the Shared subaccounts field so /sap-iac.accounts resolves it, rather than inventing a value.",
+      "assertions": [
+        {"id": "10.1", "text": "Writes `Directory management: managed`, `Directory features:` including ENTITLEMENTS and AUTHORIZATIONS, and `Subaccount directory assignment: one directory per environment tier` under `## Account Setup` in memory/governance.md"},
+        {"id": "10.2", "text": "Omits the `Shared subaccounts` field because the user did not specify one, rather than inventing a value"},
+        {"id": "10.3", "text": "Keeps `Directory structure: hierarchical` under `## Naming`"}
+      ]
     }
   ]
 }

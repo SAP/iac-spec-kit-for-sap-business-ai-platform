@@ -14,7 +14,7 @@ After `sap-iac.scenario` (and optional `sap-iac.analyse`), once the requirements
 | | |
 |---|---|
 | **Reads** | `specs/scenario.md`, and `memory/global-account.md` and `memory/governance.md` if present. |
-| **Writes** | `specs/landscape.md` — the global account reference, directory groupings, and one entry per subaccount (name, region, description, subdomain, `usage`, and `beta_enabled`) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
+| **Writes** | `specs/landscape.md` — the global account reference, a `## Directories` section (each directory's managed/unmanaged posture, features, and subdomain when applicable), and one entry per subaccount (name, region, description, subdomain, directory assignment, shared metadata, `usage`, and `beta_enabled`) across your environment tiers, plus each subaccount's runtime environments (Cloud Foundry org and optional space names, Kyma environment names). |
 
 ## Behaviour
 
@@ -24,6 +24,16 @@ After `sap-iac.scenario` (and optional `sap-iac.analyse`), once the requirements
 - Prefers the `sap-docs` MCP server over web fetches for SAP documentation.
 
 The command is interactive: when the scenario and governance leave an input underspecified, it asks targeted questions before writing `specs/landscape.md` rather than guessing.
+
+### Directory setup
+
+When the governance `## Naming → Directory structure` is `hierarchical`, `accounts` resolves three directory aspects — directory management, subaccount-to-directory assignment, and shared subaccounts. If `Directory structure` is `none`/`flat`, no directories are created and every subaccount is parented to the global account; if it is **absent**, `accounts` first asks whether directories should be used. For each aspect it applies the matching `## Account Setup` governance field (`Directory management`, `Directory features`, `Subaccount directory assignment`, `Shared subaccounts`) when present, and otherwise asks you:
+
+- **Managed vs. unmanaged** — unmanaged directories are plain folders (`btp_directory` DEFAULT feature). Managed directories are offered as two fixed feature sets: **Entitlement** (`ENTITLEMENTS`) or **Entitlement and authorization** (`ENTITLEMENTS` + `AUTHORIZATIONS`, which needs a directory subdomain); `DEFAULT` is always included.
+- **Assignment** — which directory each subaccount sits under (or directly under the global account).
+- **Shared subaccounts** — subaccounts not tied to a single stage, used as a common home for services shared across multiple subaccounts; recorded with a descriptive `Shared` flag, scope, and owner.
+
+`accounts` records in `specs/landscape.md` only the decisions governance did not already define — governed facts stay authoritative in `memory/governance.md` and are not duplicated.
 
 ### Runtime environments
 

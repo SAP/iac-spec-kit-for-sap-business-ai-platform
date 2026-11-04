@@ -28,6 +28,8 @@ The governance file SHALL contain an Account Setup section specifying the runtim
 
 The section MAY additionally contain a `Tier classifications` mapping to override the default keyword-based inference of `usage` and `beta_enabled` in the accounts command. The mapping is optional; when absent, inference applies. Each entry explicitly records both independent attributes for one tier.
 
+The section MAY additionally contain an optional directory policy that pre-defines how directories are used in the global account. Each directory-policy field is independent and optional; when a field is absent, `/sap-iac.accounts` resolves that aspect through an interactive discussion instead.
+
 #### Scenario: account setup section present
 - **WHEN** `memory/governance.md` is read by a downstream command
 - **THEN** it contains a `## Account Setup` section with:
@@ -38,6 +40,21 @@ The section MAY additionally contain a `Tier classifications` mapping to overrid
     - Tier classifications:
       - integration: usage = NOT_USED_FOR_PRODUCTION, beta_enabled = false
     ```
+  - `- Directory management:` _(optional)_ — `managed` or `unmanaged`; the default feature posture for directories. `unmanaged` means plain organisational folders (`btp_directory` DEFAULT feature only); `managed` means directories carry the features named in `Directory features`.
+  - `- Directory features:` _(optional)_ — comma-separated subset of `ENTITLEMENTS`, `AUTHORIZATIONS` applied to managed directories, or `N/A` when unmanaged. `AUTHORIZATIONS` implies `ENTITLEMENTS` and requires a directory subdomain.
+  - `- Subaccount directory assignment:` _(optional)_ — free-text policy for assigning subaccounts to directories (e.g. `one directory per environment tier`).
+  - `- Shared subaccounts:` _(optional)_ — subaccounts shared across teams, stages, or applications with their owners (e.g. `shared-connectivity → platform team`), or `none`.
+
+### Requirement: optional directory policy
+The `## Account Setup` section MAY contain the optional directory-policy fields `Directory management`, `Directory features`, `Subaccount directory assignment`, and `Shared subaccounts`, each independently governing one aspect of directory setup. When a directory-policy field is present, `/sap-iac.accounts` SHALL apply it without discussion; when a field is absent, `/sap-iac.accounts` SHALL resolve that aspect interactively.
+
+#### Scenario: directory policy field present
+- **WHEN** `memory/governance.md` contains a `Directory management`, `Directory features`, `Subaccount directory assignment`, or `Shared subaccounts` field under `## Account Setup`
+- **THEN** `/sap-iac.accounts` applies that field directly and does not open an interactive discussion for that aspect
+
+#### Scenario: directory policy field absent
+- **WHEN** `memory/governance.md` omits a directory-policy field (including a legacy file with no directory policy at all)
+- **THEN** `/sap-iac.accounts` resolves that aspect through an interactive discussion before writing `specs/landscape.md`
 
 #### Scenario: optional tier override fields absent
 - **WHEN** `memory/governance.md` does not contain `- Tier classifications:`

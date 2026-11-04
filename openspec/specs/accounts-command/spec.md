@@ -20,6 +20,50 @@ The command SHALL define the BTP account topology: global account subdomain, dir
 - **WHEN** inputs are read
 - **THEN** the command produces a complete account topology covering all environment tiers
 
+### Requirement: discuss directory setup when governance leaves it open
+The command SHALL determine whether directories are used from `## Naming → Directory structure`: `hierarchical` means directories are used; `none` or `flat` means no directories are created and every subaccount is parented to the global account. When `Directory structure` is absent from governance, the command SHALL ask the user whether directories should be used rather than assuming either answer.
+
+When directories are used, the command SHALL resolve three directory-setup aspects — directory management (managed vs. unmanaged), subaccount-to-directory assignment, and shared subaccounts — applying the matching `## Account Setup` directory-policy field when present and otherwise asking the user. For a managed directory the command SHALL offer exactly two feature-set options — `Entitlement` (the `ENTITLEMENTS` feature) and `Entitlement and authorization` (the `ENTITLEMENTS` and `AUTHORIZATIONS` features, which require a directory subdomain) — and SHALL always include `DEFAULT` in the recorded feature set. It SHALL NOT invent a posture, feature set, assignment, or shared-subaccount list that neither governance nor the user supplied.
+
+#### Scenario: directory usage asked when ungoverned
+- **WHEN** `## Naming → Directory structure` is absent from governance
+- **THEN** the command asks the user whether directories should be used before resolving any further directory aspect
+
+#### Scenario: directory management discussed when ungoverned
+- **WHEN** directories are used and no `Directory management` field is present in governance
+- **THEN** the command explains managed (feature-carrying) vs. unmanaged (plain folder) directories with their trade-offs and lets the user choose
+
+#### Scenario: managed feature set offered as two fixed options
+- **WHEN** the user selects a managed directory and `Directory features` is not governed
+- **THEN** the command offers exactly `Entitlement` and `Entitlement and authorization`, and records `DEFAULT` together with the chosen features (collecting a subdomain for `Entitlement and authorization`)
+
+#### Scenario: directory policy honoured when governed
+- **WHEN** governance defines `Directory management`, `Directory features`, `Subaccount directory assignment`, or `Shared subaccounts`
+- **THEN** the command applies each present field without opening a discussion for that aspect
+
+#### Scenario: flat structure skips directories
+- **WHEN** `Directory structure` is `none` or `flat`
+- **THEN** the command creates no directories and parents every subaccount to the global account
+
+#### Scenario: authorizations feature implies entitlements and subdomain
+- **WHEN** a managed directory is given the `AUTHORIZATIONS` feature
+- **THEN** the command also enables `ENTITLEMENTS` for it and collects a directory subdomain
+
+### Requirement: record only non-governed directory decisions
+The command SHALL record directory decisions in `specs/landscape.md` only where governance did not already define them, keeping `memory/governance.md` the authoritative source and not duplicating governed facts. It SHALL record the concrete entities governance does not contain — each directory's name and, when it uses `AUTHORIZATIONS`, its subdomain — and SHALL record a per-subaccount `Directory` assignment, per-directory `Management`/`Features`, or `Shared`/owner metadata only when the corresponding governance field was absent. A shared-subaccount flag is descriptive metadata and SHALL NOT change which BTP resources are produced.
+
+#### Scenario: governed aspect not duplicated
+- **WHEN** governance defines a directory aspect (e.g. `Directory management`, `Directory features`, `Subaccount directory assignment`, or `Shared subaccounts`)
+- **THEN** `specs/landscape.md` does not restate that aspect and the command relies on `memory/governance.md` for it
+
+#### Scenario: ungoverned assignment recorded
+- **WHEN** `Subaccount directory assignment` is absent from governance and the user assigns a subaccount to a directory
+- **THEN** `specs/landscape.md` records that subaccount's `Directory` assignment
+
+#### Scenario: ungoverned shared subaccount recorded
+- **WHEN** `Shared subaccounts` is absent from governance and the user declares a shared subaccount
+- **THEN** `specs/landscape.md` records `Shared: true` with the sharing scope and owner
+
 ### Requirement: collect runtime environment setup
 For every subaccount, the command SHALL determine whether Cloud Foundry, Kyma, both, or no runtime environment is required. When Cloud Foundry is selected, it SHALL determine whether spaces are required and collect their names.
 
@@ -65,11 +109,15 @@ The command SHALL validate each subaccount name and environment tier against gov
 - **UNLESS** `- Override: true` is set
 
 ### Requirement: write landscape file
-The command SHALL write `specs/landscape.md` as the authoritative account structure.
+The command SHALL write `specs/landscape.md` as the authoritative account structure. When directories are used, it SHALL include a `## Directories` section recording the non-governed directory decisions (directory names; subdomains for `AUTHORIZATIONS` directories; and per-directory `Management`/`Features` only where ungoverned) and per-subaccount directory/shared fields only where ungoverned.
 
 #### Scenario: landscape file written
 - **WHEN** the command completes successfully
 - **THEN** `specs/landscape.md` exists and is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`
+
+#### Scenario: directories recorded in landscape
+- **WHEN** one or more directories were defined and their management and features were not governed
+- **THEN** `specs/landscape.md` contains a `## Directories` section listing each directory's name, management posture, features, and subdomain when it has the `AUTHORIZATIONS` feature
 
 ### Requirement: validate platform availability when values are supplied
 The command SHALL apply the shared platform-validation capability to topology regions and any named service offering, subscription, or plan pair. CLI checks SHALL target the resolved global-account subdomain and ignore NEO regions.

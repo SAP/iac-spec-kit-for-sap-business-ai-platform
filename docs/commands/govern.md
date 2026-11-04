@@ -23,6 +23,7 @@ Before `sap-iac.scenario`, at the start of a project — or any time you want to
 - Inspects your invocation prompt to see which categories you have already described, and asks one question at a time only for the ones still uncovered.
 - When your prompt names specific regions or service plans and a global-account subdomain is configured in `memory/global-account.md`, it validates them against the live BTP account using read/list lookups only, warns on an infrastructure-provider mismatch, and may ask for a valid replacement if a value is unavailable. With no subdomain configured, it keeps your input without a live check.
 - Writes the guardrails to a fixed section structure that downstream commands know how to read. (The *Environments* answer is split across `## Account Setup` and `## Naming`.)
+- When the directory structure is hierarchical, the *Naming* question group can also capture an optional **directory policy** — the default managed/unmanaged posture, the features managed directories carry (`ENTITLEMENTS`, `AUTHORIZATIONS`), the subaccount-to-directory assignment policy, and shared subaccounts with their owners. These are written to `## Account Setup`. Any aspect you leave out is deferred to an interactive discussion in `sap-iac.accounts`.
 - When present, `accounts`, `services`, `security`, and `generate` enforce these rules and stop on violations — except an infrastructure-provider mismatch, which is advisory only.
 
 !!! tip "Set guardrails once, enforce everywhere"

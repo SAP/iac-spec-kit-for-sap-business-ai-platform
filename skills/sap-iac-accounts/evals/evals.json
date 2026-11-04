@@ -96,6 +96,85 @@
         {"id": "5.1", "text": "Shows inferred NOT_USED_FOR_PRODUCTION and beta_enabled true for the test tier in a confirmation table"},
         {"id": "5.2", "text": "Writes beta_enabled false for acme-test-billing after the row correction"}
       ]
+    },
+    {
+      "id": 6,
+      "name": "directory-setup-discussed-when-ungoverned",
+      "description": "With a hierarchical structure but no directory policy in governance, the command discusses managed vs. unmanaged, assignment, and shared subaccounts.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate dev and prod subaccounts for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev, prod\n- Directory structure: hierarchical\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Use one managed directory per tier (acme-dev-dir, acme-prod-dir), each with ENTITLEMENTS only. Assign each subaccount to its tier directory. No shared subaccounts. No runtime environments."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "6.1", "text": "Because governance has no Directory management/assignment/shared fields, it discusses managed vs. unmanaged directories (with features and trade-offs), assignment, and shared subaccounts rather than inventing them"},
+        {"id": "6.2", "text": "Writes a ## Directories section with acme-dev-dir and acme-prod-dir as managed whose features include DEFAULT and ENTITLEMENTS and with no subdomain"},
+        {"id": "6.3", "text": "Records each subaccount's Directory assignment and Shared: false in specs/landscape.md"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "directory-policy-honoured-and-shared-subaccount",
+      "description": "Governance directory-policy fields are applied without discussion, and a shared subaccount is recorded with its owner.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate a shared connectivity subaccount plus a dev subaccount."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n- Directory management: managed\n- Directory features: ENTITLEMENTS, AUTHORIZATIONS\n- Subaccount directory assignment: one directory per environment tier\n- Shared subaccounts: acme-shared-connectivity -> platform team\n\n## Naming\n- Subaccount pattern: acme-{env}-{app}\n- Pattern tokens: {env} = environment tier, {app} = application identifier\n- Cloud Foundry org pattern: acme-{env}-{app}\n- Kyma environment pattern: acme-{env}-{app}-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: shared, dev\n- Directory structure: hierarchical\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Create acme-shared-connectivity and acme-dev-billing, both with no runtime environment."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "7.1", "text": "Applies the governed directory policy without re-asking the managed/unmanaged, feature-set, assignment, or shared questions"},
+        {"id": "7.2", "text": "Records the concrete non-governed facts in specs/landscape.md — directory names and, because the governed feature set includes AUTHORIZATIONS, a directory subdomain — without restating the governed managed posture or feature set"},
+        {"id": "7.3", "text": "Does not duplicate the governed Shared subaccounts entry in specs/landscape.md; acme-shared-connectivity's shared designation stays in memory/governance.md"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "flat-structure-creates-no-directories",
+      "description": "With a flat directory structure, no directories are created and every subaccount is parented to the global account.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate a dev subaccount for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev\n- Directory structure: flat\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Create acme-dev-billing in eu10 with no runtime environment."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "8.1", "text": "Does not discuss managed/unmanaged directories or create any directory because the structure is flat"},
+        {"id": "8.2", "text": "Writes no ## Directories section and parents acme-dev-billing to the global account (no directory assignment) in specs/landscape.md"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "asks-whether-to-use-directories-when-ungoverned",
+      "description": "When governance has no Directory structure field, the command asks whether directories should be used before resolving directory aspects.",
+      "files": [
+        {"path": "specs/scenario.md", "content": "# Scenario\n\nCreate dev and prod subaccounts for the billing application."},
+        {"path": "memory/governance.md", "content": "# BTP Governance\n\n## Regions\n- Allowed: eu10\n- Forbidden: none\n\n## Account Setup\n- Global account subdomain: acme-global\n- Allowed environments: Cloud Foundry\n\n## Naming\n- Subaccount pattern: acme-{env}-billing\n- Pattern tokens: {env} = environment tier\n- Cloud Foundry org pattern: acme-{env}-billing\n- Kyma environment pattern: acme-{env}-billing-kyma\n- Cloud Foundry space pattern: acme-{env}-{space}\n- Environments: dev, prod\n- Max name length: 60\n"},
+        {"path": "terraform/.gitkeep", "content": ""}
+      ],
+      "turns": [
+        {"role": "user", "content": "Define the account topology for this project."},
+        {"role": "user", "content": "Yes, use directories: one unmanaged directory acme-dir holding both subaccounts. No shared subaccounts. No runtime environments."},
+        {"role": "user", "content": "Accept the usage and beta settings."}
+      ],
+      "assertions": [
+        {"id": "9.1", "text": "Because governance has no Directory structure field, asks whether directories should be used before resolving any directory aspect, rather than assuming yes or no"},
+        {"id": "9.2", "text": "Creates the unmanaged directory acme-dir with no features attribute and no subdomain in the ## Directories section"},
+        {"id": "9.3", "text": "Records both subaccounts assigned to acme-dir because the assignment was not governed"}
+      ]
     }
   ]
 }
