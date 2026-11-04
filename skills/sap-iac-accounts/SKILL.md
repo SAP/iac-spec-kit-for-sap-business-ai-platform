@@ -4,7 +4,7 @@ description: Defines the BTP account topology — subaccounts, regions, and dire
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Accounts
@@ -153,10 +153,44 @@ The user may accept all rows or correct individual rows inline. Apply any correc
 
 ---
 
+## Directory topology and shared subaccounts
+
+Collect these account-topology decisions as part of defining the topology. Governance is authoritative: when `memory/governance.md` already defines a fact below, use that definition and do not re-ask. Write to `specs/landscape.md` only the decisions governance does not already define.
+
+### Are directories used
+
+`## Naming → Directory structure` in governance is the governed source for this decision:
+- `hierarchical` — directories are used; do not ask.
+- `none` — directories are not used; skip the directory questions below.
+- field absent (legacy governance file, or no governance file) — ask the user whether directories should be used.
+
+### Directory model — asked only when directories are used and governance does not define it
+
+1. Ask whether the directories should be **managed** or **unmanaged**.
+2. If managed, ask which managed-directory feature set to enable, offering exactly these two options:
+   - Entitlement
+   - Entitlement and authorization
+3. Agree the grouping or mapping approach for assigning subaccounts to directories (for example, group by stage). Record the concrete subaccount-to-directory assignment once the subaccounts below are defined.
+
+### Shared subaccounts
+
+Ask whether shared subaccounts should be created — subaccounts not assigned to a single stage, used as a common home for services shared across multiple subaccounts. This is not a governed fact, so always ask. Record the decision (used or not used) either way.
+
+---
+
 ## Workflow
 
 Read `specs/scenario.md` and `memory/global-account.md` to understand the application's environment, deployment requirements, and configured global account.
 
+Define the account topology:
+- Global account subdomain. Use the value in `memory/global-account.md`. If it is blank or the file is absent, leave it unspecified and do not ask for one.
+- Directory topology and shared subaccounts — see "Directory topology and shared subaccounts" above
+- Subaccounts per environment tier — name, region, description, subdomain
+- Per subaccount, determine whether to create no runtime environment, Cloud Foundry, Kyma, or both. Respect any decision already supplied in the scenario or governance. If it is not known, ask the user.
+- For each selected Cloud Foundry environment, collect its organization name. Ask whether Cloud Foundry spaces should be created; if yes, collect their concrete names and validate them against governance when a space pattern exists.
+- For each selected Kyma environment, collect its environment name.
+
+Write `specs/landscape.md` with the complete account structure, including the global account subdomain and each subaccount's runtime environment types, names, and Cloud Foundry spaces. For each subaccount, also record the confirmed `usage` (`USED_FOR_PRODUCTION` or `NOT_USED_FOR_PRODUCTION`) and `beta_enabled` (`true` or `false`) values. Also record the directory model (whether directories are used; managed or unmanaged, with the enabled managed-directory feature set where relevant), the directory-to-subaccount assignments, and whether shared subaccounts are used — writing only the decisions governance does not already define, so governance stays the authoritative source where it applies. This file is the authoritative input for `/sap-iac.services`, `/sap-iac.security`, and `/sap-iac.generate`.
 Determine the project setup model from governance (see Project setup model validation above) before proceeding. The topology structure depends on which option applies.
 
 ### Option 1 — Subaccount per project

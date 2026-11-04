@@ -29,6 +29,10 @@ The command is interactive: when the scenario and governance leave an input unde
 
 For each subaccount, `accounts` determines whether to create Cloud Foundry, Kyma, both, or no runtime environment, respecting any decision already implied by the scenario or governance and asking the user when it is not. For each Cloud Foundry environment it collects the organization name and asks whether spaces are needed, collecting their concrete names if so; for each Kyma environment it collects the environment name. These are recorded in `specs/landscape.md`.
 
+### Directory topology and shared subaccounts
+
+When governance does not already define the account topology, `accounts` runs a guided discussion and records the outcome in `specs/landscape.md`. Governance stays authoritative: `## Naming → Directory structure` decides whether directories are used (`hierarchical`/`none`), and only when that field is absent does the command ask. When directories are used it asks whether they are managed or unmanaged, and for managed directories which feature set to enable (**Entitlement** or **Entitlement and authorization**), then gathers how subaccounts map to directories. It always asks whether shared subaccounts — subaccounts used as a common home for services shared across several subaccounts rather than tied to one stage — should be created. Only decisions governance does not already define are written to `specs/landscape.md`.
+
 ### BTP platform validation
 
 Using only read/list BTP CLI commands and BTP MCP lookups, `accounts` validates topology regions and any explicitly named service offering, subscription, or service-plan pair against the resolved global-account subdomain (targeted with `btp target --global-account <subdomain>` from `memory/global-account.md`). It uses `btp list accounts/available-region` for regions, ignoring all `NEO` region entries. This stays within the read/list-only BTP safety boundary — the command never creates, updates, or otherwise mutates BTP state.
