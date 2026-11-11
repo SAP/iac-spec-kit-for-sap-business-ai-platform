@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the behaviour of `/sap-iac.analyse`: reading application source code or Terraform configuration to extract concrete infrastructure signals as evidenced, confidence-rated facts, and enriching `specs/scenario.md` in place without leaking secrets or overwriting user content.
-
 ## Requirements
-
 ### Requirement: select analysis input
 The command SHALL ask the user whether to analyse existing application source code, Terraform configuration, or both, and SHALL NOT proceed until it has a clear answer.
 
@@ -88,15 +86,19 @@ The command SHALL define its behaviour for boundary conditions before and during
 - **THEN** the command records the conflict as an unresolved item rather than choosing one silently
 
 ### Requirement: enrich scenario file in place
-The command SHALL enrich `specs/scenario.md` in place with findings from the analysis, writing them only between the paired markers `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`. On re-runs the command SHALL replace only the content enclosed by those markers and SHALL preserve all content outside them. The command SHALL NOT perform a whole-file rewrite. The generated section SHALL organise findings under "Observed services", "Observed security", "Terraform architecture", and "Unresolved mappings and conflicts".
+The command SHALL enrich `specs/scenario.md` in place with findings from the analysis, writing them only between the paired markers `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`. On re-runs the command SHALL replace only the content enclosed by those markers and SHALL preserve all content outside them. The command SHALL NOT perform a whole-file rewrite. The generated section SHALL organise findings under "Observed services", "Observed security", "Terraform architecture", "Platform landscape", and "Unresolved mappings and conflicts", and every findings table SHALL carry an explicit source column distinguishing `platform`, `terraform`, and `app` findings. A subsection whose table has no rows SHALL be omitted.
 
 #### Scenario: scenario file enriched between markers
 - **WHEN** the analysis is complete
-- **THEN** the extracted findings are written between `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`, organised into the observed-services, observed-security, Terraform-architecture, and unresolved subsections
+- **THEN** the extracted findings are written between `<!-- sap-iac:analyse:begin -->` and `<!-- sap-iac:analyse:end -->`, organised into the observed-services, observed-security, Terraform-architecture, platform-landscape, and unresolved subsections, each findings table carrying an explicit source column
 
 #### Scenario: re-run preserves surrounding content
 - **WHEN** the command runs again on a file that already contains the paired markers
 - **THEN** only the content between the markers is replaced and all content outside them is preserved
+
+#### Scenario: platform-only landscape recorded
+- **WHEN** live-platform discovery produces structural topology that is neither a service nor a security finding (for example the account hierarchy, regions, or destinations)
+- **THEN** the command records it under the "Platform landscape" subsection with its source marked `platform`
 
 ### Requirement: report completion
 The command SHALL produce a completion report identifying the files analysed and skipped, the findings written, the redactions performed, the unresolved mappings, and the recommended next command.
@@ -104,3 +106,56 @@ The command SHALL produce a completion report identifying the files analysed and
 #### Scenario: completion report produced
 - **WHEN** the analysis finishes
 - **THEN** the command reports analysed and skipped files, findings written, redactions performed, unresolved mappings, and the recommended next command
+
+### Requirement: discover the live SAP BTP platform
+The command SHALL support discovering an existing SAP BTP landscape through an authenticated BTP CLI or BTP MCP integration, using only read/list lookups. Where the authenticated principal's permissions allow, it SHALL discover and record: the global account, directory, and subaccount structure; regions, environments, and subaccount configuration; entitlements, quotas, and service plans; service instances, subscriptions, and related configuration; users, role collections, and role collection assignments; trust configuration, destinations, and other supported account-level settings; and the relationships and dependencies between these resources. The command SHALL record each discovered item in the same findings model used for static sources — evidence, observed value, confidence (`observed`, `inferred`, or `unresolved`), and downstream consumer — and SHALL NOT invent values for resources it cannot read.
+
+#### Scenario: landscape discovered within permissions
+- **WHEN** the user selects live-platform analysis and an authenticated read/list route is available
+- **THEN** the command discovers the account hierarchy, subaccount configuration, entitlements and plans, service instances and subscriptions, role collections and assignments, trust configuration, and destinations that its permissions allow, and records each as a finding with evidence, observed value, confidence, and downstream consumer
+
+#### Scenario: relationships captured
+- **WHEN** discovered resources depend on or reference one another (for example a subscription that consumes an entitlement, or a role assignment scoped to a subaccount)
+- **THEN** the command records the relationship between the discovered resources
+
+#### Scenario: discovery uses read/list only
+- **WHEN** the command performs live-platform discovery
+- **THEN** it invokes only documented read/list CLI commands and read/list BTP MCP tools, using `btp target --global-account <subdomain>` only as the account-selection prelude, and never a command that creates, updates, deletes, assigns, enables, disables, logs in, or otherwise mutates BTP state
+
+### Requirement: tag finding provenance
+The command SHALL tag every recorded finding with its provenance — whether it was observed from the live SAP BTP platform, from Terraform configuration, or from application source — so that downstream commands can distinguish the origin of each item. Provenance SHALL be represented explicitly (a `Source` value on each finding) rather than inferred from context.
+
+#### Scenario: provenance recorded per finding
+- **WHEN** the command records any finding
+- **THEN** the finding carries an explicit source of `platform`, `terraform`, or `app`
+
+#### Scenario: same resource seen from two sources
+- **WHEN** the same resource is observed from both the live platform and Terraform
+- **THEN** the command records both findings with their distinct sources rather than merging them into one unsourced finding
+
+### Requirement: report platform discovery diagnostics
+The command SHALL report incomplete, inaccessible, or ambiguous live-platform information as actionable diagnostics rather than silently omitting or inventing it. Diagnostics SHALL cover at least missing permissions, unsupported or unrecognised resource types, and inaccessible remote or platform state. For Terraform analysis the command SHALL likewise report unresolved inputs and inaccessible remote state. A resource that cannot be read SHALL be recorded as `unresolved` with a diagnostic, never as a guessed value.
+
+#### Scenario: permission denied during discovery
+- **WHEN** a read/list lookup is denied because the principal lacks permission
+- **THEN** the command reports a diagnostic naming the inaccessible resource and the implicated permission, records the affected items as `unresolved`, and continues discovering what it can access
+
+#### Scenario: unsupported resource type encountered
+- **WHEN** discovery encounters a resource type the command does not support
+- **THEN** the command reports it as an unsupported type diagnostic rather than omitting it silently
+
+#### Scenario: inaccessible state reported
+- **WHEN** Terraform remote state or a platform resource cannot be accessed
+- **THEN** the command reports the inaccessibility as a diagnostic and does not fabricate the missing values
+
+### Requirement: preserve BTP read-only safety boundary
+The command SHALL operate within a read-only safety boundary for all SAP BTP interactions. It SHALL invoke only documented read/list BTP CLI commands and read/list BTP MCP tools, SHALL use `btp target --global-account <subdomain>` only as the account-selection prelude to such read/list calls, and SHALL NOT invoke, suggest, or approve any command that creates, updates, deletes, assigns, unassigns, enables, disables, logs in, configures, or otherwise mutates BTP state — even when the user requests it.
+
+#### Scenario: mutation requested
+- **WHEN** the user asks the command to change, create, delete, or assign a BTP resource during analysis
+- **THEN** the command declines, explains the read-only boundary, and does not perform or suggest the mutation
+
+#### Scenario: account targeting prelude
+- **WHEN** the command must select a global account before a read/list lookup
+- **THEN** it may run `btp target --global-account <subdomain>` solely as the prelude to read/list commands and runs no other state-changing command
+
