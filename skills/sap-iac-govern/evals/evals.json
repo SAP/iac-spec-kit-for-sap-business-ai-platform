@@ -6,16 +6,17 @@
       "name": "full-policy-direct-write",
       "description": "A complete governance policy is written directly without unnecessary questions.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In a sap-iac project, establish governance: prefer AWS infrastructure, allow eu10 and eu20, forbid us10, keep customer data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and both Cloud Foundry and Kyma are allowed. Subaccounts, CF orgs, and Kyma environments use {org}-{env}-{app}; CF spaces use {org}-{env}-{space}; org is the organisation short code, env is dev/test/prod, app is the application identifier, and space is the space purpose; use a hierarchical directory structure and a maximum name length of 60. In dev, permit free and standard, forbid none, and default to free. In test, permit standard, forbid none, and default to standard. In prod, permit standard, forbid free because it has no SLA, and default to standard. Require a SAML 2.0 custom IdP; assign BTP_OPERATOR to platform-admins and BTP_VIEWER to developers at both scopes. Enable warnings for hana-cloud and ai-core, require the cost_center tag.",
-      "trap": "The prompt deliberately provides all six categories. The skill must not ask redundant follow-up questions, invent an Override flag, or omit required fields that happen to have a value such as 'none'.",
+      "prompt": "In a sap-iac project, establish governance: prefer AWS infrastructure, allow eu10 and eu20, forbid us10, keep customer data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Subaccounts, CF orgs, and Kyma environments use {org}-{env}-{app}; CF spaces use {org}-{env}-{space}; org is the organisation short code, env is dev/test/prod, app is the application identifier, and space is the space purpose; use a hierarchical directory structure and a maximum name length of 60. In dev, permit free and standard, forbid none, and default to free. In test, permit standard, forbid none, and default to standard. In prod, permit standard, forbid free because it has no SLA, and default to standard. Require a SAML 2.0 custom IdP; assign BTP_OPERATOR to platform-admins and BTP_VIEWER to developers at both scopes. Enable warnings for hana-cloud and ai-core, require the cost_center tag.",
+      "trap": "The prompt deliberately provides all categories. The skill must not ask redundant follow-up questions, invent an Override flag, or omit required fields that happen to have a value such as 'none'.",
       "assertions": [
         {"id": "1.1", "text": "Does not ask any follow-up governance questions before writing the file"},
-        {"id": "1.2", "text": "Creates memory/governance.md at the located project root with Regions, Account Setup, Naming, Service Plans, Security, and Cost Controls sections"},
+        {"id": "1.2", "text": "Creates memory/governance.md at the located project root with Regions, Account Setup, Reusable Modules, Naming, Service Plans, Security, and Cost Controls sections"},
         {"id": "1.3", "text": "Preserves the supplied global account subdomain, allowed environments, region, naming, per-environment plan, security, and cost-control values in their required labelled fields"},
         {"id": "1.3a", "text": "Writes Preferred infrastructure provider: AWS in the Regions section"},
         {"id": "1.4", "text": "Includes separate dev and prod Service Plans subsections, each with Permitted, Forbidden, Default plan, and a Forbidden reason when one was supplied"},
         {"id": "1.5", "text": "The generated memory/governance.md artifact does not contain '- Override: true'"},
-        {"id": "1.6", "text": "Confirms governance.md was saved and summarizes all six rule categories plus the downstream commands that enforce them"}
+        {"id": "1.6", "text": "Confirms governance.md was saved and summarizes the rule categories plus the downstream commands that enforce them"},
+        {"id": "1.7", "text": "The Reusable Modules section contains exactly '- Reuse: none' because no module reuse was requested"}
       ]
     },
     {
@@ -24,17 +25,17 @@
       "description": "Only uncovered governance categories receive one targeted question.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "turns": [
-        {"role": "user", "content": "In this sap-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use no directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
+        {"role": "user", "content": "In this sap-iac project, no infrastructure provider is preferred. Only eu10 is approved; us10 is forbidden; data must remain in the EU for GDPR; prefer eu10. The global account subdomain is acme and only Cloud Foundry is allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is our short code, env is dev/test/prod, app is the app identifier, and space is the space purpose; use no directory structure and names up to 60 characters. Require an OIDC custom IdP, assign BTP_OPERATOR to platform-admins at platform scope."},
         {"role": "user", "content": "For service plans, dev may use free (default free), test may use standard (default standard), and prod may use standard (default standard); free is forbidden in prod because it has no SLA. Enable metered-service warnings for hana-cloud and ai-core. The cost centre tag is required and its Terraform key is cost_center."}
       ],
-      "trap": "Region, Naming, Environments, and Security are complete. Asking about any of those again violates the command contract; the file must not be written until service-plan and cost-control information has been collected.",
+      "trap": "Region, Naming, Environments, Reusable Modules, and Security are complete. Asking about any of those again violates the command contract; the file must not be written until service-plan and cost-control information has been collected.",
       "assertions": [
         {"id": "2.1", "text": "Requests only the missing Service Plans details, covering permitted plans, forbidden plans and reasons, and defaults per environment"},
         {"id": "2.2", "text": "Requests only the missing Cost Controls details, covering metered-service warnings and the cost-centre tag"},
-        {"id": "2.3", "text": "Does not ask a Region, Naming, Environments, or Security question"},
+        {"id": "2.3", "text": "Does not ask a Region, Naming, Environments, Reusable Modules, or Security question"},
         {"id": "2.4", "text": "Does not create or overwrite memory/governance.md before the missing answers are supplied"},
         {"id": "2.5", "text": "After the second user turn, writes a complete structured governance file retaining the initially supplied rules and adding the supplied Service Plans and Cost Controls rules"},
-        {"id": "2.6", "text": "Confirms the saved governance file and summarizes all six categories after the second user turn"}
+        {"id": "2.6", "text": "Confirms the saved governance file and summarizes the categories after the second user turn"}
       ]
     },
     {
@@ -43,17 +44,19 @@
       "description": "A bare invocation initiates complete governance discovery without writing a partial policy.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Set up governance for this sap-iac project.",
-      "trap": "No governance details were supplied. The skill must ask one question at a time in the fixed order Preferred Infrastructure, Region, Environments, Naming, Service Plans, Security, Cost Control; it must not batch questions or manufacture defaults.",
+      "trap": "No governance details were supplied. The skill must ask one question at a time in the fixed order Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control; it must not batch questions or manufacture defaults.",
       "assertions": [
         {"id": "3.0", "text": "Its first question asks for the preferred infrastructure provider and presents AWS, Microsoft Azure, Google Cloud, SAP Cloud Infrastructure, Alibaba Cloud, and none"},
         {"id": "3.1", "text": "Requests Region details second: approved and forbidden regions, data residency, compliance reason, and preferred default"},
         {"id": "3.2", "text": "Requests Environments details third: allowed Cloud Foundry/Kyma runtimes; it never requests the global account subdomain"},
-        {"id": "3.3", "text": "Requests Naming details fourth: subaccount, CF org, Kyma, and CF-space patterns; token meanings; directory structure; and length limit"},
-        {"id": "3.4", "text": "Requests the Service Plans details: permitted and forbidden plans, reasons, and defaults per environment"},
-        {"id": "3.5", "text": "Requests the Security details: IdP, role collections and scope"},
-        {"id": "3.6", "text": "Requests the Cost Controls details: metered-service warning policy and cost-centre tag requirements"},
-        {"id": "3.7", "text": "Asks exactly one question per turn, waits for the answer, then follows the fixed sequence — never bundles multiple categories into a single question or tool call"},
-        {"id": "3.8", "text": "Does not create or overwrite memory/governance.md until all required information is collected"}
+        {"id": "3.3", "text": "Requests the Project setup model next: subaccount-per-project versus space-per-project"},
+        {"id": "3.4", "text": "Requests Reusable Modules next, before Naming: whether existing Terraform modules should be reused and, if so, each module's context plus a source or documentation reference"},
+        {"id": "3.5", "text": "Requests Naming details after Reusable Modules: subaccount, CF org, Kyma, and CF-space patterns; token meanings; directory structure; and length limit"},
+        {"id": "3.6", "text": "Requests the Service Plans details: permitted and forbidden plans, reasons, and defaults per environment"},
+        {"id": "3.7", "text": "Requests the Security details: IdP, role collections and scope"},
+        {"id": "3.8", "text": "Requests the Cost Controls details: metered-service warning policy and cost-centre tag requirements"},
+        {"id": "3.9", "text": "Asks exactly one question per turn, waits for the answer, then follows the fixed sequence — never bundles multiple categories into a single question or tool call"},
+        {"id": "3.10", "text": "Does not create or overwrite memory/governance.md until all required information is collected"}
       ]
     },
     {
@@ -82,7 +85,7 @@
         {"role": "user", "content": "Run govern for this project."},
         {"role": "user", "content": "done"}
       ],
-      "trap": "The existing file takes precedence over a fresh discovery workflow. A response of done must not normalize, regenerate, or otherwise rewrite it.",
+      "trap": "The existing file takes precedence over a fresh discovery workflow. A response of done must not normalize, regenerate, or otherwise rewrite it — including adding a Reusable Modules section that was not there.",
       "assertions": [
         {"id": "5.1", "text": "Reads the existing memory/governance.md and displays a summary grouped by governance category"},
         {"id": "5.2", "text": "Asks: Here are the current governance rules. What would you like to change, or type 'done' to keep them as-is."},
@@ -95,7 +98,7 @@
       "name": "override-is-explicit-only",
       "description": "Override is emitted only when the user expressly requests weaker enforcement.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "In a sap-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod with no directory structure and 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
+      "prompt": "In a sap-iac project, establish a complete governance policy using eu10 only with no preferred infrastructure provider. The global account subdomain is acme and Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation short code, env is the environment tier, app is the application identifier, and space is the space purpose, for dev and prod with no directory structure and 60-character names; permit standard plans and default standard for each environment, with no forbidden plans; do not require a custom IdP, use N/A, assign no default role collections at platform scope; disable metered-service warnings, use all as the metered-services value, and make the cost_center tag optional. Explicitly add Override: true because this project needs warnings instead of hard blocks.",
       "trap": "Override is a powerful exception. The skill must add it when directly requested, but must not treat any ordinary full-policy prompt as authorization to add it.",
       "assertions": [
         {"id": "6.1", "text": "Writes a complete governance file containing a top-level '- Override: true' entry because the user explicitly requested it"},
@@ -129,11 +132,11 @@
       "name": "five-of-six-policy-ask-one-missing",
       "description": "A nearly complete policy triggers exactly one question for its single missing category.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope.",
+      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope.",
       "trap": "Only Cost Controls is absent. The skill must not ask a broad discovery questionnaire or write a partial governance file.",
       "assertions": [
         {"id": "8.1", "text": "Requests only the missing Cost Controls details, covering metered-service warnings and the cost-centre tag requirement and key"},
-        {"id": "8.2", "text": "Does not ask a Region, Naming, Environments, Service Plans, or Security question"},
+        {"id": "8.2", "text": "Does not ask a Region, Naming, Environments, Reusable Modules, Service Plans, or Security question"},
         {"id": "8.3", "text": "Does not create or overwrite memory/governance.md before the Cost Controls answer is supplied"}
       ]
     },
@@ -142,7 +145,7 @@
       "name": "writes-deprecated-services-approved-section",
       "description": "A fully specified policy that approves a deprecated service/plan combination writes a Deprecated Services section without further questions.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Approve the deprecated combination sap-alert-notification / standard for use despite deprecation. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope. Warn on metered services hana-cloud and ai-core and require a cost_center tag.",
+      "prompt": "Establish governance with Google Cloud as the preferred infrastructure provider: allow eu10, forbid us10, keep data in the EU for GDPR, and prefer eu10. The global account subdomain is acme and only Kyma is allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the organisation code, env is dev/test/prod, app is the identifier, and space is the space purpose; directories are none and names are at most 60 characters. In dev permit free, forbid none, and default to free; in prod permit standard, forbid free because it has no SLA, and default to standard. Approve the deprecated combination sap-alert-notification / standard for use despite deprecation. Require an OIDC custom IdP; assign BTP_OPERATOR to platform-admins at platform scope. Warn on metered services hana-cloud and ai-core and require a cost_center tag.",
       "trap": "Approving a deprecated combination must populate ## Deprecated Services -> Approved, not set the global - Override: true flag, and must not trigger extra questions since every category is covered.",
       "assertions": [
         {"id": "9.1", "text": "Writes memory/governance.md without asking any follow-up question, since every category including Deprecated Services is covered in the prompt"},
@@ -155,7 +158,7 @@
       "name": "subdomain-convention-written-verbatim",
       "description": "A subdomain convention supplied in the Naming group is written verbatim to ## Naming; neither field is written when skipped.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. Subaccount subdomain convention: lowercase, hyphens only, max 20 characters before UUID suffix. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. Subaccount subdomain convention: lowercase, hyphens only, max 20 characters before UUID suffix. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
       "trap": "The subdomain convention must be written exactly as supplied under ## Naming as '- Subaccount subdomain convention:'. No Additional naming conventions field must appear because the user did not supply one.",
       "assertions": [
         {"id": "10.1", "text": "Does not ask any follow-up question since all governance categories are covered"},
@@ -168,12 +171,52 @@
       "name": "optional-naming-convention-fields-absent-when-skipped",
       "description": "When the user provides no input for either optional naming convention field, neither field appears in the written governance file.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
-      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. No subdomain convention. No additional naming conventions. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. No subdomain convention. No additional naming conventions. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
       "trap": "Absence of user input for optional fields must produce absence in the file — no placeholder, no 'none' value, and no empty line.",
       "assertions": [
         {"id": "11.1", "text": "Does not ask any follow-up question since all governance categories are covered"},
         {"id": "11.2", "text": "The written memory/governance.md does NOT contain '- Subaccount subdomain convention:'"},
         {"id": "11.3", "text": "The written memory/governance.md does NOT contain '- Additional naming conventions:'"}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "reusable-module-approved-with-source",
+      "description": "An approved reusable module with context and a source is written as a Module block without further questions.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Reuse the existing Terraform module naming-conventions to derive the naming conventions; its source is git::https://github.com/acme/tf-naming.git?ref=v1.2.0. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "trap": "The module has a name, a context, and a source, so the skill must record it without asking for a reference; it must not drop the source or invent documentation.",
+      "assertions": [
+        {"id": "12.1", "text": "Does not ask any follow-up question since all governance categories, including the reusable module's source, are covered"},
+        {"id": "12.2", "text": "The written memory/governance.md contains a `## Reusable Modules` section with a `- Module: naming-conventions` block"},
+        {"id": "12.3", "text": "The module block records the Context (deriving the naming conventions) and the Source git::https://github.com/acme/tf-naming.git?ref=v1.2.0"},
+        {"id": "12.4", "text": "The Reusable Modules section does not contain '- Reuse: none' because a module was approved"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "reusable-module-missing-reference-asks",
+      "description": "A module approved with a context but no source or documentation triggers one question for the missing reference before writing.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Reuse the existing Terraform module landing-zone to provision the base subaccount layout, but I have not given you its source or documentation yet. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "trap": "The module is approved for reuse but has neither a source nor documentation. The skill must ask for the missing reference and must not write a Module block without one.",
+      "assertions": [
+        {"id": "13.1", "text": "Asks for the missing source or documentation reference for the landing-zone module before writing governance"},
+        {"id": "13.2", "text": "Does not create or overwrite memory/governance.md until the module's reference is supplied"},
+        {"id": "13.3", "text": "Does not fabricate a source or documentation value for the module"}
+      ]
+    },
+    {
+      "id": 14,
+      "name": "reusable-modules-none-recorded",
+      "description": "When no module is reused, the Reusable Modules section records exactly '- Reuse: none'.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. We do not reuse any existing Terraform modules. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
+      "trap": "No module reuse is a valid answer that must be recorded explicitly, not omitted. The section must contain '- Reuse: none' and no Module block.",
+      "assertions": [
+        {"id": "14.1", "text": "Does not ask a reusable-modules follow-up question since the prompt states no module reuse"},
+        {"id": "14.2", "text": "The written memory/governance.md contains a `## Reusable Modules` section whose only content is '- Reuse: none'"},
+        {"id": "14.3", "text": "The Reusable Modules section does not contain any '- Module:' block"}
       ]
     }
   ]

@@ -82,6 +82,10 @@ Write (or, on a re-run, rewrite) `specs/state-architecture.md` recording the app
 ## Rationale & trade-offs
 - <why these boundaries were chosen: deployment independence, ownership, blast radius, lifecycle, operational overhead>
 
+## Reusable modules
+<!-- Only when memory/governance.md records approved modules under ## Reusable Modules; omit this heading when governance records "- Reuse: none" or has no such section. -->
+- <module name> — context: <approved context>; reference: <Source or Documentation from governance>; used by chunk(s): <chunk name(s)>
+
 ## Assumptions & overrides
 - <explicit assumptions and any user free-text overrides captured during this step>
 ```
@@ -146,6 +150,10 @@ If `memory/backend.md` is absent or contains no type, each configuration unit's 
 ## BTP directory-per-stage layer
 
 Only when governance or tasks indicate BTP **directories** are used to model stages, define a dedicated directory-per-stage configuration using the same standard layout. Its `outputs.tf` exposes the directory ID, which is handed (via manual tfvars) into the BTP configuration's `parent_id`. When directories are not used for stages, do not define this layer — subaccounts sit directly under the global account.
+
+## Reusable modules
+
+When `memory/governance.md` records approved modules under `## Reusable Modules` (anything other than `- Reuse: none`), prefer reusing an approved module **in its stated context** over modelling an equivalent pattern from scratch. For each module that applies, record it under `## Reusable modules` in `specs/state-architecture.md` with its approved context, its `Source` or `Documentation` reference carried over verbatim from governance, and the chunk(s) that use it. Do not reuse a module outside the context governance approved it for, and do not drop its source/documentation reference. This is advisory guidance, not a hard block.
 
 ## Task annotations
 
