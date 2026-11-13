@@ -172,3 +172,24 @@ func TestTasksSkillHasNoDuplicateNextStepInstruction(t *testing.T) {
 		t.Error("tasks skill has a duplicate next-step instruction in its output template")
 	}
 }
+
+func TestReusableModulesGovernanceContract(t *testing.T) {
+	wants := map[string][]string{
+		// govern authors the category and both governance.md forms.
+		"sap-iac-govern/SKILL.md": {"## Reusable Modules", "- Reuse: none"},
+		// design and generate consume recorded modules advisorily.
+		"sap-iac-design/SKILL.md":   {"Reusable Modules"},
+		"sap-iac-generate/SKILL.md": {"Reusable Modules"},
+	}
+	for path, substrings := range wants {
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, want := range substrings {
+			if !strings.Contains(string(data), want) {
+				t.Errorf("%s is missing reusable-modules content %q", path, want)
+			}
+		}
+	}
+}
