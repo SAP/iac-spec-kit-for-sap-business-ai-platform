@@ -82,7 +82,7 @@ func TestAllSkillsEnforceBTPReadOnlyBoundary(t *testing.T) {
 
 func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 	checks := map[string][]string{
-		"sap-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider"},
+		"sap-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider", "Governance Baseline References", "sha256", "Reference Validation", "Governance Baseline Reference Resolution"},
 		"sap-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
 		"sap-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
 		"sap-iac-generate/SKILL.md": {"available-region", "NEO", "Preferred infrastructure provider"},

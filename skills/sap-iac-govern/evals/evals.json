@@ -175,6 +175,60 @@
         {"id": "11.2", "text": "The written memory/governance.md does NOT contain '- Subaccount subdomain convention:'"},
         {"id": "11.3", "text": "The written memory/governance.md does NOT contain '- Additional naming conventions:'"}
       ]
+    },
+    {
+      "id": 12,
+      "name": "baseline-references-collected-and-stored",
+      "description": "Governance baseline references are validated, hashed, and written to the Governance Baseline References section.",
+      "files": [
+        {"path": "specs/.gitkeep", "content": ""},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""},
+        {"path": "docs/security-policy.md", "content": "# Security Policy\n\n- All subaccounts must use a custom IdP.\n- Role collection `BTP_OPERATOR` must be assigned to the `platform-admins` group.\n"}
+      ],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional. Reference docs/security-policy.md as governance baseline with label 'Security Policy'.",
+      "trap": "The reference is a repository-relative path. The skill must validate the file, compute a SHA-256 hash of its content, store the label and location, and write the ## Governance Baseline References section. It must not copy the full document content into governance.md.",
+      "assertions": [
+        {"id": "12.1", "text": "Does not ask any follow-up question since all governance categories including baseline references are covered in the prompt"},
+        {"id": "12.2", "text": "The written memory/governance.md contains a '## Governance Baseline References' section"},
+        {"id": "12.3", "text": "The section contains a ref block with label 'Security Policy' and location 'docs/security-policy.md'"},
+        {"id": "12.4", "text": "The ref block contains a sha256 field with a non-empty hex string (not a placeholder)"},
+        {"id": "12.5", "text": "The full content of docs/security-policy.md is NOT copied into memory/governance.md"},
+        {"id": "12.6", "text": "The confirmation summary includes a Baseline Refs line naming the reference count and label"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "baseline-references-skipped-when-declined",
+      "description": "No Governance Baseline References section is written when the user declines to add any.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "turns": [
+        {"role": "user", "content": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional."},
+        {"role": "user", "content": "No, I do not want to add any governance baseline references."}
+      ],
+      "trap": "When the user declines baseline references the section must be omitted entirely — not written with an empty or placeholder value.",
+      "assertions": [
+        {"id": "13.1", "text": "After collecting all other categories, asks whether the user wants to reference existing governance documents as additional baseline"},
+        {"id": "13.2", "text": "After the user declines, writes memory/governance.md without a '## Governance Baseline References' section"},
+        {"id": "13.3", "text": "The confirmation summary shows 'Baseline Refs: none'"}
+      ]
+    },
+    {
+      "id": 14,
+      "name": "baseline-reference-inaccessible-asks-user",
+      "description": "An inaccessible baseline reference is reported and the user is offered corrective choices before the file is written.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "turns": [
+        {"role": "user", "content": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional. Reference docs/does-not-exist.md as baseline with label 'Missing Doc'."},
+        {"role": "user", "content": "Skip the inaccessible reference and continue without it."}
+      ],
+      "trap": "The referenced file does not exist. The skill must not silently store it, must not halt without prompting, and must complete governance writing after the user chooses to skip.",
+      "assertions": [
+        {"id": "14.1", "text": "Reports that docs/does-not-exist.md could not be read or accessed"},
+        {"id": "14.2", "text": "Asks the user whether to provide a corrected reference, replace it, or skip it — before writing any file"},
+        {"id": "14.3", "text": "After the user chooses to skip, writes memory/governance.md without a '## Governance Baseline References' section"},
+        {"id": "14.4", "text": "The confirmation summary shows 'Baseline Refs: none'"}
+      ]
     }
   ]
 }

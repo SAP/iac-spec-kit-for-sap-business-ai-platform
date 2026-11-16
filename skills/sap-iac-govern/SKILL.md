@@ -4,12 +4,12 @@ description: Establishes governance guardrails — infrastructure, regions, nami
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.1"
+  version: "1.2"
 ---
 
 # BTP IaC — Govern
 
-Establishes governance guardrails for the project. Reads the optional global-account subdomain from `memory/global-account.md` and records approved regions and infrastructure-provider preference, naming conventions, permitted runtime environments, service plans, approved deprecated service/plan combinations, security requirements, and cost controls into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
+Establishes governance guardrails for the project. Reads the optional global-account subdomain from `memory/global-account.md` and records approved regions and infrastructure-provider preference, naming conventions, permitted runtime environments, service plans, approved deprecated service/plan combinations, security requirements, cost controls, and optional governance baseline document references into `memory/governance.md`. All subsequent commands validate their outputs against this file and hard-block on violations, except that an infrastructure-provider mismatch is advisory.
 
 ---
 
@@ -88,8 +88,9 @@ Assess whether the user's invocation message already covers the required governa
 | **Deprecated Services** | service/plan combinations explicitly approved for use despite deprecation |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
+| **Governance Baseline References** | existing Markdown documents (local paths or URLs) whose content serves as additional governance baseline |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Project setup model → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Project setup model → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control → Governance Baseline References**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
@@ -106,8 +107,21 @@ Keep each question to a single short prompt. The details to gather for each ques
 - **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
 - **Security** — whether a custom IdP is required and its type (SAML 2.0 / OIDC); default role collections and their user groups; role-collection scope (platform / application / both).
 - **Cost Controls** — whether metered services trigger a warning and which ones (e.g. hana-cloud, ai-core); whether a cost centre tag is required and its Terraform attribute name (e.g. cost_center).
+- **Governance Baseline References** — ask: "Do you want to reference existing governance documents as additional baseline?" If yes, collect one or more references. Each reference is a repository-relative path, absolute local path, or unauthenticated URL pointing to a Markdown file. For each reference also ask for a short human-friendly label (e.g. "Security Policy", "Role Collection Guide"). Authentication and credential handling are out of scope — only unauthenticated resources are supported. Validate each reference before storing it (see Reference Validation below). The user may add multiple references; keep asking "Add another reference?" until the user says no.
 
 If the prompt already covers every detail, skip to Step 3 immediately.
+
+---
+
+### Reference Validation
+
+When the user provides a governance baseline reference, validate it before storing:
+
+1. **Resolve the location**: for a repository-relative path, resolve it against the project root; for an absolute path, use it as-is; for a URL, treat it as an HTTP/HTTPS fetch target.
+2. **Check accessibility**: attempt to read the file or fetch the URL. If the resource cannot be read or fetched, report the failure and ask the user to provide a corrected reference, replace it with a different one, or skip it.
+3. **Verify Markdown content**: confirm the content starts with recognisable Markdown (e.g. a heading, list, or fenced code block). If the content is clearly not Markdown, report it and ask the user whether to skip or replace it.
+4. **Compute a content hash**: compute the SHA-256 hash of the raw content and store it alongside the reference as `sha256`. This hash is used by downstream commands to detect when a source has changed since governance was last written.
+5. Store only the reference location and label — do not copy the full document content into `governance.md`.
 
 ---
 
@@ -195,6 +209,15 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Metered services: <comma-separated BTP service names, or "all">
 - Cost centre tag: <required / optional / not required>
 - Tag key name: <Terraform attribute name, e.g. cost_center>
+
+## Governance Baseline References
+
+<!-- Omit this section entirely if the user provided no baseline references -->
+- ref:
+    label: <human-friendly label, e.g. "Security Policy">
+    location: <repository-relative path, absolute path, or URL>
+    sha256: <SHA-256 hex digest of the content at the time govern was run>
+<!-- Repeat the ref block for each additional reference -->
 ```
 
 Do **not** include `- Override: true` unless the user explicitly requests it. When present, this flag causes all downstream commands to warn instead of block on violations.
@@ -217,6 +240,7 @@ The following rules are now in effect:
   Service Restrictions: <summary, or "none declared">
   Security:       <summary>
   Cost Controls:  <summary>
+  Baseline Refs:  <count and labels, e.g. "2 references: Security Policy, Role Collection Guide", or "none">
 
 All subsequent commands (/sap-iac.accounts, /sap-iac.services,
 /sap-iac.security, /sap-iac.generate) will validate their output
@@ -224,6 +248,24 @@ against these rules and stop on any violation.
 
 To bypass enforcement, add "- Override: true" to memory/governance.md.
 ```
+
+---
+
+## Governance Baseline Reference Resolution
+
+Commands that load `memory/governance.md` and need governance context (including `govern` itself on re-invocation, and `sap-iac.accounts`, `sap-iac.services`, `sap-iac.security`, `sap-iac.generate`, `sap-iac.scenario`) must apply the following rules when the `## Governance Baseline References` section is present:
+
+1. **Load once per invocation**: resolve all references at command start; reuse the loaded content throughout that invocation. Do not re-fetch mid-command.
+2. **Resolve each reference**:
+   - Repository-relative path → resolve against the project root.
+   - Absolute local path → use as-is.
+   - URL → fetch via HTTP/HTTPS (unauthenticated only).
+3. **Hash check**: compute the SHA-256 of the fetched content and compare with the stored `sha256` value. If they differ, warn:
+   > "Governance baseline reference '<label>' has changed since governance was last written (stored hash: <stored>, current hash: <current>). Continue with updated content, re-run `/sap-iac.govern` to refresh the hash, or stop?"
+   Wait for the user to choose before proceeding.
+4. **Inaccessible reference**: if a reference cannot be read or fetched, report it and ask whether to continue with the remaining baseline documents, replace the reference, or stop.
+5. **Interpretation scope**: treat referenced documents as additional context for deriving or refining governance rules. They may contain naming conventions, role-collection assignments, matching patterns (including regex-based rules), or other policy guidance. Apply their content when generating or validating output, in addition to the explicit rules in `governance.md`.
+6. **Purely structural commands** (e.g. formatting, file renaming) that do not require governance evaluation are exempt from this resolution step.
 
 ## Next step
 
