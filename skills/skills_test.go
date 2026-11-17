@@ -82,7 +82,7 @@ func TestAllSkillsEnforceBTPReadOnlyBoundary(t *testing.T) {
 
 func TestRequestedSkillsContainSpecificPlatformChecks(t *testing.T) {
 	checks := map[string][]string{
-		"sap-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider", "Governance Baseline References", "sha256", "Reference Validation", "Governance Baseline Reference Resolution"},
+		"sap-iac-govern/SKILL.md":   {"btp list accounts/entitlement", "available-region", "NEO", "AWS", "Microsoft Azure", "Google Cloud", "SAP Cloud Infrastructure", "Alibaba Cloud", "Preferred infrastructure provider", "Reusable Modules", "Governance Baseline References", "sha256", "Reference Validation", "Governance Baseline Reference Resolution"},
 		"sap-iac-scenario/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
 		"sap-iac-accounts/SKILL.md": {"btp list accounts/entitlement", "available-region", "NEO", "Preferred infrastructure provider"},
 		"sap-iac-generate/SKILL.md": {"available-region", "NEO", "Preferred infrastructure provider"},
@@ -170,5 +170,26 @@ func TestTasksSkillHasNoDuplicateNextStepInstruction(t *testing.T) {
 	}
 	if strings.Contains(string(data), "Next step: /sap-iac.design") {
 		t.Error("tasks skill has a duplicate next-step instruction in its output template")
+	}
+}
+
+func TestReusableModulesGovernanceContract(t *testing.T) {
+	wants := map[string][]string{
+		// govern authors the category and both governance.md forms.
+		"sap-iac-govern/SKILL.md": {"## Reusable Modules", "- Reuse: none"},
+		// design and generate consume recorded modules advisorily.
+		"sap-iac-design/SKILL.md":   {"Reusable Modules"},
+		"sap-iac-generate/SKILL.md": {"Reusable Modules"},
+	}
+	for path, substrings := range wants {
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, want := range substrings {
+			if !strings.Contains(string(data), want) {
+				t.Errorf("%s is missing reusable-modules content %q", path, want)
+			}
+		}
 	}
 }

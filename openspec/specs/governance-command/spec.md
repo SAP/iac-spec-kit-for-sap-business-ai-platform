@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the behaviour of the `/sap-iac.govern` agent command: project root detection, existing file handling, category completeness evaluation, and writing the governance file.
-
 ## Requirements
-
 ### Requirement: locate project root
 The command SHALL identify the sap-iac project root by walking up from the current working directory until it finds a directory containing `specs/`, `memory/`, and `terraform/` subdirectories.
 
@@ -38,7 +36,7 @@ Before collecting any other missing governance details, the command SHALL determ
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
 ### Requirement: fixed governance-question order
-The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Deprecated Services covers service/plan combinations approved for use despite deprecation. Service Restrictions covers org-wide service and service-plan allowlists and denylists. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
+The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Project setup model covers whether each new project receives a dedicated subaccount per stage or shares a subaccount per stage using Cloud Foundry spaces. Reusable Modules covers existing Terraform modules approved for reuse, each with an intended context and a fetchable source or accessible documentation. Deprecated Services covers service/plan combinations approved for use despite deprecation. Service Restrictions covers org-wide service and service-plan allowlists and denylists. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
 #### Scenario: all required details covered in prompt
 - **WHEN** the user's prompt contains every required governance detail and states a valid preferred infrastructure provider
@@ -46,12 +44,12 @@ The command SHALL assess whether the user's invocation prompt covers all require
 
 #### Scenario: some required details missing from prompt
 - **WHEN** the user's prompt covers only some required details
-- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
 - **AND** does not re-ask about details already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks the nine questions in this sequence: Preferred Infrastructure, Region, Naming, Environments, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks the eleven questions in this sequence: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
 
 ### Requirement: collect service restrictions
 The command SHALL ask the user whether org-wide service and service-plan restrictions apply, as part of the fixed governance question sequence immediately before the per-tier Service Plans question.
@@ -102,3 +100,21 @@ When the input identifies named service offerings, subscriptions, service-plan p
 - **WHEN** the user supplies service names or service-plan pairs via the Service Restrictions path (link or free-text)
 - **THEN** the command does not issue a BTP CLI entitlement lookup or MCP check for those values
 - **AND** records them in governance.md without modification
+
+### Requirement: collect reusable modules
+The command SHALL ask the user whether existing Terraform modules should be reused, as part of the fixed governance question sequence immediately before the Naming question. For every module the user approves, the command SHALL record a module name, an intended context describing what the module derives or provisions, and at least one of a fetchable source (Terraform Registry address, Git URL/ref, or local path) or an accessible documentation path, recording both when available. The command SHALL NOT fetch or verify a module's source or documentation; it records the references as supplied.
+
+#### Scenario: user declines module reuse
+- **WHEN** the user answers that no existing Terraform module should be reused
+- **THEN** the command records `- Reuse: none` under `## Reusable Modules` in `governance.md`
+- **AND** proceeds to the Naming question
+
+#### Scenario: user approves a module with a source or documentation
+- **WHEN** the user approves reusing a module and supplies its intended context and at least one of a source or a documentation reference
+- **THEN** the command records a `- Module:` entry with the name, `Context`, and the supplied `Source` and/or `Documentation` under `## Reusable Modules`
+
+#### Scenario: user approves a module but supplies neither source nor documentation
+- **WHEN** the user approves reusing a module but provides neither a source nor a documentation reference for it
+- **THEN** the command asks for the missing reference before writing governance
+- **AND** does not write the module entry until a source or documentation reference is supplied
+
