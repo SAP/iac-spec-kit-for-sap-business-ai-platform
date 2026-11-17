@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines how downstream commands (`/sap-iac.accounts`, `/sap-iac.services`, `/sap-iac.security`, `/sap-iac.generate`) read and enforce governance rules from `memory/governance.md`.
-
 ## Requirements
-
 ### Requirement: governance file read before generating output
 Each downstream command (`/sap-iac.accounts`, `/sap-iac.services`, `/sap-iac.security`, `/sap-iac.generate`) SHALL read `memory/governance.md` at the start of execution if it exists.
 
@@ -59,3 +57,21 @@ When `memory/governance.md` contains `- Override: true`, downstream commands SHA
 - **WHEN** a governance violation is detected and `- Override: true` is set
 - **THEN** the command logs a warning identifying the violation and the override
 - **AND** continues generating output
+
+### Requirement: reusable module consumption
+Downstream governance-aware commands SHALL reuse a module recorded under `## Reusable Modules` in `memory/governance.md` only in the context recorded for that module, and SHALL retain the module's source or documentation reference in the specifications or Terraform output they generate. This guidance is advisory: it SHALL NOT hard-block generation, and commands SHALL NOT be required to emit a Terraform `module` block.
+
+#### Scenario: module reused in approved context
+- **WHEN** a command generates output that matches the approved context of a recorded reusable module
+- **THEN** the command reuses the recorded module rather than recreating an equivalent pattern
+- **AND** carries the module's `Source` or `Documentation` reference into the generated specification or Terraform output
+
+#### Scenario: module not applicable to the context
+- **WHEN** no recorded reusable module applies to the context of the output being generated
+- **THEN** the command generates the output normally without reusing a module
+- **AND** does not block or warn solely because a module exists for a different context
+
+#### Scenario: reuse section records none
+- **WHEN** `## Reusable Modules` contains `- Reuse: none`, or the section is absent
+- **THEN** downstream commands generate output without reusing any module
+

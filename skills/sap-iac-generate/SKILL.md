@@ -79,6 +79,9 @@ For each metered service resource:
 - If `## Cost Controls → Cost centre tag: required`, verify each subaccount resource includes the cost centre tag attribute — **STOP** if missing
   > "GOVERNANCE VIOLATION: Cost centre tag is required on all subaccounts. Add the tag to `<subaccount>` or add `- Override: true` to memory/governance.md."
 
+### Reusable modules (advisory)
+When `<project-root>/memory/governance.md` records approved modules under `## Reusable Modules` (anything other than `- Reuse: none`), and a module applies to its approved context, reuse it rather than silently recreating the equivalent pattern, and retain its `Source`/`Documentation` reference in the generated Terraform — for example a `# Reusable module: <name> — source: <ref>` comment next to the resources it covers (or honour the reference already recorded under `## Reusable modules` in `specs/state-architecture.md`). Do not reuse a module outside the context governance approved it for, and never drop its source/documentation reference. This is advisory guidance — it does **not** STOP generation, and it does not require emitting a Terraform `module` block.
+
 **If `- Override: true` is set in `<project-root>/memory/governance.md`:** log a warning for each violation and continue instead of stopping.
 
 ---

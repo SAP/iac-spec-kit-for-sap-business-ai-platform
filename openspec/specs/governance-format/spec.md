@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the structured markdown format of `memory/governance.md` and all required sections.
-
 ## Requirements
-
 ### Requirement: regions section
 The governance file SHALL contain a Regions section specifying the preferred infrastructure provider, allowed and forbidden BTP regions, the data residency classification, the compliance reason behind the restriction, and the preferred default region.
 
@@ -101,7 +99,7 @@ The governance file SHALL contain a Cost Controls section specifying which meter
   - `- Tag key name:` — the Terraform resource attribute name for the cost centre tag (e.g. `cost_center`, `labels`)
 
 ### Requirement: service restrictions section
-The governance file MAY contain an optional `## Service Restrictions` section. Its presence indicates org-wide service and service-plan restrictions were declared during `govern`. Its absence indicates no org-wide restrictions were specified.
+The governance file SHALL treat the `## Service Restrictions` section as optional. Its presence indicates org-wide service and service-plan restrictions were declared during `govern`. Its absence indicates no org-wide restrictions were specified.
 
 #### Scenario: service restrictions section absent
 - **WHEN** `memory/governance.md` does not contain `## Service Restrictions`
@@ -135,7 +133,7 @@ The governance file MAY contain an optional `## Service Restrictions` section. I
 - **AND** `Policy document` holds the URL and `Inline policy` holds the free-text content
 
 ### Requirement: override flag
-The governance file MAY contain a top-level `- Override: true` entry that downstream commands treat as explicit user permission to bypass hard blocks.
+The governance file SHALL support an optional top-level `- Override: true` entry that downstream commands treat as explicit user permission to bypass hard blocks.
 
 #### Scenario: override present
 - **WHEN** `memory/governance.md` contains `- Override: true`
@@ -156,3 +154,25 @@ The governance file SHALL contain a Deprecated Services section listing the serv
 #### Scenario: override flag does not cover deprecation
 - **WHEN** `memory/governance.md` contains `- Override: true` but the deprecated combination is not in `## Deprecated Services → Approved`
 - **THEN** the services command still warns and requires explicit user confirmation for that combination
+
+### Requirement: reusable modules section
+The governance file SHALL contain a `## Reusable Modules` section recording existing Terraform modules approved for reuse. The section is always written: it contains either one block per approved module or the single line `- Reuse: none`.
+
+#### Scenario: no modules reused
+- **WHEN** no existing Terraform module is approved for reuse
+- **THEN** `memory/governance.md` contains a `## Reusable Modules` section whose only content is `- Reuse: none`
+
+#### Scenario: modules approved for reuse
+- **WHEN** one or more Terraform modules are approved for reuse
+- **THEN** `memory/governance.md` contains a `## Reusable Modules` section with, for each module, a block:
+  - `- Module:` — the module name
+  - `  - Context:` — what the module derives or provisions (its approved context)
+  - `  - Source:` — a Terraform Registry address, Git URL/ref, or local path (present when a source was supplied)
+  - `  - Documentation:` — a README.md or documentation path (present when documentation was supplied)
+- **AND** each module block contains at least one of `Source` or `Documentation`
+
+#### Scenario: downstream commands read the section
+- **WHEN** a downstream command reads `memory/governance.md`
+- **THEN** a `## Reusable Modules` section listing module blocks indicates modules available for reuse in their recorded context
+- **AND** a `## Reusable Modules` section containing `- Reuse: none`, or the absence of the section in a legacy file, indicates no modules are available for reuse
+

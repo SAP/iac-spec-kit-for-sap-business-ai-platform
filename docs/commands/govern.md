@@ -14,13 +14,14 @@ Before `sap-iac.scenario`, at the start of a project — or any time you want to
 | | |
 |---|---|
 | **Reads** | `memory/governance.md`, if it already exists, so it can summarise and edit it; and `memory/global-account.md` for the global-account subdomain set at `init`. |
-| **Writes** | `memory/governance.md`, with seven sections: Regions (including preferred infrastructure provider), Account Setup, Naming, Service Plans, Deprecated Services, Security, and Cost Controls. |
-| **Asks** | One question at a time, in a fixed order, for each of the eight categories your prompt has not already covered: Preferred Infrastructure → Region → Environments → Naming → Service Plans → Deprecated Services → Security → Cost Controls. On an existing file, it asks what to change. |
+| **Writes** | `memory/governance.md`, with these sections: Regions (including preferred infrastructure provider), Account Setup, Reusable Modules, Naming, Service Plans, Deprecated Services, Security, Cost Controls, and an optional Service Restrictions section. |
+| **Asks** | One question at a time, in a fixed order, for each category your prompt has not already covered: Preferred Infrastructure → Region → Environments → Project setup model → Reusable Modules → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Controls. On an existing file, it asks what to change. |
 
 ## Behaviour
 
 - Must run inside a project created by `sap-iac init`: it walks up from the current directory looking for a root that contains `specs/`, `memory/`, and `terraform/`, and stops without creating or modifying anything if none is found.
 - Inspects your invocation prompt to see which categories you have already described, and asks one question at a time only for the ones still uncovered.
+- Records approved **reusable Terraform modules** — for each, its intended context plus a fetchable source (Terraform Registry address, Git URL/ref, or local path) or an accessible documentation path. If you approve reuse but give neither a source nor documentation for a module, it asks for the missing reference before saving; if nothing should be reused it records `- Reuse: none`. Recorded modules are reused advisorily by `design` and `generate` in their approved context, carrying the source/doc reference into the generated specs or Terraform.
 - When your prompt names specific regions or service plans and a global-account subdomain is configured in `memory/global-account.md`, it validates them against the live BTP account using read/list lookups only, warns on an infrastructure-provider mismatch, and may ask for a valid replacement if a value is unavailable. With no subdomain configured, it keeps your input without a live check.
 - Writes the guardrails to a fixed section structure that downstream commands know how to read. (The *Environments* answer is split across `## Account Setup` and `## Naming`.)
 - When present, `accounts`, `services`, `security`, and `generate` enforce these rules and stop on violations — except an infrastructure-provider mismatch, which is advisory only.
