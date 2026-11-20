@@ -223,43 +223,97 @@
     },
     {
       "id": 15,
+      "name": "baseline-references-collected-and-stored",
+      "description": "Governance baseline references are validated, hashed, and written to the Governance Baseline References section.",
+      "files": [
+        {"path": "specs/.gitkeep", "content": ""},
+        {"path": "memory/.gitkeep", "content": ""},
+        {"path": "terraform/.gitkeep", "content": ""},
+        {"path": "docs/security-policy.md", "content": "# Security Policy\n\n- All subaccounts must use a custom IdP.\n- Role collection `BTP_OPERATOR` must be assigned to the `platform-admins` group.\n"}
+      ],
+      "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional. Reference docs/security-policy.md as governance baseline with label 'Security Policy'.",
+      "trap": "The reference is a repository-relative path. The skill must validate the file, compute a SHA-256 hash of its content, store the label and location, and write the ## Governance Baseline References section. It must not copy the full document content into governance.md.",
+      "assertions": [
+        {"id": "15.1", "text": "Does not ask any follow-up question since all governance categories including baseline references are covered in the prompt"},
+        {"id": "15.2", "text": "The written memory/governance.md contains a '## Governance Baseline References' section"},
+        {"id": "15.3", "text": "The section contains a ref block with label 'Security Policy' and location 'docs/security-policy.md'"},
+        {"id": "15.4", "text": "The ref block contains a sha256 field with a non-empty hex string (not a placeholder)"},
+        {"id": "15.5", "text": "The full content of docs/security-policy.md is NOT copied into memory/governance.md"},
+        {"id": "15.6", "text": "The confirmation summary includes a Baseline Refs line naming the reference count and label"}
+      ]
+    },
+    {
+      "id": 18,
       "name": "subaccount-labels-starter-set-accepted",
       "description": "The proposed starter labels are recorded with their value modes without further questions.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. For subaccount labels, govern the starter set applied to all subaccounts: cost-center (required, free text), subaccount-responsible (required, free text), stage (required, one of dev/test/prod), and managed-by (optional, free text with suggested values terraform and opentofu but any value allowed). In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
       "trap": "The labels are fully specified, so no follow-up is needed. stage is an allowed-set that must list its values; managed-by is free-text whose suggestions must not constrain input; cost-center must not be duplicated as a separate Cost Controls attribute.",
       "assertions": [
-        {"id": "15.1", "text": "Does not ask a subaccount-labels follow-up question since the strategy is fully specified"},
-        {"id": "15.2", "text": "Writes a `## Subaccount Labels` section with `- Label:` blocks for cost-center, subaccount-responsible, stage, and managed-by"},
-        {"id": "15.3", "text": "The stage label records Value mode: allowed-set with Permitted values dev, test, prod"},
-        {"id": "15.4", "text": "The managed-by label records Value mode: free-text with Suggested values terraform, opentofu and does not restrict the value to them"},
-        {"id": "15.5", "text": "Does not contain '- Labels: none' because labels were governed"}
+        {"id": "18.1", "text": "Does not ask a subaccount-labels follow-up question since the strategy is fully specified"},
+        {"id": "18.2", "text": "Writes a `## Subaccount Labels` section with `- Label:` blocks for cost-center, subaccount-responsible, stage, and managed-by"},
+        {"id": "18.3", "text": "The stage label records Value mode: allowed-set with Permitted values dev, test, prod"},
+        {"id": "18.4", "text": "The managed-by label records Value mode: free-text with Suggested values terraform, opentofu and does not restrict the value to them"},
+        {"id": "18.5", "text": "Does not contain '- Labels: none' because labels were governed"}
       ]
     },
     {
       "id": 16,
+      "name": "baseline-references-skipped-when-declined",
+      "description": "No Governance Baseline References section is written when the user declines to add any.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "turns": [
+        {"role": "user", "content": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional."},
+        {"role": "user", "content": "No, I do not want to add any governance baseline references."}
+      ],
+      "trap": "When the user declines baseline references the section must be omitted entirely — not written with an empty or placeholder value.",
+      "assertions": [
+        {"id": "16.1", "text": "After collecting all other categories, asks whether the user wants to reference existing governance documents as additional baseline"},
+        {"id": "16.2", "text": "After the user declines, writes memory/governance.md without a '## Governance Baseline References' section"},
+        {"id": "16.3", "text": "The confirmation summary shows 'Baseline Refs: none'"}
+      ]
+    },
+    {
+      "id": 19,
       "name": "subaccount-labels-none-recorded",
       "description": "When no labels are governed, the Subaccount Labels section records exactly '- Labels: none'.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. We do not govern any subaccount labels. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
       "trap": "No labels is a valid answer that must be recorded explicitly, not omitted. The section must contain '- Labels: none' and no Label block.",
       "assertions": [
-        {"id": "16.1", "text": "Does not ask a subaccount-labels follow-up question since the prompt states no labels are governed"},
-        {"id": "16.2", "text": "The written memory/governance.md contains a `## Subaccount Labels` section whose only content is '- Labels: none'"},
-        {"id": "16.3", "text": "The Subaccount Labels section does not contain any '- Label:' block"}
+        {"id": "19.1", "text": "Does not ask a subaccount-labels follow-up question since the prompt states no labels are governed"},
+        {"id": "19.2", "text": "The written memory/governance.md contains a `## Subaccount Labels` section whose only content is '- Labels: none'"},
+        {"id": "19.3", "text": "The Subaccount Labels section does not contain any `- Label:` block"}
       ]
     },
     {
       "id": 17,
+      "name": "baseline-reference-inaccessible-asks-user",
+      "description": "An inaccessible baseline reference is reported and the user is offered corrective choices before the file is written.",
+      "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
+      "turns": [
+        {"role": "user", "content": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces; flat directory; max 60 chars. In dev permit free (default free); in prod permit standard (default standard), forbid free (no SLA). No deprecated services. No service restrictions. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional. Reference docs/does-not-exist.md as baseline with label 'Missing Doc'."},
+        {"role": "user", "content": "Skip the inaccessible reference and continue without it."}
+      ],
+      "trap": "The referenced file does not exist. The skill must not silently store it, must not halt without prompting, and must complete governance writing after the user chooses to skip.",
+      "assertions": [
+        {"id": "17.1", "text": "Reports that docs/does-not-exist.md could not be read or accessed"},
+        {"id": "17.2", "text": "Asks the user whether to provide a corrected reference, replace it, or skip it — before writing any file"},
+        {"id": "17.3", "text": "After the user chooses to skip, writes memory/governance.md without a '## Governance Baseline References' section"},
+        {"id": "17.4", "text": "The confirmation summary shows 'Baseline Refs: none'"}
+      ]
+    },
+    {
+      "id": 20,
       "name": "subaccount-labels-per-subaccount-exception",
       "description": "A per-subaccount assignment and exception are recorded under the Subaccount Labels subsection.",
       "files": [{"path": "specs/.gitkeep", "content": ""}, {"path": "memory/.gitkeep", "content": ""}, {"path": "terraform/.gitkeep", "content": ""}],
       "prompt": "Establish governance with no preferred infrastructure provider: allow eu10, forbid none, data residency unrestricted, prefer eu10. Both Cloud Foundry and Kyma are allowed. No existing Terraform modules should be reused. Use {org}-{env}-{app} for subaccounts, CF orgs, and Kyma environments, and {org}-{env}-{space} for CF spaces, where org is the org code, env is dev/prod, app is the app identifier, and space is the space purpose; flat directory structure, max 60 characters. For subaccount labels: govern stage (required, one of dev/test/prod, all subaccounts) and managed-by (optional, free text, all subaccounts). The sandbox subaccount is exempt from the stage label. In dev permit free (default free); in prod permit standard (default standard), forbid free because it has no SLA. No deprecated services. No custom IdP, N/A, no role collections, platform scope. Disable metered-service warnings, all services, cost_center tag optional.",
       "trap": "The sandbox exception must be recorded under the per-subaccount assignments/exceptions subsection, not by dropping the stage label definition itself.",
       "assertions": [
-        {"id": "17.1", "text": "Writes `- Label:` blocks for stage (allowed-set dev, test, prod) and managed-by (free-text) applied to all subaccounts"},
-        {"id": "17.2", "text": "Records the sandbox exemption under a `### Per-subaccount assignments and exceptions` subsection (e.g. 'sandbox: ... except stage')"},
-        {"id": "17.3", "text": "Does not remove or weaken the global stage label definition because of the sandbox exception"}
+        {"id": "20.1", "text": "Writes `- Label:` blocks for stage (allowed-set dev, test, prod) and managed-by (free-text) applied to all subaccounts"},
+        {"id": "20.2", "text": "Records the sandbox exemption under a `### Per-subaccount assignments and exceptions` subsection (e.g. 'sandbox: ... except stage')"},
+        {"id": "20.3", "text": "Does not remove or weaken the global stage label definition because of the sandbox exception"}
       ]
     }
   ]
