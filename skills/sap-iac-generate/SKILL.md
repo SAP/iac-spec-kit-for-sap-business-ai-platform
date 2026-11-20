@@ -76,11 +76,14 @@ For each trust configuration:
 ### Cost controls validation
 For each metered service resource:
 - If `## Cost Controls → Metered service warning: enabled`, output a warning listing the metered services before proceeding (do not block)
-- If `## Cost Controls → Cost centre tag: required`, verify each subaccount resource includes the cost centre tag attribute — **STOP** if missing
-  > "GOVERNANCE VIOLATION: Cost centre tag is required on all subaccounts. Add the tag to `<subaccount>` or add `- Override: true` to memory/governance.md."
+- If `## Cost Controls → Cost centre tag: required`, verify each subaccount resource includes the cost centre tag — the governed `cost-center` entry of the subaccount `labels` map (see *Subaccount labels* below) satisfies this requirement — **STOP** if missing
+  > "GOVERNANCE VIOLATION: Cost centre tag is required on all subaccounts. Add the cost-centre label to `<subaccount>` or add `- Override: true` to memory/governance.md."
 
 ### Reusable modules (advisory)
 When `<project-root>/memory/governance.md` records approved modules under `## Reusable Modules` (anything other than `- Reuse: none`), and a module applies to its approved context, reuse it rather than silently recreating the equivalent pattern, and retain its `Source`/`Documentation` reference in the generated Terraform — for example a `# Reusable module: <name> — source: <ref>` comment next to the resources it covers (or honour the reference already recorded under `## Reusable modules` in `specs/state-architecture.md`). Do not reuse a module outside the context governance approved it for, and never drop its source/documentation reference. This is advisory guidance — it does **not** STOP generation, and it does not require emitting a Terraform `module` block.
+
+### Subaccount labels (advisory)
+When `<project-root>/memory/governance.md` records a labeling strategy under `## Subaccount Labels` (anything other than `- Labels: none`), emit a `labels = { ... }` attribute on each generated `btp_subaccount` resource. Apply every label whose `Applies to` is `all`, plus any label scoped to that subaccount, and honour the `### Per-subaccount assignments and exceptions` entries (a subaccount may override a value or, via `except <label>`, omit one). Use each label's governed value: the single value for a `fixed` label; the assigned value (which must be one of the list) for an `allowed-set` label; the supplied value for a `free-text` label. A `required` label must be present on every subaccount it applies to. The `cost-center` label is the same entry the `## Cost Controls` cost-centre tag requires — emit it once, under `labels`, rather than as a separate attribute. This is advisory guidance and respects `- Override: true`.
 
 **If `- Override: true` is set in `<project-root>/memory/governance.md`:** log a warning for each violation and continue instead of stopping.
 

@@ -75,3 +75,23 @@ Downstream governance-aware commands SHALL reuse a module recorded under `## Reu
 - **WHEN** `## Reusable Modules` contains `- Reuse: none`, or the section is absent
 - **THEN** downstream commands generate output without reusing any module
 
+### Requirement: subaccount label application
+When `memory/governance.md` records a labeling strategy under `## Subaccount Labels` (anything other than `- Labels: none`), `/sap-iac.generate` SHALL emit a `labels` map on each generated `btp_subaccount` resource, applying every label whose applicability is `all` plus any label scoped to that subaccount, and honouring the recorded per-subaccount assignments and exceptions. A `required` label SHALL be present on every subaccount it applies to. The governed `cost-center` label SHALL satisfy the `## Cost Controls` cost-centre-tag requirement rather than being emitted as a separate attribute. This guidance is advisory: it SHALL respect the `- Override: true` flag and SHALL NOT introduce a hard block beyond the existing cost-centre-tag check.
+
+#### Scenario: labels emitted on generated subaccounts
+- **WHEN** generate produces a `btp_subaccount` resource and `## Subaccount Labels` governs labels that apply to it
+- **THEN** the resource carries a `labels` map containing those labels with their governed values
+
+#### Scenario: per-subaccount exception honoured
+- **WHEN** a subaccount has a per-subaccount assignment or an `except <label>` exception recorded under `## Subaccount Labels`
+- **THEN** generate applies the override value or omits the excepted label for that subaccount
+
+#### Scenario: cost-centre tag satisfied by the cost-center label
+- **WHEN** `## Cost Controls` requires a cost-centre tag and a `cost-center` label is governed
+- **THEN** the cost-centre-tag requirement is satisfied by the `cost-center` entry of the subaccount `labels` map
+- **AND** generate does not emit a separate cost-centre attribute
+
+#### Scenario: no labels governed
+- **WHEN** `## Subaccount Labels` contains `- Labels: none`, or the section is absent
+- **THEN** generate does not emit a governed `labels` map on that basis
+

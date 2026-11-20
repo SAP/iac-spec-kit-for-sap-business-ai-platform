@@ -36,7 +36,7 @@ Before collecting any other missing governance details, the command SHALL determ
 - **THEN** the command asks for it as its first follow-up question, before any category question
 
 ### Requirement: fixed governance-question order
-The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Project setup model covers whether each new project receives a dedicated subaccount per stage or shares a subaccount per stage using Cloud Foundry spaces. Reusable Modules covers existing Terraform modules approved for reuse, each with an intended context and a fetchable source or accessible documentation. Deprecated Services covers service/plan combinations approved for use despite deprecation. Service Restrictions covers org-wide service and service-plan allowlists and denylists. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
+The command SHALL assess whether the user's invocation prompt covers all required governance details. It SHALL ask one question at a time and, after skipping details already supplied, use this fixed order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Subaccount Labels, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control. Environments covers permitted runtime environments and environment-tier names. Project setup model covers whether each new project receives a dedicated subaccount per stage or shares a subaccount per stage using Cloud Foundry spaces. Reusable Modules covers existing Terraform modules approved for reuse, each with an intended context and a fetchable source or accessible documentation. Subaccount Labels covers the labeling strategy for subaccounts: per label its applicability, requirement, permitted values, and value mode. Deprecated Services covers service/plan combinations approved for use despite deprecation. Service Restrictions covers org-wide service and service-plan allowlists and denylists. The command SHALL read the global-account subdomain only from `memory/global-account.md` and SHALL not request it.
 
 #### Scenario: all required details covered in prompt
 - **WHEN** the user's prompt contains every required governance detail and states a valid preferred infrastructure provider
@@ -44,12 +44,12 @@ The command SHALL assess whether the user's invocation prompt covers all require
 
 #### Scenario: some required details missing from prompt
 - **WHEN** the user's prompt covers only some required details
-- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks only missing details in this order: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Subaccount Labels, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
 - **AND** does not re-ask about details already addressed in the prompt
 
 #### Scenario: no governance detail in prompt
 - **WHEN** the user invokes the command with no governance detail
-- **THEN** the command asks the eleven questions in this sequence: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
+- **THEN** the command asks the twelve questions in this sequence: Preferred Infrastructure, Region, Environments, Project setup model, Reusable Modules, Naming, Subaccount Labels, Service Restrictions, Service Plans, Deprecated Services, Security, Cost Control
 
 ### Requirement: collect service restrictions
 The command SHALL ask the user whether org-wide service and service-plan restrictions apply, as part of the fixed governance question sequence immediately before the per-tier Service Plans question.
@@ -117,4 +117,32 @@ The command SHALL ask the user whether existing Terraform modules should be reus
 - **WHEN** the user approves reusing a module but provides neither a source nor a documentation reference for it
 - **THEN** the command asks for the missing reference before writing governance
 - **AND** does not write the module entry until a source or documentation reference is supplied
+
+### Requirement: collect subaccount labels
+The command SHALL guide the user through a subaccount labeling strategy as part of the fixed governance question sequence immediately after the Naming question. It SHALL propose a starter set of labels — `cost-center`, `subaccount-responsible`, `stage`, `managed-by` — that the user MAY accept, revise, remove, or extend. For every proposed or user-defined label the command SHALL capture its applicability (all subaccounts or specific ones), whether it is required or optional, the permitted values, and the value mode (`fixed`, `allowed-set`, or `free-text`). The command SHALL validate that each definition is unambiguous before writing governance: an `allowed-set` label SHALL list its permitted values and a `fixed` label SHALL give its single value. The command SHALL record per-subaccount label assignments and exceptions when a label is scoped to specific subaccounts or a subaccount overrides or omits a label. The command SHALL NOT define the `cost-center` label and the Cost Controls cost-centre tag as separate attributes; they are the same subaccount label entry.
+
+#### Scenario: starter set accepted
+- **WHEN** the user accepts the proposed labels with their recommended values
+- **THEN** the command records each accepted label under `## Subaccount Labels` with its applicability, requirement, value mode, and permitted or suggested values
+
+#### Scenario: user revises, removes, or adds labels
+- **WHEN** the user revises a value, removes a proposed label, or adds a new one
+- **THEN** the command records only the resulting set of labels, with each definition's applicability, requirement, value mode, and values
+
+#### Scenario: allowed-set label requires a value list
+- **WHEN** a label's value mode is `allowed-set`
+- **THEN** the command records the permitted values as a list
+- **AND** does not write the label until at least one permitted value is supplied
+
+#### Scenario: free-text label with suggestions
+- **WHEN** a label's value mode is `free-text` and the user provides suggested values (for example `managed-by: terraform, opentofu`)
+- **THEN** the command records the suggestions while permitting any value
+
+#### Scenario: per-subaccount assignment or exception
+- **WHEN** a label applies only to specific subaccounts, or a subaccount overrides a value or omits a label
+- **THEN** the command records the assignment or exception under the per-subaccount assignments subsection of `## Subaccount Labels`
+
+#### Scenario: no labels governed
+- **WHEN** the user decides no subaccount labels should be governed
+- **THEN** the command records `- Labels: none` under `## Subaccount Labels`
 
