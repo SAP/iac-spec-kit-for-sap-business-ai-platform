@@ -193,3 +193,23 @@ func TestReusableModulesGovernanceContract(t *testing.T) {
 		}
 	}
 }
+
+func TestSubaccountLabelsGovernanceContract(t *testing.T) {
+	wants := map[string][]string{
+		// govern authors the category and both governance.md forms.
+		"sap-iac-govern/SKILL.md": {"## Subaccount Labels", "- Labels: none"},
+		// generate applies the governed labels advisorily.
+		"sap-iac-generate/SKILL.md": {"Subaccount labels"},
+	}
+	for path, substrings := range wants {
+		data, err := Commands.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, want := range substrings {
+			if !strings.Contains(string(data), want) {
+				t.Errorf("%s is missing subaccount-labels content %q", path, want)
+			}
+		}
+	}
+}

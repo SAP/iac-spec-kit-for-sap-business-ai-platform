@@ -1,10 +1,10 @@
 ---
 name: sap-iac-govern
-description: Establishes governance guardrails — infrastructure, regions, naming, runtime environments, reusable Terraform modules, service plans, security, and cost controls.
+description: Establishes governance guardrails — infrastructure, regions, naming, runtime environments, reusable Terraform modules, subaccount labels, service plans, security, and cost controls.
 license: Apache-2.0
 metadata:
   author: SAP
-  version: "1.2"
+  version: "1.3"
 ---
 
 # BTP IaC — Govern
@@ -84,13 +84,14 @@ Assess whether the user's invocation message already covers the required governa
 | **Project setup model** | whether new projects each get a dedicated subaccount per stage (Option 1) or share a subaccount per stage and use Cloud Foundry spaces to isolate projects (Option 2) |
 | **Reusable Modules** | existing Terraform modules that should be reused; per module an intended context plus a fetchable source or accessible documentation |
 | **Naming** | subaccount, Cloud Foundry org, Kyma environment, and CF-space patterns; token definitions; directory structure; max length; subaccount subdomain convention; additional naming conventions |
+| **Subaccount Labels** | a labeling strategy for subaccounts; per label its applicability, required/optional, permitted values, and whether the value is fixed, from a set, or free text |
 | **Service Restrictions** | whether org-wide service/plan restrictions apply; link to policy doc or free-text allowlist/denylist |
 | **Service Plans** | plan names per environment, forbidden plans and reasons, default plan per tier |
 | **Deprecated Services** | service/plan combinations explicitly approved for use despite deprecation |
 | **Security** | IdP, custom identity provider type, role collections and scope |
 | **Cost Controls** | metered services list, cost centre tag key name, whether tag is mandatory |
 
-For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Project setup model → Reusable Modules → Naming → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
+For each **missing** detail, ask one question at a time in this fixed order, skipping only a detail already supplied: **Preferred Infrastructure → Region → Environments → Project setup model → Reusable Modules → Naming → Subaccount Labels → Service Restrictions → Service Plans → Deprecated Services → Security → Cost Control**. Emit one question, wait for the answer, then proceed to the next missing detail in that order. Never bundle multiple categories into one question or one tool call — batching produces oversized, schema-invalid parameters.
 
 Keep each question to a single short prompt. The details to gather for each question group are listed below as sub-points for your own reference — surface them concisely (e.g. as the prompt plus its examples), not as separate questions crammed into one string.
 
@@ -103,6 +104,7 @@ Keep each question to a single short prompt. The details to gather for each ques
   Ask the user to choose Option 1 or Option 2 (or describe their preference). If Option 2 is chosen and Cloud Foundry is not already included in allowed environments, add Cloud Foundry automatically and note the addition.
 - **Reusable Modules** — ask: "Should existing Terraform modules be reused? If yes, for each module provide its intended context and either a fetchable source (Terraform Registry address, Git URL/ref, or local path) or an accessible README.md/documentation path." The intended context states what the module is used for (e.g. "Use module xyz to derive the naming conventions"). For every approved module record three things: a **module name**, an **intended context**, and **at least one** of a fetchable source or accessible documentation — record both when available. If the user approves reuse but provides neither a source nor documentation for a module, ask for the missing reference **before** writing governance; do not save a module entry without one. If no existing Terraform module should be reused, record `- Reuse: none`. Do not fetch or verify the source or documentation here — record the references as given; downstream commands resolve them when needed.
 - **Naming** — subaccount, Cloud Foundry organization, Kyma environment, and Cloud Foundry space patterns (e.g. `{org}-{env}-{app}`), what each token means, none or hierarchical directory structure, and maximum subaccount name length. Optionally: free-text guidance for the subaccount subdomain convention (e.g. "lowercase, hyphens only, max 20 chars before UUID suffix") and any other resource naming conventions. Both optional fields are skipped if the user has no input — do not write a placeholder.
+- **Subaccount Labels** — guide the user through a reusable labeling strategy for subaccounts. Propose this starter set and let the user accept, revise, remove, or add labels: `cost-center`, `subaccount-responsible`, `stage`, `managed-by`. For **every** proposed or user-defined label ask four things: (1) does it apply to **all** subaccounts or only **specific** ones; (2) is it **required** or **optional**; (3) what **values** are permitted; (4) is the value **fixed** (one value), chosen from an **allowed-set** (a defined list), or **free-text**. Offer editable recommendations, e.g. `stage: dev, test, prod` (allowed-set) and `managed-by: terraform, opentofu` as *suggested* free-text values (any value, such as an internal platform name or a different IaC tool, is allowed). Validate that each definition is clear and unambiguous before saving: an allowed-set must list its values, a fixed value must give the single value, and a free-text label may carry suggested values but permits any. Record per-subaccount assignments and exceptions when a label applies only to specific subaccounts or a subaccount overrides or omits a label. If no labels should be governed, record `- Labels: none`. The `cost-center` label and the `## Cost Controls` cost-centre tag are the **same** physical subaccount `labels` entry — when `cost-center` is governed here, the Cost Controls tag refers to this label rather than defining a separate attribute; do not record conflicting definitions.
 - **Service Restrictions** — ask: "Do org-wide service or service-plan restrictions apply?" If yes, ask whether the user wants to provide a link to a Markdown policy document, enter the restrictions as free text, or both. Collect an allowlist of permitted BTP services and service-plan pairs, and a denylist of prohibited ones. For a linked document store only the URL — do not fetch or copy its content. For free-text record the supplied content inline. Do **not** validate service or plan names against BTP; accept them as-is.
 - **Service Plans** — permitted plans per environment tier; any forbidden plans and why (e.g. free plan has no SLA); default plan per tier when several are allowed.
 - **Deprecated Services** — service/plan combinations that may be used despite being deprecated. Each approved entry suppresses the deprecation warning for that exact combination everywhere in the workflow; leaving the list empty (`none`) means every deprecated combination still prompts the user in `/sap-iac.services`. The global `- Override: true` flag does **not** cover deprecation — only this list does.
@@ -158,6 +160,21 @@ Write (or overwrite) `<project-root>/memory/governance.md` using the following s
 - Subaccount subdomain convention: <free-text guidance, e.g. "lowercase, hyphens only, max 20 chars before UUID suffix">
 - Additional naming conventions: |
     <free-text for any other resource naming guidance>
+
+## Subaccount Labels
+<!-- One block per governed label. Value mode is fixed | allowed-set | free-text.
+     "Applies to" is "all" or a comma-separated list of subaccount names/patterns.
+     If no labels are governed, write exactly "- Labels: none" and omit the blocks and the assignments subsection. -->
+- Label: <label name, e.g. cost-center>
+  - Applies to: <all | comma-separated subaccount names or patterns>
+  - Requirement: <required | optional>
+  - Value mode: <fixed | allowed-set | free-text>
+  - Permitted values: <the single value for fixed; the comma-separated list for allowed-set; "any" for free-text>
+  - Suggested values: <comma-separated suggestions for a free-text label; omit when not applicable>
+
+### Per-subaccount assignments and exceptions
+<!-- Omit this subsection entirely when no label is scoped to specific subaccounts and no subaccount overrides or omits a label. -->
+- <subaccount name or pattern>: <label>=<value>, <label>=<value>; except <label>
 
 ## Service Plans
 
@@ -223,6 +240,7 @@ The following rules are now in effect:
   Account Setup:  <summary>
   Reusable Modules: <module names and their contexts, or "none">
   Naming:         <subaccount pattern, subdomain convention if set, additional conventions if set>
+  Subaccount Labels: <governed label names and value modes, or "none">
   Service Plans:  <summary>
   Deprecated Services: <summary>
   Service Restrictions: <summary, or "none declared">
