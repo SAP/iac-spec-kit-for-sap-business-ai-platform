@@ -176,3 +176,30 @@ The governance file SHALL contain a `## Reusable Modules` section recording exis
 - **THEN** a `## Reusable Modules` section listing module blocks indicates modules available for reuse in their recorded context
 - **AND** a `## Reusable Modules` section containing `- Reuse: none`, or the absence of the section in a legacy file, indicates no modules are available for reuse
 
+### Requirement: subaccount labels section
+The governance file SHALL contain a `## Subaccount Labels` section recording the subaccount labeling strategy. The section is always written: it contains either one block per governed label or the single line `- Labels: none`.
+
+#### Scenario: no labels governed
+- **WHEN** no subaccount label is governed
+- **THEN** `memory/governance.md` contains a `## Subaccount Labels` section whose only content is `- Labels: none`
+
+#### Scenario: labels governed
+- **WHEN** one or more subaccount labels are governed
+- **THEN** `memory/governance.md` contains a `## Subaccount Labels` section with, for each label, a block:
+  - `- Label:` — the label name
+  - `  - Applies to:` — `all`, or a comma-separated list of subaccount names or patterns
+  - `  - Requirement:` — `required` or `optional`
+  - `  - Value mode:` — `fixed`, `allowed-set`, or `free-text`
+  - `  - Permitted values:` — the single value for `fixed`, the comma-separated list for `allowed-set`, or `any` for `free-text`
+  - `  - Suggested values:` — comma-separated suggestions for a `free-text` label (present only when supplied)
+
+#### Scenario: per-subaccount assignments and exceptions recorded
+- **WHEN** a label is scoped to specific subaccounts, or a subaccount overrides a value or omits a label
+- **THEN** the `## Subaccount Labels` section contains a `### Per-subaccount assignments and exceptions` subsection listing each subaccount's assignments and exceptions
+- **AND** the subsection is omitted when no label is scoped to specific subaccounts and no subaccount overrides or omits a label
+
+#### Scenario: cost-centre tag aligned with the cost-center label
+- **WHEN** a `cost-center` label is governed and `## Cost Controls` requires a cost-centre tag
+- **THEN** the cost-centre tag refers to the governed `cost-center` label entry rather than a separate attribute
+- **AND** the two are not recorded as conflicting definitions
+
